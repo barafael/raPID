@@ -1,0 +1,4 @@
+- IMU
+- Connectivity (Serial USB or Bluetooth)
+- PID loop
+- Mixer
