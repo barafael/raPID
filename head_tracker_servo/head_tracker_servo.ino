@@ -44,6 +44,7 @@
       2017-01-10 - [Rafael Bachmann] add servo output (needs low pass filter such as capacitor in parallel for pwm to work)
       2017-01-30 - [Rafael Bachmann] modifications to run this sketch on the teensy 3.2
       2017-01-30 - [Rafael Bachmann] removal of teapot output
+      2017-09-10 - [Rafael Bachmann] boil down to head tracker implementation with 0-calibration
 */
 
 // I2Cdev and MPU6050 must be installed as libraries, or else the .cpp/.h files
@@ -54,8 +55,8 @@
 //#include "MPU6050.h" // not necessary if using MotionApps include file
 
 #include <Servo.h>
-Servo yaw;
-Servo pitch;
+Servo yaw_servo;
+Servo pitch_servo;
 
 // Arduino Wire library is required if I2Cdev I2CDEV_ARDUINO_WIRE implementation
 // is used in I2Cdev.h
@@ -80,22 +81,29 @@ MPU6050 mpu;
      GND ------------------ GND
      SDA ------------------ A4/pin 18
      SCL ------------------ A5/pin 19
+     INT ------------------ Digital Pin 2 (Teensy)
+   ========================================================================= */
+/* =========================================================================
+   NOTE: For calibration, connect a push-to-make-contact push button to ground and
+   $(CALIBRATION_PIN) (pin 14). Push button to reset the camera to initial position.
+   Issue: when yaw drifts over or is pushed to the limit (180) by calibration,
+   servo range is strongly limited in one direction and flips around.
+
    ========================================================================= */
 
-// uncomment "SERVO_OUTPUT" if you want to move servos
-#define SERVO_OUTPUT
-#define YAW_SERVO_OUTPUT 23
-#define PITCH_SERVO_OUTPUT 10
+#define YAW_SERVO_PIN 10
+#define PITCH_SERVO_PIN 11
 
-// uncomment "OUTPUT_READABLE_YAWPITCHROLL" if you want to see the yaw/
-// pitch/roll angles (in degrees) calculated from the quaternions coming
-// from the FIFO. Note this also requires gravity vector calculations.
-// Also note that yaw/pitch/roll angles suffer from gimbal lock (for
-// more info, see: http://en.wikipedia.org/wiki/Gimbal_lock)
-#define OUTPUT_READABLE_YAWPITCHROLL
+#define CALIBRATION_PIN 14
+
+// Calibration variables
+float yaw_offset = 0;
+float pitch_offset = 0;
+
 
 #define LED_PIN 13 // (Arduino is 13, Teensy 3.2 is 13, Teensy++ is 6)
 bool blinkState = false;
+
 
 // MPU control/status vars
 bool dmpReady = false;  // set true if DMP init was successful
@@ -128,6 +136,14 @@ void dmpDataReady() {
 // ================================================================
 
 void setup() {
+  // Set the calibration button to react when LOW is applied to the pin
+  pinMode(CALIBRATION_PIN, INPUT);
+  digitalWrite(CALIBRATION_PIN, HIGH);
+
+  yaw_servo.attach(YAW_SERVO_PIN);
+  pitch_servo.attach(PITCH_SERVO_PIN);
+
+
   // join I2C bus (I2Cdev library doesn't do this automatically)
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
   Wire.begin();
@@ -136,8 +152,6 @@ void setup() {
   Fastwire::setup(400, true);
 #endif
 
-  // initialize serial communication
-  // baud frequency really is up to you depending on your project
   Serial.begin(115200);
 
   // initialize device
@@ -187,9 +201,6 @@ void setup() {
 
   // configure LED for output
   pinMode(LED_PIN, OUTPUT);
-
-  yaw.attach(YAW_SERVO_OUTPUT);
-  pitch.attach(PITCH_SERVO_OUTPUT);
 }
 
 // ================================================================
@@ -242,22 +253,36 @@ void loop() {
     mpu.dmpGetGravity(&gravity, &q);
     mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
 
-    // get yaw degrees: ypr[0] * 180 / M_PI * 2;
-    yaw.write(180 - ypr[0] * 180 / M_PI);
+    if (digitalRead(CALIBRATION_PIN) == LOW) {
+      yaw_offset = ypr[0];
+      pitch_offset = ypr[1];
+    }
 
-    // get pitch_degrees: ypr[1] * 180 / M_PI * 2;
-    pitch.write(90 + ypr[1] * 180 / M_PI);
+    // servo to yaw degrees
+    // Add M_PI to get positive values (ypr[0] element of (-M_PI, M_PI)).
+    // Angle in degree is ratio of reading to max reading * 180 where max reading: 2 * M_PI
+    yaw_servo.write(180 - (ypr[0] + M_PI - yaw_offset) * 180 / (M_PI * 2));
 
-    // display Euler angles in degrees
-    mpu.dmpGetQuaternion(&q, fifoBuffer);
-    mpu.dmpGetGravity(&gravity, &q);
-    mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+    // servo to pitch degrees
+    // Add 90 to start at horizontal, flat position
+    // Angle in degree is ratio of reading to max reading * 180 where max reading: 2 * M_PI
+    pitch_servo.write(90 + ypr[1] * 180 / M_PI - pitch_offset);
+
+    // Send the yaw/pitch/roll euler angles (in degrees) over serial connection
+    // calculated from the quaternions in the FIFO.
+    // Note this also requires gravity vector calculations.
+    // Also note that yaw/pitch/roll angles suffer from gimbal lock
+    // (for more info, see: http://en.wikipedia.org/wiki/Gimbal_lock)
     Serial.print("ypr\t");
-    Serial.print(ypr[0] * 180 / M_PI);
+    Serial.print((ypr[0] + M_PI) * 180 / (M_PI * 2));
     Serial.print("\t");
     Serial.print(ypr[1] * 180 / M_PI);
     Serial.print("\t");
-    Serial.println(ypr[2] * 180 / M_PI);
+    Serial.print(ypr[2] * 180 / M_PI);
+    Serial.print("\t");
+    Serial.print(yaw_offset);
+    Serial.print("\t");
+    Serial.println(pitch_offset);
 
     // blink LED to indicate activity
     blinkState = !blinkState;
