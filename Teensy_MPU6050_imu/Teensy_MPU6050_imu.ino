@@ -53,6 +53,11 @@
 #include "MPU6050_6Axis_MotionApps20.h"
 //#include "MPU6050.h" // not necessary if using MotionApps include file
 
+#include <Servo.h>
+Servo yaw;
+Servo pitch;
+Servo throttle;
+
 // Arduino Wire library is required if I2Cdev I2CDEV_ARDUINO_WIRE implementation
 // is used in I2Cdev.h
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
@@ -79,9 +84,12 @@ MPU6050 mpu;
    ========================================================================= */
 
 // uncomment "SERVO_OUTPUT" if you want to move servos
-//#define SERVO_OUTPUT
-#define YAW_SERVO_OUTPUT 9
+#define SERVO_OUTPUT
+#define YAW_SERVO_OUTPUT 23
 #define PITCH_SERVO_OUTPUT 10
+#define THROTTLE_OUTPUT 11
+
+//#define DAC_OUTPUT_TEENSY32
 
 // uncomment "OUTPUT_READABLE_QUATERNION" if you want to see the actual
 // quaternion components in a [w, x, y, z] format (not best for parsing
@@ -208,8 +216,9 @@ void setup() {
   // configure LED for output
   pinMode(LED_PIN, OUTPUT);
 
-  pinMode(YAW_SERVO_OUTPUT, OUTPUT);
-  pinMode(PITCH_SERVO_OUTPUT, OUTPUT);
+  yaw.attach(YAW_SERVO_OUTPUT);
+  pitch.attach(PITCH_SERVO_OUTPUT);
+  throttle.attach(THROTTLE_OUTPUT);
 }
 
 // ================================================================
@@ -264,10 +273,22 @@ void loop() {
     mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
 
     // get yaw degrees: ypr[0] * 180 / M_PI * 2;
-    analogWrite(YAW_SERVO_OUTPUT, map(ypr[0] * 180 / M_PI * 2, -90, 90, 0, 100));
+    yaw.write(180 - ypr[0] * 180 / M_PI);
 
     // get pitch_degrees: ypr[1] * 180 / M_PI * 2;
-    analogWrite(PITCH_SERVO_OUTPUT, map(ypr[1] * 180 / M_PI * 2, -90, 90, 0, 100));
+    pitch.write(90 + ypr[1] * 180 / M_PI);
+
+    //throttle.write(90 + ypr[2] * 180 / M_PI);
+
+#endif
+
+#ifdef DAC_OUTPUT_TEENSY
+    mpu.dmpGetQuaternion(&q, fifoBuffer);
+    mpu.dmpGetGravity(&gravity, &q);
+    mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+
+    // get yaw degrees: ypr[0] * 180 / M_PI * 2;
+    analogWrite(YAW_SERVO_OUTPUT, map(ypr[0] * 180 / M_PI * 2, -90, 90, 0, 100));
 
 #endif
 
