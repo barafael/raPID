@@ -152,7 +152,7 @@ void setup() {
   Fastwire::setup(400, true);
 #endif
 
-  Serial.begin(115200);
+  Serial.begin(9600);
 
   // initialize device
   Serial.println(F("Initializing I2C devices..."));
@@ -261,6 +261,9 @@ void loop() {
     // servo to yaw degrees
     // Add M_PI to get positive values (ypr[0] element of (-M_PI, M_PI)).
     // Angle in degree is ratio of reading to max reading * 180 where max reading: 2 * M_PI
+    float yaw_value = 180 - (ypr[0] + M_PI - yaw_offset) * 180 / (M_PI * 2);
+    yaw_value = yaw_value > 180.0 ? 180.0 : yaw_value;
+    yaw_value = yaw_value < 0.0 ? 0.0 : yaw_value;
     yaw_servo.write(180 - (ypr[0] + M_PI - yaw_offset) * 180 / (M_PI * 2));
 
     // servo to pitch degrees
