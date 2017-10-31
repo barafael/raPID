@@ -1,5 +1,5 @@
-#include "types.h"
 #include "error_handling.h"
+#include "types.h"
 
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
@@ -8,65 +8,74 @@
 #include "Wire.h"
 #endif
 
-// class default I2C address is 0x68
-// specific I2C addresses may be passed as a parameter here
-// AD0 low = 0x68 (default for SparkFun breakout and InvenSense evaluation board)
-// AD0 high = 0x69
-MPU6050 mpu;
-//MPU6050 mpu(0x69); // <-- use for AD0 high
+/* HARDWARE SETUP
 
-/* =========================================================================
-   NOTE: In addition to connection 3.3v, GND, SDA, and SCL, this sketch
-   depends on the MPU-6050's INT pin being connected to the Teensy's digital pin 2.
-
-   HARDWARE SETUP:
      MPU6050 Breakout ----- Teensy 3.2
      3.3V ----------------- 3.3V
      GND ------------------ GND
      SDA ------------------ A4/pin 18
      SCL ------------------ A5/pin 19
-     INT ------------------ Digital Pin 2 (Teensy)
-   ========================================================================= */
+     INT ------------------ Digital Pin 2
+*/
+
+/* Class default I2C address is 0x68
+   specific I2C addresses may be passed as a parameter here
+   AD0 low = 0x68
+   (default for SparkFun breakout and InvenSense evaluation board)
+   AD0 high = 0x69 */
+MPU6050 mpu;
 
 static const uint8_t LED_PIN = 13;
 bool blinkState = false;
 
-// MPU control/status vars
-bool dmpReady = false;  // set true if DMP init was successful
-uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
-uint8_t devStatus;      // return status after each device operation (0 = success, !0 = error)
-uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
-uint16_t fifoCount;     // count of all bytes currently in FIFO
-uint8_t fifoBuffer[64]; // FIFO storage buffer
+/* MPU control/status vars */
 
-// orientation/motion vars
-Quaternion q;           // [w, x, y, z]         quaternion container
-VectorInt16 aa;         // [x, y, z]            accel sensor measurements
-VectorInt16 aaReal;     // [x, y, z]            gravity-free accel sensor measurements
-VectorInt16 aaWorld;    // [x, y, z]            world-frame accel sensor measurements
-VectorFloat gravity;    // [x, y, z]            gravity vector
-float euler[3];         // [psi, theta, phi]    Euler angle container
-float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+/* Holds actual interrupt status byte from MPU */
+uint8_t mpuIntStatus;  
 
-// ================================================================
-// ===               INTERRUPT DETECTION ROUTINE                ===
-// ================================================================
+/* Return status after each device operation
+   (0 = success, !0 = error) */
+uint8_t devStatus;
 
-volatile bool mpuInterrupt = false;     // indicates whether MPU interrupt pin has gone high
-void dmpDataReady() {
-    mpuInterrupt = true;
-}
+/* Expected DMP packet size (default is 42 bytes) */
+uint16_t packetSize;
+
+uint16_t fifoCount;
+uint8_t fifoBuffer[64];
+
+/* Orientation/motion vars */
+Quaternion q;   // [w, x, y, z]         quaternion container
+VectorInt16 aa; // [x, y, z]            accel sensor measurements
+VectorInt16 aaReal; // [x, y, z]        gravity-free accel sensor measurements
+VectorInt16 aaWorld; // [x, y, z]       world-frame accel sensor measurements
+VectorFloat gravity; // [x, y, z]       gravity vector
+
+float euler[3]; // [psi, theta, phi]    Euler angle container
+float ypr[3];   // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+
+// ————————————————————————————————————————————————————————————————
+// ———             MPU INTERRUPT DETECTION ROUTINE              ———
+// ————————————————————————————————————————————————————————————————
+
+/* Indicates whether MPU interrupt pin has gone high */
+volatile bool mpuInterrupt = false;
+void dmpDataReady() { mpuInterrupt = true; }
+
+// ————————————————————————————————————————————————————————————————
+// ———             RECEIVER READ GLOBAL VARIABLES               ———
+// ————————————————————————————————————————————————————————————————
 
 static volatile byte input_flags;
 
-/* The interrupt writes to this variable and the main program reads */
+/* The servo interrupt writes to this variable and the main loop reads */
 volatile uint16_t receiverInShared[NUM_CHANNELS];
 
-static uint16_t receiverIn[NUM_CHANNELS];
+uint16_t receiverIn[NUM_CHANNELS];
 
 /* Written by interrupt when HIGH value is read */
 uint32_t receiverInStart[NUM_CHANNELS];
 
+/* Read each new value, indicated by the corresponding bit set in input_flags */
 void readReceiver() {
     noInterrupts();
     for (size_t channel = 0; channel < NUM_CHANNELS; channel++) {
@@ -76,6 +85,10 @@ void readReceiver() {
     }
     interrupts();
 }
+
+// ————————————————————————————————————————————————————
+// ———             SERIAL DEBUG OUTPUT              ———
+// ————————————————————————————————————————————————————
 
 void printYPR() {
     Serial.print("ypr\t");
@@ -97,63 +110,72 @@ void printReceivers() {
     Serial.println('\t');
 }
 
+// ———————————————————————————————————————————————————
+// ———             IMU INITIALISATION              ———
+// ———————————————————————————————————————————————————
+
 void initMPU6050() {
-    // join I2C bus (I2Cdev library doesn't do this automatically)
+    /* Join I2C bus (I2Cdev library doesn't do this automatically) */
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
     Wire.begin();
-    TWBR = 24; // 400kHz I2C clock (200kHz if CPU is 8MHz)
+    /* 400kHz I2C clock (200kHz if CPU is 8MHz) */
+    TWBR = 24;
 #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
     Fastwire::setup(400, true);
 #endif
 
-    // initialize device
+    /* Initialize device */
     Serial.println(F("Initializing I2C devices..."));
     mpu.initialize();
 
-    // verify connection
+    /* Verify connection */
     Serial.println(F("Testing device connections..."));
-    Serial.println(mpu.testConnection() ? F("MPU6050 connection successful") : F("MPU6050 connection failed"));
+    Serial.println(mpu.testConnection() ? F("MPU6050 connection successful")
+            : F("MPU6050 connection failed"));
 
-    // load and configure the DMP
+    /* Load and configure the DMP */
     Serial.println(F("Initializing DMP..."));
     devStatus = mpu.dmpInitialize();
 
-    // supply your own gyro offsets here, scaled for min sensitivity
+    /* Supply your own gyro offsets here, scaled for min sensitivity */
     mpu.setXGyroOffset(220);
     mpu.setYGyroOffset(76);
     mpu.setZGyroOffset(-85);
     mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
 
-    // make sure it worked (returns 0 if so)
+    /* Make sure initialisation worked (returns 0 if so) */
     if (devStatus == 0) {
-        // turn on the DMP, now that it's ready
+        /* Turn on the DMP, now that it's ready */
         Serial.println(F("Enabling DMP..."));
         mpu.setDMPEnabled(true);
 
-        // enable Arduino interrupt detection
-        Serial.println(F("Enabling interrupt detection (Arduino external interrupt 0)..."));
+        /* Enable Arduino interrupt detection */
+        Serial.println(
+                F("Enabling interrupt detection (Arduino external interrupt 0)..."));
         attachInterrupt(2, dmpDataReady, RISING);
         mpuIntStatus = mpu.getIntStatus();
 
-        // set our DMP Ready flag so the main loop() function knows it's okay to use it
         Serial.println(F("DMP ready! Waiting for first interrupt..."));
-        dmpReady = true;
 
-        // get expected DMP packet size for later comparison
+        /* Get expected DMP packet size for later comparison */
         packetSize = mpu.dmpGetFIFOPacketSize();
     } else {
-        /* Error case */
-        switch(devStatus) {
+        /* Error while init */
+        switch (devStatus) {
             case 1:
-                error_blink(DMP_INIT_MEM_LOAD_FAILED, "DMP init error code 1: Initial Memory Load failed!");
+                error_blink(DMP_INIT_MEM_LOAD_FAILED,
+                        "DMP init error code 1: Initial Memory Load failed!");
                 break;
             case 2:
-                error_blink(DMP_CONF_UPDATES_FAILED, "DMP init error code 2: DMP configuration updates failed!");
+                error_blink(DMP_CONF_UPDATES_FAILED,
+                        "DMP init error code 2: DMP configuration updates failed!");
                 break;
-            default:
-                //TODO use itoa or similar to alert devStatus
-                error_blink(DMP_ERROR_UNKNOWN, "DMP init unknown error code!");
-                break;
+            default: {
+                         char msg[50] = "DMP init error code     ";
+                         itoa(devStatus, msg + 20, 10);
+                         error_blink(DMP_ERROR_UNKNOWN, msg);
+                         break;
+                     }
         }
     }
 }
@@ -165,8 +187,13 @@ void setup() {
 
     initMPU6050();
 
-    /* On each CHANGE on an input pin, the corresponding interrupt handler is called
-       Note that on Arduino all digital pins default to input mode */
+    /* The pinMode should be correct by default, set it anyway */
+    pinMode(THROTTLE_INPUT_PIN, INPUT);
+    pinMode(ROLL_INPUT_PIN,     INPUT);
+    pinMode(PITCH_INPUT_PIN,    INPUT);
+    pinMode(YAW_INPUT_PIN,      INPUT);
+
+    /* On each CHANGE on an input pin, an interrupt handler is called */
     attachInterrupt(THROTTLE_INPUT_PIN, readThrottle, CHANGE);
     attachInterrupt(ROLL_INPUT_PIN,     readRoll,     CHANGE);
     attachInterrupt(PITCH_INPUT_PIN,    readPitch,    CHANGE);
@@ -174,77 +201,78 @@ void setup() {
 }
 
 void loop() {
-    if (!dmpReady) return;
-
-    // wait for MPU interrupt or extra packet(s) available
+    /* wait for MPU interrupt or extra packet(s) available */
     while (!mpuInterrupt && fifoCount < packetSize) {
-        // other program behavior stuff here
-        // .
-        // .
-        // .
         // if you are really paranoid you can frequently test in between other
         // stuff to see if mpuInterrupt is true, and if so, "break;" from the
         // while() loop to immediately process the MPU data
-        // .
-        // .
-        // .
 
         readReceiver();
-        //printReceivers();
+        // printReceivers();
         printYPR();
     }
-    // reset interrupt flag and get INT_STATUS byte
 
+    /* Reset interrupt flag and get INT_STATUS byte */
     mpuInterrupt = false;
     mpuIntStatus = mpu.getIntStatus();
 
-    // get current FIFO count
+    /* Get current FIFO count */
     fifoCount = mpu.getFIFOCount();
 
-    // check for overflow (this should never happen unless our code is too inefficient)
+    /* Check for overflow (this should be rare) */
     if ((mpuIntStatus & 0x10) || fifoCount == 1024) {
-        // reset so we can continue cleanly
+        /* reset so we can continue cleanly */
         mpu.resetFIFO();
         Serial.println(F("FIFO overflow!"));
 
-        // otherwise, check for DMP data ready interrupt (this should happen frequently)
+        /* Otherwise, check for DMP data ready interrupt (this happens often) */
     } else if (mpuIntStatus & 0x02) {
-        // wait for correct available data length, should be a VERY short wait
-        while (fifoCount < packetSize) fifoCount = mpu.getFIFOCount();
+        /* Wait for correct available data length, should be a VERY short wait */
+        while (fifoCount < packetSize) {
+            fifoCount = mpu.getFIFOCount();
+        }
 
-        // read a packet from FIFO
+        /* Read a packet from FIFO */
         mpu.getFIFOBytes(fifoBuffer, packetSize);
 
-        // track FIFO count here in case there is > 1 packet available
-        // (this lets us immediately read more without waiting for an interrupt)
+        /* Track FIFO count here in case there is > 1 packet available */
+        /* (this lets us immediately read more without waiting for an interrupt) */
         fifoCount -= packetSize;
 
         mpu.dmpGetQuaternion(&q, fifoBuffer);
         mpu.dmpGetGravity(&gravity, &q);
         mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
 
-        // yaw degrees
+        /* Yaw degrees */
         // Add M_PI to get positive values (ypr[0] element of (-M_PI, M_PI)).
-        // Angle in degree is ratio of reading to max reading * 180 where max reading: 2 * M_PI
+        // Angle in degree is ratio of reading to max reading * 180
+        // where max reading: 2 * M_PI
         int yaw_value = (int)180 - (ypr[0] + M_PI) * 180 / (M_PI * 2);
-        /*yaw_value = yaw_value > 180.0 ? 180.0 : yaw_value;
-          yaw_value = yaw_value < 0.0 ? 0.0 : yaw_value;*/
-        // pitch degrees
-        // Add 90 to start at horizontal, flat position
-        // Angle in degree is ratio of reading to max reading * 180 where max reading: 2 * M_PI
-        int pitch_value = (int) (90 + ypr[1] * 180 / M_PI);
+        // yaw_value = yaw_value > 180.0 ? 180.0 : yaw_value;
+        // yaw_value = yaw_value < 0.0 ? 0.0 : yaw_value;
 
-        // blink LED to indicate activity
+        /* Pitch degrees */
+        // Add 90 to start at horizontal, flat position
+        // Angle in degree is ratio of reading to max reading * 180
+        // where max reading: 2 * M_PI
+        int pitch_value = (int)(90 + ypr[1] * 180 / M_PI);
+
+        /* Blink LED to indicate activity */
         blinkState = !blinkState;
         digitalWrite(LED_PIN, blinkState);
     }
 }
 
+// ————————————————————————————————————————————————————————————————
+// ———             RECEIVER READ INTERRUPT ROUTINES             ———
+// ————————————————————————————————————————————————————————————————
+
 void readThrottle() {
     if (digitalRead(THROTTLE_INPUT_PIN) == HIGH) {
         receiverInStart[THROTTLE_CHANNEL] = micros();
     } else {
-        receiverInShared[THROTTLE_CHANNEL] = (uint16_t)(micros() - receiverInStart[THROTTLE_CHANNEL]);
+        receiverInShared[THROTTLE_CHANNEL] =
+            (uint16_t)(micros() - receiverInStart[THROTTLE_CHANNEL]);
         input_flags |= 1 << THROTTLE_CHANNEL;
     }
 }
@@ -253,7 +281,8 @@ void readRoll() {
     if (digitalRead(ROLL_INPUT_PIN) == HIGH) {
         receiverInStart[ROLL_CHANNEL] = micros();
     } else {
-        receiverInShared[ROLL_CHANNEL] = (uint16_t)(micros() - receiverInStart[ROLL_CHANNEL]);
+        receiverInShared[ROLL_CHANNEL] =
+            (uint16_t)(micros() - receiverInStart[ROLL_CHANNEL]);
         input_flags |= 1 << ROLL_CHANNEL;
     }
 }
@@ -262,7 +291,8 @@ void readPitch() {
     if (digitalRead(PITCH_INPUT_PIN) == HIGH) {
         receiverInStart[PITCH_CHANNEL] = micros();
     } else {
-        receiverInShared[PITCH_CHANNEL] = (uint16_t)(micros() - receiverInStart[PITCH_CHANNEL]);
+        receiverInShared[PITCH_CHANNEL] =
+            (uint16_t)(micros() - receiverInStart[PITCH_CHANNEL]);
         input_flags |= 1 << PITCH_CHANNEL;
     }
 }
@@ -271,7 +301,8 @@ void readYaw() {
     if (digitalRead(YAW_INPUT_PIN) == HIGH) {
         receiverInStart[YAW_CHANNEL] = micros();
     } else {
-        receiverInShared[YAW_CHANNEL] = (uint16_t)(micros() - receiverInStart[YAW_CHANNEL]);
+        receiverInShared[YAW_CHANNEL] =
+            (uint16_t)(micros() - receiverInStart[YAW_CHANNEL]);
         input_flags |= 1 << YAW_CHANNEL;
     }
 }

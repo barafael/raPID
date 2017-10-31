@@ -19,7 +19,7 @@ void blink_pattern(char pattern[]) {
                     delay(BLINK_PERIOD);
                     break;
                 default:
-                    Serial.println("Invalid pattern string!");
+                    Serial.println(F("Invalid pattern string!"));
                     return;
             }
         }
