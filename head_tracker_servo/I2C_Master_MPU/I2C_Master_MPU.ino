@@ -47,16 +47,38 @@
       2017-09-10 - [Rafael Bachmann] boil down to head tracker implementation with 0-calibration
 */
 
+union int_bytes {
+  uint8_t b[4];
+  struct yp {
+    uint16_t y;
+    uint16_t p;
+  } yp;
+} int_bytes;
+
+#define DEBUG_OUT
+
+//#define SERVO_OUT
+#ifdef SERVO_OUT
+#define YAW_SERVO_PIN 10
+#define PITCH_SERVO_PIN 11
+
+#include <Servo.h>
+Servo yaw_servo;
+Servo pitch_servo;
+#endif
+
+#define CALIBRATION_PIN 14
+
+// Calibration variables
+float yaw_offset = 0;
+float pitch_offset = 0;
+
 // I2Cdev and MPU6050 must be installed as libraries, or else the .cpp/.h files
 // for both classes must be in the include path of your project
 #include "I2Cdev.h"
 
 #include "MPU6050_6Axis_MotionApps20.h"
 //#include "MPU6050.h" // not necessary if using MotionApps include file
-
-#include <Servo.h>
-Servo yaw_servo;
-Servo pitch_servo;
 
 // Arduino Wire library is required if I2Cdev I2CDEV_ARDUINO_WIRE implementation
 // is used in I2Cdev.h
@@ -91,19 +113,8 @@ MPU6050 mpu;
 
    ========================================================================= */
 
-#define YAW_SERVO_PIN 10
-#define PITCH_SERVO_PIN 11
-
-#define CALIBRATION_PIN 14
-
-// Calibration variables
-float yaw_offset = 0;
-float pitch_offset = 0;
-
-
-#define LED_PIN 13 // (Arduino is 13, Teensy 3.2 is 13, Teensy++ is 6)
+#define LED_PIN 13
 bool blinkState = false;
-
 
 // MPU control/status vars
 bool dmpReady = false;  // set true if DMP init was successful
@@ -140,9 +151,15 @@ void setup() {
   pinMode(CALIBRATION_PIN, INPUT);
   digitalWrite(CALIBRATION_PIN, HIGH);
 
+  // configure LED for output
+  pinMode(LED_PIN, OUTPUT);
+
+#ifdef SERVO_OUT
   yaw_servo.attach(YAW_SERVO_PIN);
   pitch_servo.attach(PITCH_SERVO_PIN);
+#endif
 
+  Serial.begin(9600);
 
   // join I2C bus (I2Cdev library doesn't do this automatically)
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
@@ -151,8 +168,6 @@ void setup() {
 #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
   Fastwire::setup(400, true);
 #endif
-
-  Serial.begin(9600);
 
   // initialize device
   Serial.println(F("Initializing I2C devices..."));
@@ -197,10 +212,14 @@ void setup() {
     Serial.print(F("DMP Initialization failed (code "));
     Serial.print(devStatus);
     Serial.println(F(")"));
-  }
 
-  // configure LED for output
-  pinMode(LED_PIN, OUTPUT);
+    while (1) {
+      digitalWrite(LED_PIN, HIGH);
+      delay(500);
+      digitalWrite(LED_PIN, LOW);
+      delay(500);
+    }
+  }
 }
 
 // ================================================================
@@ -222,8 +241,8 @@ void loop() {
     // .
     // .
     // .
-  }
 
+  }
   // reset interrupt flag and get INT_STATUS byte
   mpuInterrupt = false;
   mpuIntStatus = mpu.getIntStatus();
@@ -258,35 +277,44 @@ void loop() {
       pitch_offset = ypr[1];
     }
 
-    // servo to yaw degrees
+    // yaw degrees
     // Add M_PI to get positive values (ypr[0] element of (-M_PI, M_PI)).
     // Angle in degree is ratio of reading to max reading * 180 where max reading: 2 * M_PI
-    float yaw_value = 180 - (ypr[0] + M_PI - yaw_offset) * 180 / (M_PI * 2);
-    yaw_value = yaw_value > 180.0 ? 180.0 : yaw_value;
-    yaw_value = yaw_value < 0.0 ? 0.0 : yaw_value;
-    yaw_servo.write(180 - (ypr[0] + M_PI - yaw_offset) * 180 / (M_PI * 2));
-
-    // servo to pitch degrees
+    int yaw_value = (int)180 - (ypr[0] + M_PI - yaw_offset) * 180 / (M_PI * 2);
+    /*yaw_value = yaw_value > 180.0 ? 180.0 : yaw_value;
+      yaw_value = yaw_value < 0.0 ? 0.0 : yaw_value;*/
+    // pitch degrees
     // Add 90 to start at horizontal, flat position
     // Angle in degree is ratio of reading to max reading * 180 where max reading: 2 * M_PI
-    pitch_servo.write(90 + ypr[1] * 180 / M_PI - pitch_offset);
+    int pitch_value = (int) (90 + ypr[1] * 180 / M_PI - pitch_offset);
+
+#ifdef SERVO_OUT
+    yaw_servo.write(yaw_value);
+    pitch_servo.write(pitch_value);
+#endif
 
     // Send the yaw/pitch/roll euler angles (in degrees) over serial connection
     // calculated from the quaternions in the FIFO.
     // Note this also requires gravity vector calculations.
     // Also note that yaw/pitch/roll angles suffer from gimbal lock
     // (for more info, see: http://en.wikipedia.org/wiki/Gimbal_lock)
+#ifdef DEBUG_OUT
     Serial.print("ypr\t");
-    Serial.print((ypr[0] + M_PI) * 180 / (M_PI * 2));
+    Serial.print(yaw_value);
     Serial.print("\t");
-    Serial.print(ypr[1] * 180 / M_PI);
+    Serial.print(pitch_value);
     Serial.print("\t");
-    Serial.print(ypr[2] * 180 / M_PI);
-    Serial.print("\t");
-    Serial.print(yaw_offset);
-    Serial.print("\t");
-    Serial.println(pitch_offset);
+    Serial.println(ypr[2] * 180 / M_PI);
+#endif
 
+    int_bytes.yp.p = yaw_value;
+    int_bytes.yp.y = pitch_value;
+
+    Wire.beginTransmission(12);
+    for (int i = 0; i < 4; i++) {
+      Wire.write(int_bytes.b[i]);
+    }
+    Wire.endTransmission(12);
     // blink LED to indicate activity
     blinkState = !blinkState;
     digitalWrite(LED_PIN, blinkState);
