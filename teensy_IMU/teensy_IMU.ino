@@ -40,10 +40,6 @@
       2012-06-04 - remove accel offset clearing for better results (thanks Sungon Lee)
       2012-06-01 - fixed gyro sensitivity to be 2000 deg/sec instead of 250
       2012-05-30 - basic DMP initialization working
-
-      2017-01-10 - [Rafael Bachmann] add servo output (needs low pass filter such as capacitor in parallel for pwm to work)
-      2017-01-30 - [Rafael Bachmann] modifications to run this sketch on the teensy 3.2
-      2017-01-30 - [Rafael Bachmann] removal of teapot output
 */
 
 // I2Cdev and MPU6050 must be installed as libraries, or else the .cpp/.h files
@@ -52,11 +48,6 @@
 
 #include "MPU6050_6Axis_MotionApps20.h"
 //#include "MPU6050.h" // not necessary if using MotionApps include file
-
-#include <Servo.h>
-Servo yaw;
-Servo pitch;
-Servo throttle;
 
 // Arduino Wire library is required if I2Cdev I2CDEV_ARDUINO_WIRE implementation
 // is used in I2Cdev.h
@@ -81,48 +72,14 @@ MPU6050 mpu;
      GND ------------------ GND
      SDA ------------------ A4/pin 18
      SCL ------------------ A5/pin 19
+     INT ------------------ Digital Pin 2 (Teensy)
    ========================================================================= */
 
-// uncomment "SERVO_OUTPUT" if you want to move servos
-#define SERVO_OUTPUT
-#define YAW_SERVO_OUTPUT 23
-#define PITCH_SERVO_OUTPUT 10
-#define THROTTLE_OUTPUT 11
+uint16_t yaw_value;
+uint16_t pitch_value;
+uint16_t roll_value;
 
-//#define DAC_OUTPUT_TEENSY32
-
-// uncomment "OUTPUT_READABLE_QUATERNION" if you want to see the actual
-// quaternion components in a [w, x, y, z] format (not best for parsing
-// on a remote host such as Processing or something though)
-//#define OUTPUT_READABLE_QUATERNION
-
-// uncomment "OUTPUT_READABLE_EULER" if you want to see Euler angles
-// (in degrees) calculated from the quaternions coming from the FIFO.
-// Note that Euler angles suffer from gimbal lock (for more info, see
-// http://en.wikipedia.org/wiki/Gimbal_lock)
-//#define OUTPUT_READABLE_EULER
-
-// uncomment "OUTPUT_READABLE_YAWPITCHROLL" if you want to see the yaw/
-// pitch/roll angles (in degrees) calculated from the quaternions coming
-// from the FIFO. Note this also requires gravity vector calculations.
-// Also note that yaw/pitch/roll angles suffer from gimbal lock (for
-// more info, see: http://en.wikipedia.org/wiki/Gimbal_lock)
-#define OUTPUT_READABLE_YAWPITCHROLL
-
-// uncomment "OUTPUT_READABLE_REALACCEL" if you want to see acceleration
-// components with gravity removed. This acceleration reference frame is
-// not compensated for orientation, so +X is always +X according to the
-// sensor, just without the effects of gravity. If you want acceleration
-// compensated for orientation, us OUTPUT_READABLE_WORLDACCEL instead.
-//#define OUTPUT_READABLE_REALACCEL
-
-// uncomment "OUTPUT_READABLE_WORLDACCEL" if you want to see acceleration
-// components with gravity removed and adjusted for the world frame of
-// reference (yaw is relative to initial orientation, since no magnetometer
-// is present in this case). Could be quite handy in some cases.
-//#define OUTPUT_READABLE_WORLDACCEL
-
-#define LED_PIN 13 // (Arduino is 13, Teensy 3.2 is 13, Teensy++ is 6)
+#define LED_PIN 13
 bool blinkState = false;
 
 // MPU control/status vars
@@ -156,6 +113,11 @@ void dmpDataReady() {
 // ================================================================
 
 void setup() {
+  // configure LED for output
+  pinMode(LED_PIN, OUTPUT);
+
+  Serial.begin(9600);
+
   // join I2C bus (I2Cdev library doesn't do this automatically)
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
   Wire.begin();
@@ -163,10 +125,6 @@ void setup() {
 #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
   Fastwire::setup(400, true);
 #endif
-
-  // initialize serial communication
-  // baud frequency really is up to you depending on your project
-  Serial.begin(115200);
 
   // initialize device
   Serial.println(F("Initializing I2C devices..."));
@@ -211,14 +169,14 @@ void setup() {
     Serial.print(F("DMP Initialization failed (code "));
     Serial.print(devStatus);
     Serial.println(F(")"));
+
+    while (1) {
+      digitalWrite(LED_PIN, HIGH);
+      delay(500);
+      digitalWrite(LED_PIN, LOW);
+      delay(500);
+    }
   }
-
-  // configure LED for output
-  pinMode(LED_PIN, OUTPUT);
-
-  yaw.attach(YAW_SERVO_OUTPUT);
-  pitch.attach(PITCH_SERVO_OUTPUT);
-  throttle.attach(THROTTLE_OUTPUT);
 }
 
 // ================================================================
@@ -240,8 +198,8 @@ void loop() {
     // .
     // .
     // .
-  }
 
+  }
   // reset interrupt flag and get INT_STATUS byte
   mpuInterrupt = false;
   mpuIntStatus = mpu.getIntStatus();
@@ -267,98 +225,35 @@ void loop() {
     // (this lets us immediately read more without waiting for an interrupt)
     fifoCount -= packetSize;
 
-#ifdef SERVO_OUTPUT
     mpu.dmpGetQuaternion(&q, fifoBuffer);
     mpu.dmpGetGravity(&gravity, &q);
     mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
 
-    // get yaw degrees: ypr[0] * 180 / M_PI * 2;
-    yaw.write(180 - ypr[0] * 180 / M_PI);
+    // yaw degrees
+    // Add M_PI to get positive values (ypr[0] element of (-M_PI, M_PI)).
+    // Angle in degree is ratio of reading to max reading * 180 where max reading: 2 * M_PI
+    yaw_value = (uint16_t)180 - (ypr[0] + M_PI) * 180 / (M_PI * 2);
+    /*yaw_value = yaw_value > 180.0 ? 180.0 : yaw_value;
+      yaw_value = yaw_value < 0.0 ? 0.0 : yaw_value;*/
+    // pitch degrees
+    // Add 90 to start at horizontal, flat position
+    // Angle in degree is ratio of reading to max reading * 180 where max reading: 2 * M_PI
+    pitch_value = (uint16_t) (90 + ypr[1] * 180 / M_PI);
 
-    // get pitch_degrees: ypr[1] * 180 / M_PI * 2;
-    pitch.write(90 + ypr[1] * 180 / M_PI);
+    roll_value = (uint16_t) (ypr[2] * 180 / M_PI);
 
-    //throttle.write(90 + ypr[2] * 180 / M_PI);
+    // Send the yaw/pitch/roll euler angles (in degrees) over serial connection
+    // calculated from the quaternions in the FIFO.
+    // Note this also requires gravity vector calculations.
+    // Also note that yaw/pitch/roll angles suffer from gimbal lock
+    // (for more info, see: http://en.wikipedia.org/wiki/Gimbal_lock)
 
-#endif
-
-#ifdef DAC_OUTPUT_TEENSY
-    mpu.dmpGetQuaternion(&q, fifoBuffer);
-    mpu.dmpGetGravity(&gravity, &q);
-    mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-
-    // get yaw degrees: ypr[0] * 180 / M_PI * 2;
-    analogWrite(YAW_SERVO_OUTPUT, map(ypr[0] * 180 / M_PI * 2, -90, 90, 0, 100));
-
-#endif
-
-#ifdef OUTPUT_READABLE_QUATERNION
-    // display quaternion values in easy matrix form: w x y z
-    mpu.dmpGetQuaternion(&q, fifoBuffer);
-    Serial.print("quat\t");
-    Serial.print(q.w);
-    Serial.print("\t");
-    Serial.print(q.x);
-    Serial.print("\t");
-    Serial.print(q.y);
-    Serial.print("\t");
-    Serial.println(q.z);
-#endif
-
-#ifdef OUTPUT_READABLE_EULER
-    // display Euler angles in degrees
-    mpu.dmpGetQuaternion(&q, fifoBuffer);
-    mpu.dmpGetEuler(euler, &q);
-    Serial.print("euler\t");
-    Serial.print(euler[0] * 180 / M_PI);
-    Serial.print("\t");
-    Serial.print(euler[1] * 180 / M_PI);
-    Serial.print("\t");
-    Serial.println(euler[2] * 180 / M_PI);
-#endif
-
-#ifdef OUTPUT_READABLE_YAWPITCHROLL
-    // display Euler angles in degrees
-    mpu.dmpGetQuaternion(&q, fifoBuffer);
-    mpu.dmpGetGravity(&gravity, &q);
-    mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
     Serial.print("ypr\t");
-    Serial.print(ypr[0] * 180 / M_PI);
+    Serial.print(yaw_value);
     Serial.print("\t");
-    Serial.print(ypr[1] * 180 / M_PI);
+    Serial.print(pitch_value);
     Serial.print("\t");
-    Serial.println(ypr[2] * 180 / M_PI);
-#endif
-
-#ifdef OUTPUT_READABLE_REALACCEL
-    // display real acceleration, adjusted to remove gravity
-    mpu.dmpGetQuaternion(&q, fifoBuffer);
-    mpu.dmpGetAccel(&aa, fifoBuffer);
-    mpu.dmpGetGravity(&gravity, &q);
-    mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
-    Serial.print("areal\t");
-    Serial.print(aaReal.x);
-    Serial.print("\t");
-    Serial.print(aaReal.y);
-    Serial.print("\t");
-    Serial.println(aaReal.z);
-#endif
-
-#ifdef OUTPUT_READABLE_WORLDACCEL
-    // display initial world-frame acceleration, adjusted to remove gravity
-    // and rotated based on known orientation from quaternion
-    mpu.dmpGetQuaternion(&q, fifoBuffer);
-    mpu.dmpGetAccel(&aa, fifoBuffer);
-    mpu.dmpGetGravity(&gravity, &q);
-    mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
-    mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-    Serial.print("aworld\t");
-    Serial.print(aaWorld.x);
-    Serial.print("\t");
-    Serial.print(aaWorld.y);
-    Serial.print("\t");
-    Serial.println(aaWorld.z);
-#endif
+    Serial.println(yaw_value);
 
     // blink LED to indicate activity
     blinkState = !blinkState;
