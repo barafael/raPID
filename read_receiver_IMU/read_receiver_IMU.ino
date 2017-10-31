@@ -1,3 +1,6 @@
+#include "types.h"
+#include "error_handling.h"
+
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
 
@@ -53,29 +56,6 @@ volatile bool mpuInterrupt = false;     // indicates whether MPU interrupt pin h
 void dmpDataReady() {
     mpuInterrupt = true;
 }
-
-typedef enum {
-    YAW_ANGLE = 0,
-    PITCHT_ANGLE = 1,
-    ROLL_ANGLE = 2
-} sensor_output;
-
-const static uint8_t NUM_CHANNELS = 4;
-
-/* On an Arduino Uno, digital pins 2 and 3 are capable of interrupts. */
-typedef enum {
-    THROTTLE_INPUT_PIN = 12,
-    ROLL_INPUT_PIN     = 11,
-    PITCH_INPUT_PIN    = 10,
-    YAW_INPUT_PIN      = 9,
-} input_pin;
-
-typedef enum {
-    THROTTLE_CHANNEL = 0,
-    ROLL_CHANNEL     = 1,
-    PITCH_CHANNEL    = 2,
-    YAW_CHANNEL      = 3
-} input_channel;
 
 static volatile byte input_flags;
 
@@ -162,19 +142,18 @@ void initMPU6050() {
         // get expected DMP packet size for later comparison
         packetSize = mpu.dmpGetFIFOPacketSize();
     } else {
-        // ERROR!
-        // 1 = initial memory load failed
-        // 2 = DMP configuration updates failed
-        // (if it's going to break, usually the code will be 1)
-        Serial.print(F("DMP Initialization failed (code "));
-        Serial.print(devStatus);
-        Serial.println(F(")"));
-
-        while (1) {
-            digitalWrite(LED_PIN, HIGH);
-            delay(500);
-            digitalWrite(LED_PIN, LOW);
-            delay(500);
+        /* Error case */
+        switch(devStatus) {
+            case 1:
+                error_blink(DMP_INIT_MEM_LOAD_FAILED, "DMP init error code 1: Initial Memory Load failed!");
+                break;
+            case 2:
+                error_blink(DMP_CONF_UPDATES_FAILED, "DMP init error code 2: DMP configuration updates failed!");
+                break;
+            default:
+                //TODO use itoa or similar to alert devStatus
+                error_blink(DMP_ERROR_UNKNOWN, "DMP init unknown error code!");
+                break;
         }
     }
 }
@@ -211,8 +190,8 @@ void loop() {
         // .
 
         readReceiver();
-        printReceivers();
-        //printYPR();
+        //printReceivers();
+        printYPR();
     }
     // reset interrupt flag and get INT_STATUS byte
 
