@@ -91,23 +91,22 @@ void readReceiver() {
 // ————————————————————————————————————————————————————
 
 void printYPR() {
-    Serial.print("ypr\t");
+    Serial.print(F("ypr\t"));
     Serial.print(ypr[YAW_ANGLE]);
-    Serial.print("\t");
+    Serial.print(F("\t"));
     Serial.print(ypr[PITCH_ANGLE]);
-    Serial.print("\t");
+    Serial.print(F("\t"));
     Serial.println(ypr[ROLL_ANGLE]);
 }
 
 void printReceivers() {
     Serial.print(receiverIn[THROTTLE_CHANNEL]);
-    Serial.print('\t');
+    Serial.print(F("\t"));
     Serial.print(receiverIn[ROLL_CHANNEL]);
-    Serial.print('\t');
+    Serial.print(F("\t"));
     Serial.print(receiverIn[PITCH_CHANNEL]);
-    Serial.print('\t');
-    Serial.print(receiverIn[YAW_CHANNEL]);
-    Serial.println('\t');
+    Serial.print(F("\t"));
+    Serial.println(receiverIn[YAW_CHANNEL]);
 }
 
 // ———————————————————————————————————————————————————
