@@ -173,17 +173,17 @@ void calib_rates() {
 
     Serial.println(F("Calibrating gyro rates, hold still!"));
 
-    Serial.println("Average rate good before calibration:");
-    Serial.println(rate_calibrated);
+    int16_t raw_rates[3] = { 0 };
+
     while(!calib_rates_ok()) {
         for (int i = 0; i < 3; i++) {
             gyro_axis_cal[i] = 0;
         }
         for (uint16_t count = 0; count < iterations; count++) {
-            read_angular_rates(false);
-            gyro_axis_cal[ROLL_RATE]  += gyro_axis[ROLL_RATE];
-            gyro_axis_cal[PITCH_RATE] += gyro_axis[PITCH_RATE];
-            gyro_axis_cal[YAW_RATE]   += gyro_axis[YAW_RATE];
+            read_raw_rates(raw_rates);
+            gyro_axis_cal[ROLL_RATE]  += raw_rates[0];
+            gyro_axis_cal[PITCH_RATE] += raw_rates[1];
+            gyro_axis_cal[YAW_RATE]   += raw_rates[2];
 
             delay(5);
         }
@@ -193,9 +193,6 @@ void calib_rates() {
         gyro_axis_cal[YAW_RATE]   /= iterations;
     }
 
-    Serial.println("Average rate good after calibration:");
-    Serial.println(rate_calibrated);
-
     Serial.println(F("Done calibrating gyro rates"));
 }
 
@@ -204,9 +201,9 @@ bool calib_rates_ok() {
     const int tolerance = 10;
 
     int64_t accumulator[3] = { 0 };
-
+    
     for (uint16_t count = 0; count < iterations; count++) {
-        read_angular_rates(true);
+        read_angular_rates();
         accumulator[ROLL_RATE]  += gyro_axis[ROLL_RATE];
         accumulator[PITCH_RATE] += gyro_axis[PITCH_RATE];
         accumulator[YAW_RATE]   += gyro_axis[YAW_RATE];
@@ -234,11 +231,23 @@ bool calib_rates_ok() {
     return rate_calibrated;
 }
 
+
 // ————————————————————————————————————————————————————————————————
 // ———             FETCH ANGULAR RATES FROM IMU                 ———
 // ————————————————————————————————————————————————————————————————
 
-void read_angular_rates(bool use_calib_offset) {
+void read_raw_rates(int16_t *rates) {
+    Wire.beginTransmission(mpu_address);
+    Wire.write(0x43);
+    Wire.endTransmission();
+    Wire.requestFrom(mpu_address, 6);
+    while (Wire.available() < 6);
+    rates[ROLL_RATE]  = Wire.read() << 8 | Wire.read();
+    rates[PITCH_RATE] = Wire.read() << 8 | Wire.read();
+    rates[YAW_RATE]   = Wire.read() << 8 | Wire.read();
+}
+
+void read_angular_rates() {
     Wire.beginTransmission(mpu_address);
     Wire.write(0x43);
     Wire.endTransmission();
@@ -248,11 +257,9 @@ void read_angular_rates(bool use_calib_offset) {
     gyro_axis[PITCH_RATE] = Wire.read() << 8 | Wire.read();
     gyro_axis[YAW_RATE]   = Wire.read() << 8 | Wire.read();
 
-    if (rate_calibrated || use_calib_offset) {
-        gyro_axis[ROLL_RATE]  -= gyro_axis_cal[ROLL_RATE];
-        gyro_axis[PITCH_RATE] -= gyro_axis_cal[PITCH_RATE];
-        gyro_axis[YAW_RATE]   -= gyro_axis_cal[YAW_RATE];
-    }
+    gyro_axis[ROLL_RATE]  -= gyro_axis_cal[ROLL_RATE];
+    gyro_axis[PITCH_RATE] -= gyro_axis_cal[PITCH_RATE];
+    gyro_axis[YAW_RATE]   -= gyro_axis_cal[YAW_RATE];
 }
 
 
@@ -521,7 +528,7 @@ void readMPU() {
             /* (this lets us immediately read more without waiting for an interrupt) */
             fifoCount -= packetSize;
 
-            read_angular_rates(true);
+            read_angular_rates();
 
             //mpu.dmpGetQuaternion(&q, fifoBuffer);
             mpu.dmpGetGravity(&gravity, &q);
