@@ -20,13 +20,13 @@
 //#define DEBUG_PRINT
 
 #ifdef DEBUG_PRINT
-#define serial_println(a) (Serial.println(a))
-#define serial_print(a) (Serial.print(a))
-#define serial_begin(a) (Serial.begin(a))
+    #define serial_println(a) (Serial.println(a))
+    #define serial_print(a) (Serial.print(a))
+    #define serial_begin(a) (Serial.begin(a))
 #else
-#define serial_println(a)
-#define serial_print(a)
-#define serial_begin(a)
+    #define serial_println(a)
+    #define serial_print(a)
+    #define serial_begin(a)
 #endif
 
 #include "error_handling.h"
@@ -166,12 +166,12 @@ void initMPU6050() {
                         "DMP init error code 2: DMP configuration updates failed!");
             break;
         default:
-            {
-                char msg[50] = "DMP init error code     ";
-                itoa(devStatus, msg + 20, 10);
-                error_blink(DMP_ERROR_UNKNOWN, msg);
-                break;
-            }
+        {
+            char msg[50] = "DMP init error code     ";
+            itoa(devStatus, msg + 20, 10);
+            error_blink(DMP_ERROR_UNKNOWN, msg);
+            break;
+        }
         }
     }
 }
@@ -216,7 +216,7 @@ bool calib_rates_ok() {
     const int tolerance = 10;
 
     int64_t accumulator[3] = { 0 };
-    
+
     for (uint16_t count = 0; count < iterations; count++) {
         read_angular_rates();
         accumulator[ROLL_RATE]  += gyro_axis[ROLL_RATE];
@@ -240,9 +240,9 @@ bool calib_rates_ok() {
     serial_println((uint32_t)accumulator[YAW_RATE]);
 
     rate_calibrated =
-           (abs(accumulator[ROLL_RATE])  < tolerance) &&
-           (abs(accumulator[PITCH_RATE]) < tolerance) &&
-           (abs(accumulator[YAW_RATE])   < tolerance);
+        (abs(accumulator[ROLL_RATE])  < tolerance) &&
+        (abs(accumulator[PITCH_RATE]) < tolerance) &&
+        (abs(accumulator[YAW_RATE])   < tolerance);
     return rate_calibrated;
 }
 
@@ -275,6 +275,65 @@ void read_angular_rates() {
     gyro_axis[ROLL_RATE]  -= gyro_axis_cal[ROLL_RATE];
     gyro_axis[PITCH_RATE] -= gyro_axis_cal[PITCH_RATE];
     gyro_axis[YAW_RATE]   -= gyro_axis_cal[YAW_RATE];
+}
+
+
+// —————————————————————————————————————————————————————————————
+// ———             FETCH ABS ANGLES FROM IMU                 ———
+// —————————————————————————————————————————————————————————————
+
+void readMPU() {
+    /* Reset interrupt flag and get INT_STATUS byte */
+    mpuInterrupt = false;
+    mpuIntStatus = mpu.getIntStatus();
+
+    /* Get current FIFO count */
+    fifoCount = mpu.getFIFOCount();
+
+    /* Check for overflow (this should be rare) */
+    if ((mpuIntStatus & 0x10) || fifoCount == 1024) {
+        /* reset so we can continue cleanly */
+        mpu.resetFIFO();
+        serial_println(F("FIFO overflow!"));
+
+        /* Otherwise, check for DMP data ready interrupt (this happens often) */
+    } else if (mpuIntStatus & 0x02) {
+        /* Wait for correct available data length, should be a VERY short wait */
+        while (fifoCount < packetSize) {
+            fifoCount = mpu.getFIFOCount();
+        }
+
+        /* Read a packet from FIFO */
+        mpu.getFIFOBytes(fifoBuffer, packetSize);
+
+        /* Track FIFO count here in case there is > 1 packet available */
+        /* (this lets us immediately read more without waiting for an interrupt) */
+        fifoCount -= packetSize;
+
+        read_angular_rates();
+
+        //mpu.dmpGetQuaternion(&q, fifoBuffer);
+        mpu.dmpGetGravity(&gravity, &q);
+        mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+
+        /* Yaw degrees */
+        // Add M_PI to get positive values (ypr[0] element of (-M_PI, M_PI)).
+        // Angle in degree is ratio of reading to max reading * 180
+        // where max reading: 2 * M_PI
+        // int yaw_value = (int)180 - (ypr[0] + M_PI) * 180 / (M_PI * 2);
+        // yaw_value = yaw_value > 180.0 ? 180.0 : yaw_value;
+        // yaw_value = yaw_value < 0.0 ? 0.0 : yaw_value;
+
+        /* Pitch degrees */
+        // Add 90 to start at horizontal, flat position
+        // Angle in degree is ratio of reading to max reading * 180
+        // where max reading: 2 * M_PI
+        // int pitch_value = (int)(90 + ypr[1] * 180 / M_PI);
+
+        for (size_t index = YAW_ANGLE; index <= ROLL_ANGLE; index++) {
+            attitude[index] = (ypr[index] + M_PI) * (1000 / (2 * M_PI));
+        }
+    }
 }
 
 
@@ -514,60 +573,6 @@ void loop() {
     /* Blink LED to indicate activity */
     blinkState = !blinkState;
     digitalWrite(LED_PIN, blinkState);
-}
-
-void readMPU() {
-        /* Reset interrupt flag and get INT_STATUS byte */
-        mpuInterrupt = false;
-        mpuIntStatus = mpu.getIntStatus();
-
-        /* Get current FIFO count */
-        fifoCount = mpu.getFIFOCount();
-
-        /* Check for overflow (this should be rare) */
-        if ((mpuIntStatus & 0x10) || fifoCount == 1024) {
-            /* reset so we can continue cleanly */
-            mpu.resetFIFO();
-            serial_println(F("FIFO overflow!"));
-
-            /* Otherwise, check for DMP data ready interrupt (this happens often) */
-        } else if (mpuIntStatus & 0x02) {
-            /* Wait for correct available data length, should be a VERY short wait */
-            while (fifoCount < packetSize) {
-                fifoCount = mpu.getFIFOCount();
-            }
-
-            /* Read a packet from FIFO */
-            mpu.getFIFOBytes(fifoBuffer, packetSize);
-
-            /* Track FIFO count here in case there is > 1 packet available */
-            /* (this lets us immediately read more without waiting for an interrupt) */
-            fifoCount -= packetSize;
-
-            read_angular_rates();
-
-            //mpu.dmpGetQuaternion(&q, fifoBuffer);
-            mpu.dmpGetGravity(&gravity, &q);
-            mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-
-            /* Yaw degrees */
-            // Add M_PI to get positive values (ypr[0] element of (-M_PI, M_PI)).
-            // Angle in degree is ratio of reading to max reading * 180
-            // where max reading: 2 * M_PI
-            // int yaw_value = (int)180 - (ypr[0] + M_PI) * 180 / (M_PI * 2);
-            // yaw_value = yaw_value > 180.0 ? 180.0 : yaw_value;
-            // yaw_value = yaw_value < 0.0 ? 0.0 : yaw_value;
-
-            /* Pitch degrees */
-            // Add 90 to start at horizontal, flat position
-            // Angle in degree is ratio of reading to max reading * 180
-            // where max reading: 2 * M_PI
-            // int pitch_value = (int)(90 + ypr[1] * 180 / M_PI);
-
-            for (size_t index = YAW_ANGLE; index <= ROLL_ANGLE; index++) {
-                attitude[index] = (ypr[index] + M_PI) * (1000 / (2 * M_PI));
-            }
-        }
 }
 
 // ————————————————————————————————————————————————————————————————
