@@ -1,3 +1,19 @@
+/*
+   ——————————————————————————————————————————————
+   ———             HARDWARE SETUP             ———
+   ——————————————————————————————————————————————
+
+   MPU6050 Breakout ----- Teensy 3.2
+   3.3V ----------------- 3.3V
+   GND ------------------ GND
+   SDA ------------------ A4/pin 18
+   SCL ------------------ A5/pin 19
+   INT ------------------ Digital Pin 2
+
+   PPM from RC RX go to pins 9, 10, 11, 12 (see types.h)
+   Output PPM to ESC's: pins 20, 21
+*/
+
 #include "error_handling.h"
 #include "types.h"
 
@@ -11,18 +27,9 @@
 #include "Servo.h"
 
 
-/*
-   ——————————————————————————————————————————————
-   ———             HARDWARE SETUP             ———
-   ——————————————————————————————————————————————
-
-   MPU6050 Breakout ----- Teensy 3.2
-   3.3V ----------------- 3.3V
-   GND ------------------ GND
-   SDA ------------------ A4/pin 18
-   SCL ------------------ A5/pin 19
-   INT ------------------ Digital Pin 2
- */
+//  —————————————————————————————————————————————————
+//  ———              MPU6050 VARIABLES            ———
+//  —————————————————————————————————————————————————
 
 /* Class default I2C address is 0x68
    specific I2C addresses may be passed as a parameter here
@@ -51,7 +58,11 @@ uint16_t packetSize;
 uint16_t fifoCount;
 uint8_t fifoBuffer[64];
 
-/* Orientation/motion vars */
+
+//  —————————————————————————————————————————————————
+//  ———          ORIENTATION/MOTION VARS          ———
+//  —————————————————————————————————————————————————
+
 Quaternion q;        // [w, x, y, z]    quaternion container
 VectorInt16 aa;      // [x, y, z]       accel sensor measurements
 VectorInt16 aaReal;  // [x, y, z]       gravity-free accel sensor measurements
@@ -65,6 +76,7 @@ float ypr[3];   // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vec
 /* Scaled ypr to [0, 1000] */
 uint16_t attitude[3];
 
+/* Angular Rates */
 int16_t gyro_axis[4];
 int64_t gyro_axis_cal[4];
 
@@ -77,6 +89,126 @@ int64_t gyro_axis_cal[4];
 volatile bool mpuInterrupt = false;
 void dmpDataReady() {
     mpuInterrupt = true;
+}
+
+
+// ———————————————————————————————————————————————————
+// ———             IMU INITIALISATION              ———
+// ———————————————————————————————————————————————————
+
+void initMPU6050() {
+    /* Join I2C bus (I2Cdev library doesn't do this automatically) */
+#if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
+    Wire.begin();
+    /* 400kHz I2C clock (200kHz if CPU is 8MHz) */
+    TWBR = 24;
+#elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
+    Fastwire::setup(400, true);
+#endif
+
+    /* Initialize device */
+    Serial.println(F("Initializing I2C devices..."));
+    mpu.initialize();
+
+    /* Verify connection */
+    Serial.println(F("Testing device connections..."));
+    Serial.println(mpu.testConnection() ? F("MPU6050 connection successful")
+                   : F("MPU6050 connection failed"));
+
+    /* Load and configure the DMP */
+    Serial.println(F("Initializing DMP..."));
+    devStatus = mpu.dmpInitialize();
+
+    /* Supply your own gyro offsets here, scaled for min sensitivity */
+    mpu.setXGyroOffset(220);
+    mpu.setYGyroOffset(76);
+    mpu.setZGyroOffset(-85);
+    mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
+
+    /* Make sure initialisation worked (returns 0 if so) */
+    if (devStatus == 0) {
+        /* Turn on the DMP, now that it's ready */
+        Serial.println(F("Enabling DMP..."));
+        mpu.setDMPEnabled(true);
+
+        /* Enable Arduino interrupt detection */
+        Serial.println(
+            F("Enabling interrupt detection (Arduino external interrupt 0)..."));
+        attachInterrupt(2, dmpDataReady, RISING);
+        mpuIntStatus = mpu.getIntStatus();
+
+        Serial.println(F("DMP ready! Waiting for first interrupt..."));
+
+        /* Get expected DMP packet size for later comparison */
+        packetSize = mpu.dmpGetFIFOPacketSize();
+    } else {
+        /* Error while init */
+        switch (devStatus) {
+        case 1:
+            error_blink(DMP_INIT_MEM_LOAD_FAILED,
+                        "DMP init error code 1: Initial Memory Load failed!");
+            break;
+        case 2:
+            error_blink(DMP_CONF_UPDATES_FAILED,
+                        "DMP init error code 2: DMP configuration updates failed!");
+            break;
+        default: {
+            char msg[50] = "DMP init error code     ";
+            itoa(devStatus, msg + 20, 10);
+            error_blink(DMP_ERROR_UNKNOWN, msg);
+            break;
+        }
+        }
+    }
+}
+
+
+// ————————————————————————————————————————————————————————————————
+// ———             CALIBRATE RATES BY TAKING AVG                ———
+// ————————————————————————————————————————————————————————————————
+
+static bool rate_calibrated = false;
+
+void calib_rates(size_t iterations) {
+    Serial.println(F("Calibrating gyro rates"));
+    for (uint16_t count = 0; count < iterations; count++) {
+        read_angular_rates();
+        gyro_axis_cal[ROLL_RATE]  += gyro_axis[ROLL_RATE];
+        gyro_axis_cal[PITCH_RATE] += gyro_axis[PITCH_RATE];
+        gyro_axis_cal[YAW_RATE]   += gyro_axis[YAW_RATE];
+
+        delay(5);
+    }
+
+    gyro_axis_cal[ROLL_RATE]  /= iterations;
+    gyro_axis_cal[PITCH_RATE] /= iterations;
+    gyro_axis_cal[YAW_RATE]   /= iterations;
+
+    rate_calibrated = true;
+
+    Serial.println(F("Done calibrating gyro rates"));
+}
+
+
+// ————————————————————————————————————————————————————————————————
+// ———             FETCH ANGULAR RATES FROM IMU                 ———
+// ————————————————————————————————————————————————————————————————
+
+void read_angular_rates() {
+    Wire.beginTransmission(mpu_address);
+    Wire.write(0x43);
+    Wire.endTransmission();
+    Wire.requestFrom(mpu_address, 6);
+    while (Wire.available() < 6);
+    gyro_axis[ROLL_RATE]  = Wire.read() << 8 | Wire.read();
+    gyro_axis[PITCH_RATE] = Wire.read() << 8 | Wire.read();
+    gyro_axis[YAW_RATE]   = Wire.read() << 8 | Wire.read();
+
+    if (rate_calibrated) {
+        gyro_axis[ROLL_RATE]  -= gyro_axis_cal[ROLL_RATE];
+        gyro_axis[PITCH_RATE] -= gyro_axis_cal[PITCH_RATE];
+        gyro_axis[YAW_RATE]   -= gyro_axis_cal[YAW_RATE];
+    }
 }
 
 
@@ -105,7 +237,6 @@ void readReceiver() {
     interrupts();
 }
 
-static bool rate_calibrated = false;
 
 // ————————————————————————————————————————————————————
 // ———           SERVO GLOBAL VARIABLES             ———
@@ -119,6 +250,16 @@ Servo right;
 uint16_t left_throttle;
 uint16_t right_throttle;
 uint16_t throttle;
+
+/* Arm ESC's with a long low pulse */
+
+void armESC() {
+    Serial.println("Initialising ESCs: 1000ms pulse");
+    left.writeMicroseconds(1000);
+    right.writeMicroseconds(1000);
+    delay(1500);
+    Serial.println("Initialised ESCs");
+}
 
 
 // ————————————————————————————————————————————————————
@@ -139,6 +280,24 @@ float pid_last_error;
 
 float pid_i_mem_roll;
 float pid_roll_setpoint;
+
+/* Calculate PID output */
+void calculatePID() {
+    pid_error = attitude[ROLL_ANGLE] - receiverIn[ROLL_CHANNEL] + 1000;
+    Serial.println(pid_error);
+
+    float p = pid_p_gain_roll * pid_error;
+    pid_i_mem_roll += (pid_i_gain_roll * pid_error);
+    if (pid_i_mem_roll > pid_max_roll) pid_i_mem_roll = pid_max_roll;
+    else if (pid_i_mem_roll < pid_max_roll * -1) pid_i_mem_roll = (pid_max_roll * -1);
+
+    pid_output_roll = p + pid_i_mem_roll + (pid_d_gain_roll * (pid_error - pid_last_error));
+    if (pid_output_roll > pid_max_roll) pid_output_roll = pid_max_roll;
+    else if (pid_output_roll < pid_max_roll * -1) pid_output_roll = pid_max_roll * -1;
+
+    pid_last_error = pid_error;
+}
+
 
 // ————————————————————————————————————————————————————
 // ———             SERIAL DEBUG OUTPUT              ———
@@ -172,36 +331,6 @@ void printReceivers() {
     Serial.println(receiverIn[YAW_CHANNEL]);
 }
 
-void print_binary(int v, int num_places) {
-    int mask = 0, n;
-
-    for (n = 1; n <= num_places; n++)
-    {
-        mask = (mask << 1) | 0x0001;
-    }
-    v = v & mask;  // truncate v to specified number of places
-
-    while (num_places)
-    {
-
-        if (v & (0x0001 << num_places - 1))
-        {
-            Serial.print("1");
-        }
-        else
-        {
-            Serial.print("0");
-        }
-
-        --num_places;
-        if (((num_places % 4) == 0) && (num_places != 0))
-        {
-            Serial.print("_");
-        }
-    }
-    Serial.println();
-}
-
 void printAngular() {
     Serial.print(gyro_axis[1]);
     Serial.print("\t");
@@ -210,121 +339,30 @@ void printAngular() {
     Serial.println(gyro_axis[3]);
 }
 
-void calib_rates(size_t iterations) {
-    Serial.println(F("Calibrating gyro rates"));
-    for (uint16_t count = 0; count < iterations; count++) {
-        read_angular_rates();
-        gyro_axis_cal[ROLL_RATE]  += gyro_axis[ROLL_RATE];
-        gyro_axis_cal[PITCH_RATE] += gyro_axis[PITCH_RATE];
-        gyro_axis_cal[YAW_RATE]   += gyro_axis[YAW_RATE];
+void print_binary(int value, int num_places) {
+    int mask = 0;
 
-        delay(5);
+    for (int n = 1; n <= num_places; n++) {
+        mask = (mask << 1) | 0x0001;
     }
+    value = value & mask; // truncate v to specified number of places
 
-    gyro_axis_cal[ROLL_RATE]  /= iterations;
-    gyro_axis_cal[PITCH_RATE] /= iterations;
-    gyro_axis_cal[YAW_RATE]   /= iterations;
+    while (num_places) {
 
-    rate_calibrated = true;
+        if (value & (0x0001 << num_places - 1)) {
+            Serial.print(F("1"));
+        } else {
+            Serial.print(F("0"));
+        }
 
-    Serial.println(F("Done calibrating gyro rates"));
-}
-
-
-// ———————————————————————————————————————————————————
-// ———             IMU INITIALISATION              ———
-// ———————————————————————————————————————————————————
-
-void initMPU6050() {
-    /* Join I2C bus (I2Cdev library doesn't do this automatically) */
-#if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
-    Wire.begin();
-    /* 400kHz I2C clock (200kHz if CPU is 8MHz) */
-    TWBR = 24;
-#elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
-    Fastwire::setup(400, true);
-#endif
-
-    /* Initialize device */
-    Serial.println(F("Initializing I2C devices..."));
-    mpu.initialize();
-
-    /* Verify connection */
-    Serial.println(F("Testing device connections..."));
-    Serial.println(mpu.testConnection() ? F("MPU6050 connection successful")
-            : F("MPU6050 connection failed"));
-
-    /* Load and configure the DMP */
-    Serial.println(F("Initializing DMP..."));
-    devStatus = mpu.dmpInitialize();
-
-    /* Supply your own gyro offsets here, scaled for min sensitivity */
-    mpu.setXGyroOffset(220);
-    mpu.setYGyroOffset(76);
-    mpu.setZGyroOffset(-85);
-    mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
-
-    /* Make sure initialisation worked (returns 0 if so) */
-    if (devStatus == 0) {
-        /* Turn on the DMP, now that it's ready */
-        Serial.println(F("Enabling DMP..."));
-        mpu.setDMPEnabled(true);
-
-        /* Enable Arduino interrupt detection */
-        Serial.println(
-                F("Enabling interrupt detection (Arduino external interrupt 0)..."));
-        attachInterrupt(2, dmpDataReady, RISING);
-        mpuIntStatus = mpu.getIntStatus();
-
-        Serial.println(F("DMP ready! Waiting for first interrupt..."));
-
-        /* Get expected DMP packet size for later comparison */
-        packetSize = mpu.dmpGetFIFOPacketSize();
-    } else {
-        /* Error while init */
-        switch (devStatus) {
-            case 1:
-                error_blink(DMP_INIT_MEM_LOAD_FAILED,
-                        "DMP init error code 1: Initial Memory Load failed!");
-                break;
-            case 2:
-                error_blink(DMP_CONF_UPDATES_FAILED,
-                        "DMP init error code 2: DMP configuration updates failed!");
-                break;
-            default: {
-                         char msg[50] = "DMP init error code     ";
-                         itoa(devStatus, msg + 20, 10);
-                         error_blink(DMP_ERROR_UNKNOWN, msg);
-                         break;
-                     }
+        --num_places;
+        if (((num_places % 4) == 0) && (num_places != 0)) {
+            Serial.print("_");
         }
     }
+    Serial.println();
 }
 
-void read_angular_rates() {
-    Wire.beginTransmission(mpu_address);
-    Wire.write(0x43);
-    Wire.endTransmission();
-    Wire.requestFrom(mpu_address, 6);
-    while (Wire.available() < 6);
-    gyro_axis[ROLL_RATE]  = Wire.read() << 8 | Wire.read();
-    gyro_axis[PITCH_RATE] = Wire.read() << 8 | Wire.read();
-    gyro_axis[YAW_RATE]   = Wire.read() << 8 | Wire.read();
-
-    if (rate_calibrated) {
-        gyro_axis[ROLL_RATE]  -= gyro_axis_cal[ROLL_RATE];
-        gyro_axis[PITCH_RATE] -= gyro_axis_cal[PITCH_RATE];
-        gyro_axis[YAW_RATE]   -= gyro_axis_cal[YAW_RATE];
-    }
-}
-
-void initESC() {
-    Serial.println("Initialising ESCs: 1000ms pulse");
-    left.writeMicroseconds(1000);
-    right.writeMicroseconds(1000);
-    delay(1500);
-    Serial.println("Initialised ESCs");
-}
 
 void setup() {
     pinMode(LED_PIN, OUTPUT);
@@ -334,11 +372,10 @@ void setup() {
     left.attach(LEFT_SERVO_PIN);
     right.attach(RIGHT_SERVO_PIN);
 
-    initESC();
     initMPU6050();
     calib_rates(250);
 
-    // TODO: gyro calibration? Necessary?
+    armESC();
 
     /* The pinMode should be correct by default, set it anyway */
     pinMode(THROTTLE_INPUT_PIN, INPUT);
@@ -351,22 +388,6 @@ void setup() {
     attachInterrupt(ROLL_INPUT_PIN,     readRoll,     CHANGE);
     attachInterrupt(PITCH_INPUT_PIN,    readPitch,    CHANGE);
     attachInterrupt(YAW_INPUT_PIN,      readYaw,      CHANGE);
-}
-
-void calculatePID() {
-    pid_error = attitude[ROLL_ANGLE] - receiverIn[ROLL_CHANNEL] + 1000;
-    Serial.println(pid_error);
-
-    float p = pid_p_gain_roll * pid_error;
-    pid_i_mem_roll += (pid_i_gain_roll * pid_error);
-    if (pid_i_mem_roll > pid_max_roll) pid_i_mem_roll = pid_max_roll;
-    else if (pid_i_mem_roll < pid_max_roll * -1) pid_i_mem_roll = (pid_max_roll * -1);
-
-    pid_output_roll = p + pid_i_mem_roll + (pid_d_gain_roll * (pid_error - pid_last_error));
-    if (pid_output_roll > pid_max_roll) pid_output_roll = pid_max_roll;
-    else if (pid_output_roll < pid_max_roll * -1) pid_output_roll = pid_max_roll * -1;
-
-    pid_last_error = pid_error;
 }
 
 void loop() {
@@ -382,25 +403,27 @@ void loop() {
         // printReceivers();
         // printAttitude();
         // printYPR();
-        //calculatePID();
+        // calculatePID();
+
         /*
-           throttle = receiverIn[THROTTLE_CHANNEL];
-           throttle = throttle > 1800 ? 1800 : throttle;
+        throttle = receiverIn[THROTTLE_CHANNEL];
+        throttle = throttle > 1800 ? 1800 : throttle;
 
-           left_throttle  = throttle + pid_output_roll;
-           right_throttle = throttle + pid_output_roll;
+        left_throttle  = throttle + pid_output_roll;
+        right_throttle = throttle + pid_output_roll;
 
-           left_throttle = left_throttle < 1000 ? 1000 : left_throttle;
-           right_throttle = right_throttle < 1000 ? 1000 : right_throttle;
+        left_throttle = left_throttle < 1000 ? 1000 : left_throttle;
+        right_throttle = right_throttle < 1000 ? 1000 : right_throttle;
 
-           left.writeMicroseconds(left_throttle);
-           right.writeMicroseconds(right_throttle);
-         */
-        /*Serial.print(pid_output_roll);
-          Serial.print("\t");
-          Serial.print(left_throttle);
-          Serial.print("\t");
-          Serial.println(right_throttle);*/
+        left.writeMicroseconds(left_throttle);
+        right.writeMicroseconds(right_throttle);
+
+        Serial.print(pid_output_roll);
+        Serial.print("\t");
+        Serial.print(left_throttle);
+        Serial.print("\t");
+        Serial.println(right_throttle);
+        */
     }
 
     /* Reset interrupt flag and get INT_STATUS byte */
@@ -501,4 +524,3 @@ void readYaw() {
         input_flags |= 1 << YAW_CHANNEL;
     }
 }
-
