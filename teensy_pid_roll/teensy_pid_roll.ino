@@ -14,6 +14,21 @@
    Output PPM to ESC's: pins 20, 21
 */
 
+
+#define DEBUG_PIN 22
+
+//#define DEBUG_PRINT
+
+#ifdef DEBUG_PRINT
+#define serial_println(a) (Serial.println(a))
+#define serial_print(a) (Serial.print(a))
+#define serial_begin(a) (Serial.begin(a))
+#else
+#define serial_println(a)
+#define serial_print(a)
+#define serial_begin(a)
+#endif
+
 #include "error_handling.h"
 #include "types.h"
 
@@ -105,16 +120,16 @@ void initMPU6050() {
 #endif
 
     /* Initialize device */
-    Serial.println(F("Initializing I2C devices..."));
+    serial_println(F("Initializing I2C devices..."));
     mpu.initialize();
 
     /* Verify connection */
-    Serial.println(F("Testing device connections..."));
-    Serial.println(mpu.testConnection() ? F("MPU6050 connection successful")
+    serial_println(F("Testing device connections..."));
+    serial_println(mpu.testConnection() ? F("MPU6050 connection successful")
                    : F("MPU6050 connection failed"));
 
     /* Load and configure the DMP */
-    Serial.println(F("Initializing DMP..."));
+    serial_println(F("Initializing DMP..."));
     devStatus = mpu.dmpInitialize();
 
     /* Supply your own gyro offsets here, scaled for min sensitivity */
@@ -126,16 +141,16 @@ void initMPU6050() {
     /* Make sure initialisation worked (returns 0 if so) */
     if (devStatus == 0) {
         /* Turn on the DMP, now that it's ready */
-        Serial.println(F("Enabling DMP..."));
+        serial_println(F("Enabling DMP..."));
         mpu.setDMPEnabled(true);
 
         /* Enable Arduino interrupt detection */
-        Serial.println(
+        serial_println(
             F("Enabling interrupt detection (Arduino external interrupt 0)..."));
         attachInterrupt(2, dmpDataReady, RISING);
         mpuIntStatus = mpu.getIntStatus();
 
-        Serial.println(F("DMP ready! Waiting for first interrupt..."));
+        serial_println(F("DMP ready! Waiting for first interrupt..."));
 
         /* Get expected DMP packet size for later comparison */
         packetSize = mpu.dmpGetFIFOPacketSize();
@@ -171,7 +186,7 @@ static bool rate_calibrated = false;
 void calib_rates() {
     uint16_t iterations = 300;
 
-    Serial.println(F("Calibrating gyro rates, hold still!"));
+    serial_println(F("Calibrating gyro rates, hold still!"));
 
     int16_t raw_rates[3] = { 0 };
 
@@ -193,7 +208,7 @@ void calib_rates() {
         gyro_axis_cal[YAW_RATE]   /= iterations;
     }
 
-    Serial.println(F("Done calibrating gyro rates"));
+    serial_println(F("Done calibrating gyro rates"));
 }
 
 bool calib_rates_ok() {
@@ -215,14 +230,14 @@ bool calib_rates_ok() {
     accumulator[PITCH_RATE] /= iterations;
     accumulator[YAW_RATE]   /= iterations;
 
-    Serial.print("Average rate over ");
-    Serial.print(iterations);
-    Serial.println(" iterations: ");
-    Serial.print((uint32_t)accumulator[ROLL_RATE]);
-    Serial.print("\t");
-    Serial.print((uint32_t)accumulator[PITCH_RATE]);
-    Serial.print("\t");
-    Serial.println((uint32_t)accumulator[YAW_RATE]);
+    serial_print("Average rate over ");
+    serial_print(iterations);
+    serial_println(" iterations: ");
+    serial_print((uint32_t)accumulator[ROLL_RATE]);
+    serial_print("\t");
+    serial_print((uint32_t)accumulator[PITCH_RATE]);
+    serial_print("\t");
+    serial_println((uint32_t)accumulator[YAW_RATE]);
 
     rate_calibrated =
            (abs(accumulator[ROLL_RATE])  < tolerance) &&
@@ -305,11 +320,11 @@ uint16_t throttle;
 /* Arm ESC's with a long low pulse */
 
 void armESC() {
-    Serial.println("Initialising ESCs: 1000ms pulse");
+    serial_println("Initialising ESCs: 1000ms pulse");
     left.writeMicroseconds(1000);
     right.writeMicroseconds(1000);
     delay(1500);
-    Serial.println("Initialised ESCs");
+    serial_println("Initialised ESCs");
 }
 
 
@@ -335,7 +350,7 @@ float pid_roll_setpoint;
 /* Calculate PID output based on absolute angle in attitude[] */
 void calculatePID_absolute() {
     pid_error = attitude[ROLL_ANGLE] - receiverIn[ROLL_CHANNEL] + 1000;
-    Serial.println(pid_error);
+    serial_println(pid_error);
 
     float p = pid_p_gain_roll * pid_error;
     pid_i_mem_roll += (pid_i_gain_roll * pid_error);
@@ -352,7 +367,7 @@ void calculatePID_absolute() {
 /* Calculate PID output based on angular rate */
 void calculatePID_angular_rate() {
     pid_error = attitude[ROLL_ANGLE] - receiverIn[ROLL_CHANNEL] + 1000;
-    Serial.println(pid_error);
+    serial_println(pid_error);
 
     float p = pid_p_gain_roll * pid_error;
     pid_i_mem_roll += (pid_i_gain_roll * pid_error);
@@ -372,39 +387,39 @@ void calculatePID_angular_rate() {
 // ————————————————————————————————————————————————————
 
 void printYPR() {
-    Serial.print(F("ypr\t"));
-    Serial.print(ypr[YAW_ANGLE]);
-    Serial.print(F("\t"));
-    Serial.print(ypr[PITCH_ANGLE]);
-    Serial.print(F("\t"));
-    Serial.println(ypr[ROLL_ANGLE]);
+    serial_print(F("ypr\t"));
+    serial_print(ypr[YAW_ANGLE]);
+    serial_print(F("\t"));
+    serial_print(ypr[PITCH_ANGLE]);
+    serial_print(F("\t"));
+    serial_println(ypr[ROLL_ANGLE]);
 }
 
 void printAttitude() {
-    Serial.print(F("Attitude\t"));
-    Serial.print(attitude[YAW_ANGLE]);
-    Serial.print(F("\t"));
-    Serial.print(attitude[PITCH_ANGLE]);
-    Serial.print(F("\t"));
-    Serial.println(attitude[ROLL_ANGLE]);
+    serial_print(F("Attitude\t"));
+    serial_print(attitude[YAW_ANGLE]);
+    serial_print(F("\t"));
+    serial_print(attitude[PITCH_ANGLE]);
+    serial_print(F("\t"));
+    serial_println(attitude[ROLL_ANGLE]);
 }
 
 void printReceivers() {
-    Serial.print(receiverIn[THROTTLE_CHANNEL]);
-    Serial.print(F("\t"));
-    Serial.print(receiverIn[ROLL_CHANNEL]);
-    Serial.print(F("\t"));
-    Serial.print(receiverIn[PITCH_CHANNEL]);
-    Serial.print(F("\t"));
-    Serial.println(receiverIn[YAW_CHANNEL]);
+    serial_print(receiverIn[THROTTLE_CHANNEL]);
+    serial_print(F("\t"));
+    serial_print(receiverIn[ROLL_CHANNEL]);
+    serial_print(F("\t"));
+    serial_print(receiverIn[PITCH_CHANNEL]);
+    serial_print(F("\t"));
+    serial_println(receiverIn[YAW_CHANNEL]);
 }
 
 void printAngular() {
-    Serial.print(gyro_axis[ROLL_RATE]);
-    Serial.print("\t");
-    Serial.print(gyro_axis[PITCH_RATE]);
-    Serial.print("\t");
-    Serial.println(gyro_axis[YAW_RATE]);
+    serial_print(gyro_axis[ROLL_RATE]);
+    serial_print("\t");
+    serial_print(gyro_axis[PITCH_RATE]);
+    serial_print("\t");
+    serial_println(gyro_axis[YAW_RATE]);
 }
 
 void print_binary(int value, int num_places) {
@@ -418,24 +433,25 @@ void print_binary(int value, int num_places) {
     while (num_places) {
 
         if (value & (0x0001 << num_places - 1)) {
-            Serial.print(F("1"));
+            serial_print(F("1"));
         } else {
-            Serial.print(F("0"));
+            serial_print(F("0"));
         }
 
         --num_places;
         if (((num_places % 4) == 0) && (num_places != 0)) {
-            Serial.print("_");
+            serial_print("_");
         }
     }
-    Serial.println();
+    serial_println();
 }
 
 
 void setup() {
     pinMode(LED_PIN, OUTPUT);
+    pinMode(DEBUG_PIN, OUTPUT);
 
-    Serial.begin(9600);
+    serial_begin(115200);
 
     left.attach(LEFT_SERVO_PIN);
     right.attach(RIGHT_SERVO_PIN);
@@ -480,11 +496,11 @@ void loop() {
        left.writeMicroseconds(left_throttle);
        right.writeMicroseconds(right_throttle);
 
-       Serial.print(pid_output_roll);
-       Serial.print("\t");
-       Serial.print(left_throttle);
-       Serial.print("\t");
-       Serial.println(right_throttle);
+       serial_print(pid_output_roll);
+       serial_print("\t");
+       serial_print(left_throttle);
+       serial_print("\t");
+       serial_println(right_throttle);
      */
 
     /* wait for MPU interrupt or extra packet(s) available */
@@ -512,7 +528,7 @@ void readMPU() {
         if ((mpuIntStatus & 0x10) || fifoCount == 1024) {
             /* reset so we can continue cleanly */
             mpu.resetFIFO();
-            Serial.println(F("FIFO overflow!"));
+            serial_println(F("FIFO overflow!"));
 
             /* Otherwise, check for DMP data ready interrupt (this happens often) */
         } else if (mpuIntStatus & 0x02) {
