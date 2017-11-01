@@ -43,8 +43,6 @@ static const uint8_t mpu_address = 0x68;
 static const uint8_t LED_PIN = 13;
 bool blinkState = false;
 
-/* MPU control/status vars */
-
 /* Holds actual interrupt status byte from MPU */
 uint8_t mpuIntStatus;
 
@@ -77,8 +75,8 @@ float ypr[3];   // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vec
 uint16_t attitude[3];
 
 /* Angular Rates */
-int16_t gyro_axis[4];
-int64_t gyro_axis_cal[4];
+int16_t gyro_axis[3] = { 0 };
+int64_t gyro_axis_cal[3] = { 0 };
 
 
 // ————————————————————————————————————————————————————————————————
@@ -152,12 +150,13 @@ void initMPU6050() {
             error_blink(DMP_CONF_UPDATES_FAILED,
                         "DMP init error code 2: DMP configuration updates failed!");
             break;
-        default: {
-            char msg[50] = "DMP init error code     ";
-            itoa(devStatus, msg + 20, 10);
-            error_blink(DMP_ERROR_UNKNOWN, msg);
-            break;
-        }
+        default:
+            {
+                char msg[50] = "DMP init error code     ";
+                itoa(devStatus, msg + 20, 10);
+                error_blink(DMP_ERROR_UNKNOWN, msg);
+                break;
+            }
         }
     }
 }
@@ -169,32 +168,77 @@ void initMPU6050() {
 
 static bool rate_calibrated = false;
 
-void calib_rates(size_t iterations) {
-    Serial.println(F("Calibrating gyro rates"));
-    for (uint16_t count = 0; count < iterations; count++) {
-        read_angular_rates();
-        gyro_axis_cal[ROLL_RATE]  += gyro_axis[ROLL_RATE];
-        gyro_axis_cal[PITCH_RATE] += gyro_axis[PITCH_RATE];
-        gyro_axis_cal[YAW_RATE]   += gyro_axis[YAW_RATE];
+void calib_rates() {
+    uint16_t iterations = 300;
 
-        delay(5);
+    Serial.println(F("Calibrating gyro rates, hold still!"));
+
+    Serial.println("Average rate good before calibration:");
+    Serial.println(rate_calibrated);
+    while(!calib_rates_ok()) {
+        for (int i = 0; i < 3; i++) {
+            gyro_axis_cal[i] = 0;
+        }
+        for (uint16_t count = 0; count < iterations; count++) {
+            read_angular_rates(false);
+            gyro_axis_cal[ROLL_RATE]  += gyro_axis[ROLL_RATE];
+            gyro_axis_cal[PITCH_RATE] += gyro_axis[PITCH_RATE];
+            gyro_axis_cal[YAW_RATE]   += gyro_axis[YAW_RATE];
+
+            delay(5);
+        }
+
+        gyro_axis_cal[ROLL_RATE]  /= iterations;
+        gyro_axis_cal[PITCH_RATE] /= iterations;
+        gyro_axis_cal[YAW_RATE]   /= iterations;
     }
 
-    gyro_axis_cal[ROLL_RATE]  /= iterations;
-    gyro_axis_cal[PITCH_RATE] /= iterations;
-    gyro_axis_cal[YAW_RATE]   /= iterations;
-
-    rate_calibrated = true;
+    Serial.println("Average rate good after calibration:");
+    Serial.println(rate_calibrated);
 
     Serial.println(F("Done calibrating gyro rates"));
 }
 
+bool calib_rates_ok() {
+    const int iterations = 50;
+    const int tolerance = 10;
+
+    int64_t accumulator[3] = { 0 };
+
+    for (uint16_t count = 0; count < iterations; count++) {
+        read_angular_rates(true);
+        accumulator[ROLL_RATE]  += gyro_axis[ROLL_RATE];
+        accumulator[PITCH_RATE] += gyro_axis[PITCH_RATE];
+        accumulator[YAW_RATE]   += gyro_axis[YAW_RATE];
+
+        delay(5);
+    }
+
+    accumulator[ROLL_RATE]  /= iterations;
+    accumulator[PITCH_RATE] /= iterations;
+    accumulator[YAW_RATE]   /= iterations;
+
+    Serial.print("Average rate over ");
+    Serial.print(iterations);
+    Serial.println(" iterations: ");
+    Serial.print((uint32_t)accumulator[ROLL_RATE]);
+    Serial.print("\t");
+    Serial.print((uint32_t)accumulator[PITCH_RATE]);
+    Serial.print("\t");
+    Serial.println((uint32_t)accumulator[YAW_RATE]);
+
+    rate_calibrated =
+           (abs(accumulator[ROLL_RATE])  < tolerance) &&
+           (abs(accumulator[PITCH_RATE]) < tolerance) &&
+           (abs(accumulator[YAW_RATE])   < tolerance);
+    return rate_calibrated;
+}
 
 // ————————————————————————————————————————————————————————————————
 // ———             FETCH ANGULAR RATES FROM IMU                 ———
 // ————————————————————————————————————————————————————————————————
 
-void read_angular_rates() {
+void read_angular_rates(bool use_calib_offset) {
     Wire.beginTransmission(mpu_address);
     Wire.write(0x43);
     Wire.endTransmission();
@@ -204,7 +248,7 @@ void read_angular_rates() {
     gyro_axis[PITCH_RATE] = Wire.read() << 8 | Wire.read();
     gyro_axis[YAW_RATE]   = Wire.read() << 8 | Wire.read();
 
-    if (rate_calibrated) {
+    if (rate_calibrated || use_calib_offset) {
         gyro_axis[ROLL_RATE]  -= gyro_axis_cal[ROLL_RATE];
         gyro_axis[PITCH_RATE] -= gyro_axis_cal[PITCH_RATE];
         gyro_axis[YAW_RATE]   -= gyro_axis_cal[YAW_RATE];
@@ -281,8 +325,25 @@ float pid_last_error;
 float pid_i_mem_roll;
 float pid_roll_setpoint;
 
-/* Calculate PID output */
-void calculatePID() {
+/* Calculate PID output based on absolute angle in attitude[] */
+void calculatePID_absolute() {
+    pid_error = attitude[ROLL_ANGLE] - receiverIn[ROLL_CHANNEL] + 1000;
+    Serial.println(pid_error);
+
+    float p = pid_p_gain_roll * pid_error;
+    pid_i_mem_roll += (pid_i_gain_roll * pid_error);
+    if (pid_i_mem_roll > pid_max_roll) pid_i_mem_roll = pid_max_roll;
+    else if (pid_i_mem_roll < pid_max_roll * -1) pid_i_mem_roll = (pid_max_roll * -1);
+
+    pid_output_roll = p + pid_i_mem_roll + (pid_d_gain_roll * (pid_error - pid_last_error));
+    if (pid_output_roll > pid_max_roll) pid_output_roll = pid_max_roll;
+    else if (pid_output_roll < pid_max_roll * -1) pid_output_roll = pid_max_roll * -1;
+
+    pid_last_error = pid_error;
+}
+
+/* Calculate PID output based on angular rate */
+void calculatePID_angular_rate() {
     pid_error = attitude[ROLL_ANGLE] - receiverIn[ROLL_CHANNEL] + 1000;
     Serial.println(pid_error);
 
@@ -332,11 +393,11 @@ void printReceivers() {
 }
 
 void printAngular() {
-    Serial.print(gyro_axis[1]);
+    Serial.print(gyro_axis[ROLL_RATE]);
     Serial.print("\t");
-    Serial.print(gyro_axis[2]);
+    Serial.print(gyro_axis[PITCH_RATE]);
     Serial.print("\t");
-    Serial.println(gyro_axis[3]);
+    Serial.println(gyro_axis[YAW_RATE]);
 }
 
 void print_binary(int value, int num_places) {
@@ -372,10 +433,11 @@ void setup() {
     left.attach(LEFT_SERVO_PIN);
     right.attach(RIGHT_SERVO_PIN);
 
-    initMPU6050();
-    calib_rates(250);
-
     armESC();
+
+    initMPU6050();
+
+    calib_rates();
 
     /* The pinMode should be correct by default, set it anyway */
     pinMode(THROTTLE_INPUT_PIN, INPUT);
@@ -391,95 +453,99 @@ void setup() {
 }
 
 void loop() {
+    readReceiver();
+    printAngular();
+    // printReceivers();
+    // printAttitude();
+    // printYPR();
+    // calculatePID();
+
+    /*
+       throttle = receiverIn[THROTTLE_CHANNEL];
+       throttle = throttle > 1800 ? 1800 : throttle;
+
+       left_throttle  = throttle + pid_output_roll;
+       right_throttle = throttle + pid_output_roll;
+
+       left_throttle = left_throttle < 1000 ? 1000 : left_throttle;
+       right_throttle = right_throttle < 1000 ? 1000 : right_throttle;
+
+       left.writeMicroseconds(left_throttle);
+       right.writeMicroseconds(right_throttle);
+
+       Serial.print(pid_output_roll);
+       Serial.print("\t");
+       Serial.print(left_throttle);
+       Serial.print("\t");
+       Serial.println(right_throttle);
+     */
+
     /* wait for MPU interrupt or extra packet(s) available */
-    while (!mpuInterrupt && fifoCount < packetSize) {
-        // if you are really paranoid you can frequently test in between other
-        // stuff to see if mpuInterrupt is true, and if so, "break;" from the
-        // while() loop to immediately process the MPU data
-
-        readReceiver();
-        read_angular_rates();
-        printAngular();
-        // printReceivers();
-        // printAttitude();
-        // printYPR();
-        // calculatePID();
-
-        /*
-        throttle = receiverIn[THROTTLE_CHANNEL];
-        throttle = throttle > 1800 ? 1800 : throttle;
-
-        left_throttle  = throttle + pid_output_roll;
-        right_throttle = throttle + pid_output_roll;
-
-        left_throttle = left_throttle < 1000 ? 1000 : left_throttle;
-        right_throttle = right_throttle < 1000 ? 1000 : right_throttle;
-
-        left.writeMicroseconds(left_throttle);
-        right.writeMicroseconds(right_throttle);
-
-        Serial.print(pid_output_roll);
-        Serial.print("\t");
-        Serial.print(left_throttle);
-        Serial.print("\t");
-        Serial.println(right_throttle);
-        */
+    // if you are really paranoid you can frequently test in between other
+    // stuff to see if mpuInterrupt is true, and if so, "break;" from the
+    // while() loop to immediately process the MPU data
+    if(mpuInterrupt || fifoCount >= packetSize) {
+        readMPU();
     }
 
-    /* Reset interrupt flag and get INT_STATUS byte */
-    mpuInterrupt = false;
-    mpuIntStatus = mpu.getIntStatus();
-
-    /* Get current FIFO count */
-    fifoCount = mpu.getFIFOCount();
-
-    /* Check for overflow (this should be rare) */
-    if ((mpuIntStatus & 0x10) || fifoCount == 1024) {
-        /* reset so we can continue cleanly */
-        mpu.resetFIFO();
-        Serial.println(F("FIFO overflow!"));
-
-        /* Otherwise, check for DMP data ready interrupt (this happens often) */
-    } else if (mpuIntStatus & 0x02) {
-        /* Wait for correct available data length, should be a VERY short wait */
-        while (fifoCount < packetSize) {
-            fifoCount = mpu.getFIFOCount();
-        }
-
-        /* Read a packet from FIFO */
-        mpu.getFIFOBytes(fifoBuffer, packetSize);
-
-        /* Track FIFO count here in case there is > 1 packet available */
-        /* (this lets us immediately read more without waiting for an interrupt) */
-        fifoCount -= packetSize;
-
-        mpu.dmpGetQuaternion(&q, fifoBuffer);
-        mpu.dmpGetGravity(&gravity, &q);
-        mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-
-        /* Yaw degrees */
-        // Add M_PI to get positive values (ypr[0] element of (-M_PI, M_PI)).
-        // Angle in degree is ratio of reading to max reading * 180
-        // where max reading: 2 * M_PI
-        int yaw_value = (int)180 - (ypr[0] + M_PI) * 180 / (M_PI * 2);
-        // yaw_value = yaw_value > 180.0 ? 180.0 : yaw_value;
-        // yaw_value = yaw_value < 0.0 ? 0.0 : yaw_value;
-
-        /* Pitch degrees */
-        // Add 90 to start at horizontal, flat position
-        // Angle in degree is ratio of reading to max reading * 180
-        // where max reading: 2 * M_PI
-        int pitch_value = (int)(90 + ypr[1] * 180 / M_PI);
-
-        for (size_t index = YAW_ANGLE; index <= ROLL_ANGLE; index++) {
-            attitude[index] = (ypr[index] + M_PI) * (1000 / (2 * M_PI));
-        }
-        /* Blink LED to indicate activity */
-        blinkState = !blinkState;
-        digitalWrite(LED_PIN, blinkState);
-    }
+    /* Blink LED to indicate activity */
+    blinkState = !blinkState;
+    digitalWrite(LED_PIN, blinkState);
 }
 
+void readMPU() {
+        /* Reset interrupt flag and get INT_STATUS byte */
+        mpuInterrupt = false;
+        mpuIntStatus = mpu.getIntStatus();
+
+        /* Get current FIFO count */
+        fifoCount = mpu.getFIFOCount();
+
+        /* Check for overflow (this should be rare) */
+        if ((mpuIntStatus & 0x10) || fifoCount == 1024) {
+            /* reset so we can continue cleanly */
+            mpu.resetFIFO();
+            Serial.println(F("FIFO overflow!"));
+
+            /* Otherwise, check for DMP data ready interrupt (this happens often) */
+        } else if (mpuIntStatus & 0x02) {
+            /* Wait for correct available data length, should be a VERY short wait */
+            while (fifoCount < packetSize) {
+                fifoCount = mpu.getFIFOCount();
+            }
+
+            /* Read a packet from FIFO */
+            mpu.getFIFOBytes(fifoBuffer, packetSize);
+
+            /* Track FIFO count here in case there is > 1 packet available */
+            /* (this lets us immediately read more without waiting for an interrupt) */
+            fifoCount -= packetSize;
+
+            read_angular_rates(true);
+
+            //mpu.dmpGetQuaternion(&q, fifoBuffer);
+            mpu.dmpGetGravity(&gravity, &q);
+            mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+
+            /* Yaw degrees */
+            // Add M_PI to get positive values (ypr[0] element of (-M_PI, M_PI)).
+            // Angle in degree is ratio of reading to max reading * 180
+            // where max reading: 2 * M_PI
+            // int yaw_value = (int)180 - (ypr[0] + M_PI) * 180 / (M_PI * 2);
+            // yaw_value = yaw_value > 180.0 ? 180.0 : yaw_value;
+            // yaw_value = yaw_value < 0.0 ? 0.0 : yaw_value;
+
+            /* Pitch degrees */
+            // Add 90 to start at horizontal, flat position
+            // Angle in degree is ratio of reading to max reading * 180
+            // where max reading: 2 * M_PI
+            // int pitch_value = (int)(90 + ypr[1] * 180 / M_PI);
+
+            for (size_t index = YAW_ANGLE; index <= ROLL_ANGLE; index++) {
+                attitude[index] = (ypr[index] + M_PI) * (1000 / (2 * M_PI));
+            }
+        }
+}
 
 // ————————————————————————————————————————————————————————————————
 // ———             RECEIVER READ INTERRUPT ROUTINES             ———

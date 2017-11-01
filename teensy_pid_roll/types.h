@@ -7,9 +7,9 @@ typedef enum {
 } angle;
 
 typedef enum {
-    ROLL_RATE  = 1,
-    PITCH_RATE = 2,
-    YAW_RATE   = 3
+    ROLL_RATE  = 0,
+    PITCH_RATE = 1,
+    YAW_RATE   = 2
 } angle_rate;
 
 typedef enum {
