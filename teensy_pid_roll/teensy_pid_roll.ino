@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 /*
    ——————————————————————————————————————————————
    ———             HARDWARE SETUP             ———
@@ -17,7 +19,7 @@
 
 #define DEBUG_PIN 23
 
-//#define DEBUG_PRINT
+#define DEBUG_PRINT
 
 #ifdef DEBUG_PRINT
     #define serial_println(a) (Serial.println(a))
@@ -398,11 +400,11 @@ uint16_t last_roll;
 
 float pid_output_roll;
 
-float pid_p_gain_roll = 0.5;
+float pid_p_gain_roll = 0.15;
 float pid_i_gain_roll = 0.0;
-float pid_d_gain_roll = 0.0;
+float pid_d_gain_roll = 0.1;
 int pid_max_roll = 400;
-int pid_roll_integral_limit = 400;
+int pid_roll_integral_limit = 10;
 
 float pid_error;
 float pid_last_error;
