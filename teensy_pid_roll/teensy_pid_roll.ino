@@ -56,20 +56,20 @@ MPU6050 mpu;
 static const uint8_t mpu_address = 0x68;
 
 static const uint8_t LED_PIN = 13;
-bool blinkState = false;
+bool blink_state = false;
 
 /* Holds actual interrupt status byte from MPU */
-uint8_t mpuIntStatus;
+uint8_t mpu_int_status;
 
 /* Return status after each device operation
    (0 = success, !0 = error) */
-uint8_t devStatus;
+uint8_t dev_status;
 
 /* Expected DMP packet size (default is 42 bytes) */
-uint16_t packetSize;
+uint16_t packet_size;
 
-uint16_t fifoCount;
-uint8_t fifoBuffer[64];
+uint16_t fifo_count;
+uint8_t fifo_buffer[64];
 
 
 //  —————————————————————————————————————————————————
@@ -82,11 +82,13 @@ VectorInt16 aaReal;  // [x, y, z]       gravity-free accel sensor measurements
 VectorInt16 aaWorld; // [x, y, z]       world-frame accel sensor measurements
 VectorFloat gravity; // [x, y, z]       gravity vector
 
-float euler[3]; // [psi, theta, phi]    Euler angle container
-float ypr[3];   // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+/* [psi, theta, phi]    Euler angle container */
+float euler[3];
 
+/* [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector */
+float yaw_pitch_roll[3];
 
-/* Scaled ypr to [0, 1000] */
+/* Scaled yaw_pitch_roll to [0, 1000] */
 uint16_t attitude[3];
 
 /* Angular Rates */
@@ -99,9 +101,9 @@ int64_t gyro_axis_cal[3] = { 0 };
 // ————————————————————————————————————————————————————————————————
 
 /* Indicates whether MPU interrupt pin has gone high */
-volatile bool mpuInterrupt = false;
-void dmpDataReady() {
-    mpuInterrupt = true;
+volatile bool mpu_interrupt = false;
+void dmp_data_ready() {
+    mpu_interrupt = true;
 }
 
 
@@ -109,7 +111,7 @@ void dmpDataReady() {
 // ———             IMU INITIALISATION              ———
 // ———————————————————————————————————————————————————
 
-void initMPU6050() {
+void init_MPU6050() {
     /* Join I2C bus (I2Cdev library doesn't do this automatically) */
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
     Wire.begin();
@@ -130,7 +132,7 @@ void initMPU6050() {
 
     /* Load and configure the DMP */
     serial_println(F("Initializing DMP..."));
-    devStatus = mpu.dmpInitialize();
+    dev_status = mpu.dmpInitialize();
 
     /* Supply your own gyro offsets here, scaled for min sensitivity */
     mpu.setXGyroOffset(220);
@@ -139,7 +141,7 @@ void initMPU6050() {
     mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
 
     /* Make sure initialisation worked (returns 0 if so) */
-    if (devStatus == 0) {
+    if (dev_status == 0) {
         /* Turn on the DMP, now that it's ready */
         serial_println(F("Enabling DMP..."));
         mpu.setDMPEnabled(true);
@@ -147,16 +149,16 @@ void initMPU6050() {
         /* Enable Arduino interrupt detection */
         serial_println(
             F("Enabling interrupt detection (Arduino external interrupt 0)..."));
-        attachInterrupt(2, dmpDataReady, RISING);
-        mpuIntStatus = mpu.getIntStatus();
+        attachInterrupt(2, dmp_data_ready, RISING);
+        mpu_int_status = mpu.getIntStatus();
 
         serial_println(F("DMP ready! Waiting for first interrupt..."));
 
         /* Get expected DMP packet size for later comparison */
-        packetSize = mpu.dmpGetFIFOPacketSize();
+        packet_size = mpu.dmpGetFIFOPacketSize();
     } else {
         /* Error while init */
-        switch (devStatus) {
+        switch (dev_status) {
         case 1:
             error_blink(DMP_INIT_MEM_LOAD_FAILED,
                         "DMP init error code 1: Initial Memory Load failed!");
@@ -168,7 +170,7 @@ void initMPU6050() {
         default:
         {
             char msg[50] = "DMP init error code     ";
-            itoa(devStatus, msg + 20, 10);
+            itoa(dev_status, msg + 20, 10);
             error_blink(DMP_ERROR_UNKNOWN, msg);
             break;
         }
@@ -282,45 +284,45 @@ void read_angular_rates() {
 // ———             FETCH ABS ANGLES FROM IMU                 ———
 // —————————————————————————————————————————————————————————————
 
-void readMPU() {
+void read_MPU_data() {
     /* Reset interrupt flag and get INT_STATUS byte */
-    mpuInterrupt = false;
-    mpuIntStatus = mpu.getIntStatus();
+    mpu_interrupt = false;
+    mpu_int_status = mpu.getIntStatus();
 
     /* Get current FIFO count */
-    fifoCount = mpu.getFIFOCount();
+    fifo_count = mpu.getFIFOCount();
 
     /* Check for overflow (this should be rare) */
-    if ((mpuIntStatus & 0x10) || fifoCount == 1024) {
+    if ((mpu_int_status & 0x10) || fifo_count == 1024) {
         /* reset so we can continue cleanly */
         mpu.resetFIFO();
         serial_println(F("FIFO overflow!"));
 
         /* Otherwise, check for DMP data ready interrupt (this happens often) */
-    } else if (mpuIntStatus & 0x02) {
+    } else if (mpu_int_status & 0x02) {
         /* Wait for correct available data length, should be a VERY short wait */
-        while (fifoCount < packetSize) {
-            fifoCount = mpu.getFIFOCount();
+        while (fifo_count < packet_size) {
+            fifo_count = mpu.getFIFOCount();
         }
 
         /* Read a packet from FIFO */
-        mpu.getFIFOBytes(fifoBuffer, packetSize);
+        mpu.getFIFOBytes(fifo_buffer, packet_size);
 
         /* Track FIFO count here in case there is > 1 packet available */
         /* (this lets us immediately read more without waiting for an interrupt) */
-        fifoCount -= packetSize;
+        fifo_count -= packet_size;
 
         read_angular_rates();
 
         //mpu.dmpGetQuaternion(&q, fifoBuffer);
         mpu.dmpGetGravity(&gravity, &q);
-        mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+        mpu.dmpGetYawPitchRoll(yaw_pitch_roll, &q, &gravity);
 
         /* Yaw degrees */
-        // Add M_PI to get positive values (ypr[0] element of (-M_PI, M_PI)).
+        // Add M_PI to get positive values (yaw_pitch_roll[0] element of (-M_PI, M_PI)).
         // Angle in degree is ratio of reading to max reading * 180
         // where max reading: 2 * M_PI
-        // int yaw_value = (int)180 - (ypr[0] + M_PI) * 180 / (M_PI * 2);
+        // int yaw_value = (int)180 - (yaw_pitch_roll[0] + M_PI) * 180 / (M_PI * 2);
         // yaw_value = yaw_value > 180.0 ? 180.0 : yaw_value;
         // yaw_value = yaw_value < 0.0 ? 0.0 : yaw_value;
 
@@ -328,10 +330,10 @@ void readMPU() {
         // Add 90 to start at horizontal, flat position
         // Angle in degree is ratio of reading to max reading * 180
         // where max reading: 2 * M_PI
-        // int pitch_value = (int)(90 + ypr[1] * 180 / M_PI);
+        // int pitch_value = (int)(90 + yaw_pitch_roll[1] * 180 / M_PI);
 
         for (size_t index = YAW_ANGLE; index <= ROLL_ANGLE; index++) {
-            attitude[index] = (ypr[index] + M_PI) * (1000 / (2 * M_PI));
+            attitude[index] = (yaw_pitch_roll[index] + M_PI) * (1000 / (2 * M_PI));
         }
     }
 }
@@ -344,19 +346,19 @@ void readMPU() {
 static volatile byte input_flags;
 
 /* The servo interrupt writes to this variable and the main loop reads */
-volatile uint16_t receiverInShared[NUM_CHANNELS];
+volatile uint16_t receiver_in_shared[NUM_CHANNELS];
 
-uint16_t receiverIn[NUM_CHANNELS];
+uint16_t receiver_in[NUM_CHANNELS];
 
 /* Written by interrupt when HIGH value is read */
-uint32_t receiverInStart[NUM_CHANNELS];
+uint32_t receiver_in_start[NUM_CHANNELS];
 
 /* Read each new value, indicated by the corresponding bit set in input_flags */
-void readReceiver() {
+void read_receiver() {
     noInterrupts();
     for (size_t channel = 0; channel < NUM_CHANNELS; channel++) {
         if (input_flags & (1 << channel)) {
-            receiverIn[channel] = receiverInShared[channel];
+            receiver_in[channel] = receiver_in_shared[channel];
         }
     }
     interrupts();
@@ -370,18 +372,18 @@ void readReceiver() {
 static const uint8_t LEFT_SERVO_PIN = 21;
 static const uint8_t RIGHT_SERVO_PIN = 22;
 
-Servo left;
-Servo right;
+Servo left_ppm;
+Servo right_ppm;
 uint16_t left_throttle;
 uint16_t right_throttle;
 uint16_t throttle;
 
 /* Arm ESC's with a long low pulse */
 
-void armESC() {
+void arm_ESC() {
     serial_println("Initialising ESCs: 1000ms pulse");
-    left.writeMicroseconds(1000);
-    right.writeMicroseconds(1000);
+    left_ppm.writeMicroseconds(1000);
+    right_ppm.writeMicroseconds(1000);
     delay(1500);
     serial_println("Initialised ESCs");
 }
@@ -408,7 +410,7 @@ float pid_roll_setpoint;
 
 /* Calculate PID output based on absolute angle in attitude[] */
 void calculatePID_absolute() {
-    pid_error = attitude[ROLL_ANGLE] - receiverIn[ROLL_CHANNEL] + 1000;
+    pid_error = attitude[ROLL_ANGLE] - receiver_in[ROLL_CHANNEL] + 1000;
     serial_println(pid_error);
 
     float p = pid_p_gain_roll * pid_error;
@@ -425,7 +427,7 @@ void calculatePID_absolute() {
 
 /* Calculate PID output based on angular rate */
 void calculatePID_angular_rate() {
-    pid_error = attitude[ROLL_ANGLE] - receiverIn[ROLL_CHANNEL] + 1000;
+    pid_error = attitude[ROLL_ANGLE] - receiver_in[ROLL_CHANNEL] + 1000;
     serial_println(pid_error);
 
     float p = pid_p_gain_roll * pid_error;
@@ -445,40 +447,40 @@ void calculatePID_angular_rate() {
 // ———             SERIAL DEBUG OUTPUT              ———
 // ————————————————————————————————————————————————————
 
-void printYPR() {
-    serial_print(F("ypr\t"));
-    serial_print(ypr[YAW_ANGLE]);
-    serial_print(F("\t"));
-    serial_print(ypr[PITCH_ANGLE]);
-    serial_print(F("\t"));
-    serial_println(ypr[ROLL_ANGLE]);
+void print_yaw_pitch_roll() {
+    Serial.print(F("yaw_pitch_roll\t"));
+    Serial.print(yaw_pitch_roll[YAW_ANGLE]);
+    Serial.print(F("\t"));
+    Serial.print(yaw_pitch_roll[PITCH_ANGLE]);
+    Serial.print(F("\t"));
+    Serial.println(yaw_pitch_roll[ROLL_ANGLE]);
 }
 
-void printAttitude() {
-    serial_print(F("Attitude\t"));
-    serial_print(attitude[YAW_ANGLE]);
-    serial_print(F("\t"));
-    serial_print(attitude[PITCH_ANGLE]);
-    serial_print(F("\t"));
-    serial_println(attitude[ROLL_ANGLE]);
+void print_attitude() {
+    Serial.print(F("Attitude\t"));
+    Serial.print(attitude[YAW_ANGLE]);
+    Serial.print(F("\t"));
+    Serial.print(attitude[PITCH_ANGLE]);
+    Serial.print(F("\t"));
+    Serial.println(attitude[ROLL_ANGLE]);
 }
 
-void printReceivers() {
-    serial_print(receiverIn[THROTTLE_CHANNEL]);
-    serial_print(F("\t"));
-    serial_print(receiverIn[ROLL_CHANNEL]);
-    serial_print(F("\t"));
-    serial_print(receiverIn[PITCH_CHANNEL]);
-    serial_print(F("\t"));
-    serial_println(receiverIn[YAW_CHANNEL]);
+void print_receivers() {
+    Serial.print(receiver_in[THROTTLE_CHANNEL]);
+    Serial.print(F("\t"));
+    Serial.print(receiver_in[ROLL_CHANNEL]);
+    Serial.print(F("\t"));
+    Serial.print(receiver_in[PITCH_CHANNEL]);
+    Serial.print(F("\t"));
+    Serial.println(receiver_in[YAW_CHANNEL]);
 }
 
-void printAngular() {
-    serial_print(gyro_axis[ROLL_RATE]);
-    serial_print("\t");
-    serial_print(gyro_axis[PITCH_RATE]);
-    serial_print("\t");
-    serial_println(gyro_axis[YAW_RATE]);
+void print_angular() {
+    Serial.print(gyro_axis[ROLL_RATE]);
+    Serial.print("\t");
+    Serial.print(gyro_axis[PITCH_RATE]);
+    Serial.print("\t");
+    Serial.println(gyro_axis[YAW_RATE]);
 }
 
 void print_binary(int value, int num_places) {
@@ -512,12 +514,12 @@ void setup() {
 
     serial_begin(115200);
 
-    left.attach(LEFT_SERVO_PIN);
-    right.attach(RIGHT_SERVO_PIN);
+    left_ppm.attach(LEFT_SERVO_PIN);
+    right_ppm.attach(RIGHT_SERVO_PIN);
 
-    armESC();
+    arm_ESC();
 
-    initMPU6050();
+    init_MPU6050();
 
     calib_rates();
 
@@ -528,22 +530,25 @@ void setup() {
     pinMode(YAW_INPUT_PIN,      INPUT);
 
     /* On each CHANGE on an input pin, an interrupt handler is called */
-    attachInterrupt(THROTTLE_INPUT_PIN, readThrottle, CHANGE);
-    attachInterrupt(ROLL_INPUT_PIN,     readRoll,     CHANGE);
-    attachInterrupt(PITCH_INPUT_PIN,    readPitch,    CHANGE);
-    attachInterrupt(YAW_INPUT_PIN,      readYaw,      CHANGE);
+    attachInterrupt(THROTTLE_INPUT_PIN, read_throttle, CHANGE);
+    attachInterrupt(ROLL_INPUT_PIN,     read_roll,     CHANGE);
+    attachInterrupt(PITCH_INPUT_PIN,    read_pitch,    CHANGE);
+    attachInterrupt(YAW_INPUT_PIN,      read_yaw,      CHANGE);
 }
 
 void loop() {
-    readReceiver();
-    printAngular();
-    // printReceivers();
-    // printAttitude();
-    // printYPR();
-    // calculatePID();
+    read_receiver();
+    int value = (gyro_axis[ROLL_RATE] + 2000) * (255.0/4000.0);
+    analogWrite(DEBUG_PIN, value);
+
+    print_angular();
+
+    // print_receivers();
+    // print_attitude();
+    // print_yaw_pitch_roll();
 
     /*
-       throttle = receiverIn[THROTTLE_CHANNEL];
+       throttle = receiver_in[THROTTLE_CHANNEL];
        throttle = throttle > 1800 ? 1800 : throttle;
 
        left_throttle  = throttle + pid_output_roll;
@@ -564,57 +569,57 @@ void loop() {
 
     /* wait for MPU interrupt or extra packet(s) available */
     // if you are really paranoid you can frequently test in between other
-    // stuff to see if mpuInterrupt is true, and if so, "break;" from the
+    // stuff to see if mpu_interrupt is true, and if so, "break;" from the
     // while() loop to immediately process the MPU data
-    if(mpuInterrupt || fifoCount >= packetSize) {
-        readMPU();
+    if(mpu_interrupt || fifo_count >= packet_size) {
+        read_MPU_data();
     }
 
     /* Blink LED to indicate activity */
-    blinkState = !blinkState;
-    digitalWrite(LED_PIN, blinkState);
+    blink_state = !blink_state;
+    digitalWrite(LED_PIN, blink_state);
 }
 
 // ————————————————————————————————————————————————————————————————
 // ———             RECEIVER READ INTERRUPT ROUTINES             ———
 // ————————————————————————————————————————————————————————————————
 
-void readThrottle() {
+void read_throttle() {
     if (digitalRead(THROTTLE_INPUT_PIN) == HIGH) {
-        receiverInStart[THROTTLE_CHANNEL] = micros();
+        receiver_in_start[THROTTLE_CHANNEL] = micros();
     } else {
-        receiverInShared[THROTTLE_CHANNEL] =
-            (uint16_t)(micros() - receiverInStart[THROTTLE_CHANNEL]);
+        receiver_in_shared[THROTTLE_CHANNEL] =
+            (uint16_t)(micros() - receiver_in_start[THROTTLE_CHANNEL]);
         input_flags |= 1 << THROTTLE_CHANNEL;
     }
 }
 
-void readRoll() {
+void read_roll() {
     if (digitalRead(ROLL_INPUT_PIN) == HIGH) {
-        receiverInStart[ROLL_CHANNEL] = micros();
+        receiver_in_start[ROLL_CHANNEL] = micros();
     } else {
-        receiverInShared[ROLL_CHANNEL] =
-            (uint16_t)(micros() - receiverInStart[ROLL_CHANNEL]);
+        receiver_in_shared[ROLL_CHANNEL] =
+            (uint16_t)(micros() - receiver_in_start[ROLL_CHANNEL]);
         input_flags |= 1 << ROLL_CHANNEL;
     }
 }
 
-void readPitch() {
+void read_pitch() {
     if (digitalRead(PITCH_INPUT_PIN) == HIGH) {
-        receiverInStart[PITCH_CHANNEL] = micros();
+        receiver_in_start[PITCH_CHANNEL] = micros();
     } else {
-        receiverInShared[PITCH_CHANNEL] =
-            (uint16_t)(micros() - receiverInStart[PITCH_CHANNEL]);
+        receiver_in_shared[PITCH_CHANNEL] =
+            (uint16_t)(micros() - receiver_in_start[PITCH_CHANNEL]);
         input_flags |= 1 << PITCH_CHANNEL;
     }
 }
 
-void readYaw() {
+void read_yaw() {
     if (digitalRead(YAW_INPUT_PIN) == HIGH) {
-        receiverInStart[YAW_CHANNEL] = micros();
+        receiver_in_start[YAW_CHANNEL] = micros();
     } else {
-        receiverInShared[YAW_CHANNEL] =
-            (uint16_t)(micros() - receiverInStart[YAW_CHANNEL]);
+        receiver_in_shared[YAW_CHANNEL] =
+            (uint16_t)(micros() - receiver_in_start[YAW_CHANNEL]);
         input_flags |= 1 << YAW_CHANNEL;
     }
 }
