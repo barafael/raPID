@@ -15,7 +15,7 @@
 */
 
 
-#define DEBUG_PIN 22
+#define DEBUG_PIN 23
 
 //#define DEBUG_PRINT
 
@@ -89,7 +89,7 @@ float euler[3];
 float yaw_pitch_roll[3];
 
 /* Scaled yaw_pitch_roll to [0, 1000] */
-uint16_t attitude[3];
+int16_t attitude[3];
 
 /* Angular Rates */
 int16_t gyro_axis[3] = { 0 };
@@ -192,6 +192,7 @@ void calib_rates() {
 
     int16_t raw_rates[3] = { 0 };
 
+    /* Attempt calibration and check if it (probably) succeeded */
     while(!calib_rates_ok()) {
         for (int i = 0; i < 3; i++) {
             gyro_axis_cal[i] = 0;
@@ -208,6 +209,8 @@ void calib_rates() {
         gyro_axis_cal[ROLL_RATE]  /= iterations;
         gyro_axis_cal[PITCH_RATE] /= iterations;
         gyro_axis_cal[YAW_RATE]   /= iterations;
+
+        iterations = iterations < 2000 ? iterations += 200 : iterations;
     }
 
     serial_println(F("Done calibrating gyro rates"));
@@ -312,9 +315,7 @@ void read_MPU_data() {
         /* (this lets us immediately read more without waiting for an interrupt) */
         fifo_count -= packet_size;
 
-        read_angular_rates();
-
-        //mpu.dmpGetQuaternion(&q, fifoBuffer);
+        mpu.dmpGetQuaternion(&q, fifo_buffer);
         mpu.dmpGetGravity(&gravity, &q);
         mpu.dmpGetYawPitchRoll(yaw_pitch_roll, &q, &gravity);
 
@@ -348,7 +349,7 @@ static volatile byte input_flags;
 /* The servo interrupt writes to this variable and the main loop reads */
 volatile uint16_t receiver_in_shared[NUM_CHANNELS];
 
-uint16_t receiver_in[NUM_CHANNELS];
+int16_t receiver_in[NUM_CHANNELS];
 
 /* Written by interrupt when HIGH value is read */
 uint32_t receiver_in_start[NUM_CHANNELS];
@@ -358,7 +359,7 @@ void read_receiver() {
     noInterrupts();
     for (size_t channel = 0; channel < NUM_CHANNELS; channel++) {
         if (input_flags & (1 << channel)) {
-            receiver_in[channel] = receiver_in_shared[channel];
+            receiver_in[channel] = receiver_in_shared[channel] - 1000;
         }
     }
     interrupts();
@@ -374,9 +375,9 @@ static const uint8_t RIGHT_SERVO_PIN = 22;
 
 Servo left_ppm;
 Servo right_ppm;
-uint16_t left_throttle;
-uint16_t right_throttle;
-uint16_t throttle;
+int16_t left_throttle;
+int16_t right_throttle;
+int16_t throttle;
 
 /* Arm ESC's with a long low pulse */
 
@@ -397,28 +398,36 @@ uint16_t last_roll;
 
 float pid_output_roll;
 
-float pid_p_gain_roll = 3.0;
+float pid_p_gain_roll = 0.5;
 float pid_i_gain_roll = 0.0;
 float pid_d_gain_roll = 0.0;
 int pid_max_roll = 400;
+int pid_roll_integral_limit = 400;
 
 float pid_error;
 float pid_last_error;
 
-float pid_i_mem_roll;
+float p_term;
+float i_term;
+float d_term;
+
 float pid_roll_setpoint;
 
 /* Calculate PID output based on absolute angle in attitude[] */
-void calculatePID_absolute() {
-    pid_error = attitude[ROLL_ANGLE] - receiver_in[ROLL_CHANNEL] + 1000;
-    serial_println(pid_error);
+void calculate_PID_absolute() {
+    pid_roll_setpoint = receiver_in[ROLL_CHANNEL];
+    pid_error = attitude[ROLL_ANGLE] - pid_roll_setpoint;
 
-    float p = pid_p_gain_roll * pid_error;
-    pid_i_mem_roll += (pid_i_gain_roll * pid_error);
-    if (pid_i_mem_roll > pid_max_roll) pid_i_mem_roll = pid_max_roll;
-    else if (pid_i_mem_roll < pid_max_roll * -1) pid_i_mem_roll = (pid_max_roll * -1);
+    p_term = pid_p_gain_roll * pid_error;
 
-    pid_output_roll = p + pid_i_mem_roll + (pid_d_gain_roll * (pid_error - pid_last_error));
+    i_term += (pid_i_gain_roll * pid_error);
+    if (i_term > pid_roll_integral_limit) i_term = pid_roll_integral_limit;
+    else if (i_term < (pid_roll_integral_limit * -1)) i_term = (pid_roll_integral_limit * -1);
+
+    d_term = pid_d_gain_roll * (pid_error - pid_last_error);
+
+    pid_output_roll = p_term + i_term + d_term;
+
     if (pid_output_roll > pid_max_roll) pid_output_roll = pid_max_roll;
     else if (pid_output_roll < pid_max_roll * -1) pid_output_roll = pid_max_roll * -1;
 
@@ -427,15 +436,15 @@ void calculatePID_absolute() {
 
 /* Calculate PID output based on angular rate */
 void calculatePID_angular_rate() {
-    pid_error = attitude[ROLL_ANGLE] - receiver_in[ROLL_CHANNEL] + 1000;
+    pid_error = attitude[ROLL_ANGLE] - receiver_in[ROLL_CHANNEL];
     serial_println(pid_error);
 
     float p = pid_p_gain_roll * pid_error;
-    pid_i_mem_roll += (pid_i_gain_roll * pid_error);
-    if (pid_i_mem_roll > pid_max_roll) pid_i_mem_roll = pid_max_roll;
-    else if (pid_i_mem_roll < pid_max_roll * -1) pid_i_mem_roll = (pid_max_roll * -1);
+    i_term += (pid_i_gain_roll * pid_error);
+    if (i_term > pid_max_roll) i_term = pid_max_roll;
+    else if (i_term < pid_max_roll * -1) i_term = (pid_max_roll * -1);
 
-    pid_output_roll = p + pid_i_mem_roll + (pid_d_gain_roll * (pid_error - pid_last_error));
+    pid_output_roll = p + i_term + (pid_d_gain_roll * (pid_error - pid_last_error));
     if (pid_output_roll > pid_max_roll) pid_output_roll = pid_max_roll;
     else if (pid_output_roll < pid_max_roll * -1) pid_output_roll = pid_max_roll * -1;
 
@@ -465,7 +474,7 @@ void print_attitude() {
     Serial.println(attitude[ROLL_ANGLE]);
 }
 
-void print_receivers() {
+void print_receiver() {
     Serial.print(receiver_in[THROTTLE_CHANNEL]);
     Serial.print(F("\t"));
     Serial.print(receiver_in[ROLL_CHANNEL]);
@@ -475,7 +484,7 @@ void print_receivers() {
     Serial.println(receiver_in[YAW_CHANNEL]);
 }
 
-void print_angular() {
+void print_angular_rates() {
     Serial.print(gyro_axis[ROLL_RATE]);
     Serial.print("\t");
     Serial.print(gyro_axis[PITCH_RATE]);
@@ -537,35 +546,13 @@ void setup() {
 }
 
 void loop() {
+    read_angular_rates();
+
     read_receiver();
-    int value = (gyro_axis[ROLL_RATE] + 2000) * (255.0/4000.0);
-    analogWrite(DEBUG_PIN, value);
 
-    print_angular();
+    calculate_PID_absolute();
 
-    // print_receivers();
-    // print_attitude();
-    // print_yaw_pitch_roll();
-
-    /*
-       throttle = receiver_in[THROTTLE_CHANNEL];
-       throttle = throttle > 1800 ? 1800 : throttle;
-
-       left_throttle  = throttle + pid_output_roll;
-       right_throttle = throttle + pid_output_roll;
-
-       left_throttle = left_throttle < 1000 ? 1000 : left_throttle;
-       right_throttle = right_throttle < 1000 ? 1000 : right_throttle;
-
-       left.writeMicroseconds(left_throttle);
-       right.writeMicroseconds(right_throttle);
-
-       serial_print(pid_output_roll);
-       serial_print("\t");
-       serial_print(left_throttle);
-       serial_print("\t");
-       serial_println(right_throttle);
-     */
+    // serial_println(pid_output_roll);
 
     /* wait for MPU interrupt or extra packet(s) available */
     // if you are really paranoid you can frequently test in between other
@@ -575,9 +562,54 @@ void loop() {
         read_MPU_data();
     }
 
+    /*
+    int value = (gyro_axis[ROLL_RATE] + 2000) * (255.0/4000.0);
+    analogWrite(DEBUG_PIN, value);
+     */
+
+    // print_angular_rates();
+
+    // print_receiver();
+    // print_attitude();
+    // print_yaw_pitch_roll();
+
+    ///*
+
+    throttle = receiver_in[THROTTLE_CHANNEL] + 10;
+
+    left_throttle  = throttle + pid_output_roll;
+    right_throttle = throttle - pid_output_roll;
+
+    left_throttle = left_throttle < 0 ? 0 : left_throttle;
+    right_throttle = right_throttle < 0 ? 0 : right_throttle;
+
+    left_throttle = left_throttle > 1000 ? 1000 : left_throttle;
+    right_throttle = right_throttle > 1000 ? 1000 : right_throttle;
+
+    serial_print(throttle);
+    serial_print("\t");
+    serial_print(attitude[ROLL_ANGLE]);
+    serial_print("\t");
+    serial_print(left_throttle);
+    serial_print("\t");
+    serial_print(right_throttle);
+    serial_print("\t");
+    serial_println(pid_output_roll);
+
+    left_ppm.writeMicroseconds(left_throttle + 1000);
+    right_ppm.writeMicroseconds(right_throttle + 1000);
+
+    /*
+       serial_print(pid_output_roll);
+       serial_print("\t");
+       serial_print(left_throttle);
+       serial_print("\t");
+       serial_println(right_throttle);
+     */
+
     /* Blink LED to indicate activity */
     blink_state = !blink_state;
-    digitalWrite(LED_PIN, blink_state);
+    digitalWrite(DEBUG_PIN, blink_state);
 }
 
 // ————————————————————————————————————————————————————————————————
