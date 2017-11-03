@@ -525,6 +525,25 @@ void print_binary(int value, int num_places) {
     serial_println();
 }
 
+void inline watchdog_init() {
+    WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;
+    WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
+    delayMicroseconds(1);
+    // Enable WDG
+    WDOG_STCTRLH = 0x0001;
+    // The next 2 lines sets the time-out value. This is the value that the watchdog timer compare itself to.
+    WDOG_TOVALL = 200;
+    WDOG_TOVALH = 0;
+    // This sets prescale clock so that the watchdog timer ticks at 1kHZ instead of the default 1kHZ/4 = 200 HZ
+    // WDOG_PRESC = 0;
+}
+
+void inline kick_the_dog() {
+    noInterrupts();
+    WDOG_REFRESH = 0xA602;
+    WDOG_REFRESH = 0xB480;
+    interrupts()
+}
 
 int main() {
     pinMode(LED_PIN, OUTPUT);
@@ -553,6 +572,8 @@ int main() {
     attachInterrupt(PITCH_INPUT_PIN,    read_pitch,    CHANGE);
     attachInterrupt(YAW_INPUT_PIN,      read_yaw,      CHANGE);
 
+    watchdog_init();
+
     while(1) {
         Serial.println(millis());
         Serial.flush();
@@ -573,9 +594,9 @@ int main() {
         }
 
         /*
-        int value = (gyro_axis[ROLL_RATE] + 2000) * (255.0/4000.0);
-        analogWrite(DEBUG_PIN, value);
-         */
+           int value = (gyro_axis[ROLL_RATE] + 2000) * (255.0/4000.0);
+           analogWrite(DEBUG_PIN, value);
+           */
 
         // print_angular_rates();
 
@@ -621,6 +642,7 @@ int main() {
         blink_state = !blink_state;
         digitalWrite(DEBUG_PIN, blink_state);
 
+        kick_the_dog();
     }
 }
 
