@@ -575,15 +575,11 @@ int main() {
     watchdog_init();
 
     while(1) {
-        Serial.println(millis());
-        Serial.flush();
         read_angular_rates();
 
         read_receiver();
 
         calculate_PID_absolute();
-
-        // serial_println(pid_output_roll);
 
         /* wait for MPU interrupt or extra packet(s) available */
         // if you are really paranoid you can frequently test in between other
@@ -617,14 +613,17 @@ int main() {
         left_throttle = left_throttle > 1000 ? 1000 : left_throttle;
         right_throttle = right_throttle > 1000 ? 1000 : right_throttle;
 
+        serial_print("thr:");
         serial_print(throttle);
-        serial_print("\t");
+        serial_print("\tsetp:");
+        serial_print(receiver_in[ROLL_CHANNEL]);
+        serial_print("\tr-angl:");
         serial_print(attitude[ROLL_ANGLE]);
-        serial_print("\t");
+        serial_print("\tleft:");
         serial_print(left_throttle);
-        serial_print("\t");
+        serial_print("\tright:");
         serial_print(right_throttle);
-        serial_print("\t");
+        serial_print("\tr-p-out:");
         serial_println(pid_output_roll);
 
         left_ppm.writeMicroseconds(left_throttle + 1000);
@@ -636,7 +635,7 @@ int main() {
            serial_print(left_throttle);
            serial_print("\t");
            serial_println(right_throttle);
-         */
+           */
 
         /* Blink LED to indicate activity */
         blink_state = !blink_state;
