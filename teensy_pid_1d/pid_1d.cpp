@@ -1,5 +1,6 @@
 #include <Arduino.h>
 
+
 /*
    ——————————————————————————————————————————————
    ———             HARDWARE SETUP             ———
@@ -22,17 +23,17 @@
 #define ENABLE_DEBUG_PRINT
 
 #ifdef ENABLE_DEBUG_PRINT
-#define serial_println(a); (Serial.println(a)); Serial.flush();
-#define serial_print(a); (Serial.print(a)); Serial.flush();
-#define serial_begin(a); (Serial.begin(a)); Serial.flush();
+    #define serial_println(a); (Serial.println(a)); Serial.flush();
+    #define serial_print(a); (Serial.print(a)); Serial.flush();
+    #define serial_begin(a); (Serial.begin(a)); Serial.flush();
 #else
-#define serial_println(a);
-#define serial_print(a);
-#define serial_begin(a);
+    #define serial_println(a);
+    #define serial_print(a);
+    #define serial_begin(a);
 #endif
 
 #include "error_handling.h"
-#include "types.h"
+#include "settings.h"
 
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
@@ -87,7 +88,7 @@ VectorFloat gravity; // [x, y, z]       gravity vector
 /* [psi, theta, phi]    Euler angle container */
 float euler[3];
 
-/* [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector */
+/* [yaw, pitch, roll]   Yaw/Pitch/Roll container and gravity vector */
 float yaw_pitch_roll[3];
 
 /* Scaled yaw_pitch_roll to [0, 1000] */
