@@ -441,15 +441,19 @@ void calculate_PID_absolute() {
 
 /* Calculate PID output based on angular rate */
 void calculatePID_angular_rate() {
-    pid_error = attitude[ROLL_ANGLE] - receiver_in[ROLL_CHANNEL];
-    serial_println(pid_error);
+    pid_roll_setpoint = receiver_in[ROLL_CHANNEL];
+    pid_error = gyro_axis[ROLL_RATE] - pid_roll_setpoint;
 
-    float p = pid_p_gain_roll * pid_error;
+    p_term = pid_p_gain_roll * pid_error;
+
     i_term += (pid_i_gain_roll * pid_error);
-    if (i_term > pid_max_roll) i_term = pid_max_roll;
-    else if (i_term < pid_max_roll * -1) i_term = (pid_max_roll * -1);
+    if (i_term > pid_roll_integral_limit) i_term = pid_roll_integral_limit;
+    else if (i_term < (pid_roll_integral_limit * -1)) i_term = (pid_roll_integral_limit * -1);
 
-    pid_output_roll = p + i_term + (pid_d_gain_roll * (pid_error - pid_last_error));
+    d_term = pid_d_gain_roll * (pid_error - pid_last_error);
+
+    pid_output_roll = p_term + i_term + d_term;
+
     if (pid_output_roll > pid_max_roll) pid_output_roll = pid_max_roll;
     else if (pid_output_roll < pid_max_roll * -1) pid_output_roll = pid_max_roll * -1;
 
