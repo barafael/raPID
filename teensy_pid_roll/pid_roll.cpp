@@ -400,22 +400,20 @@ void read_yaw();
 // ———        PID VARIABLES AND COEFFICIENTS        ———
 // ————————————————————————————————————————————————————
 
-uint16_t last_roll;
-
 float pid_output_roll;
 
-float pid_p_gain_roll = 0.15;
-float pid_i_gain_roll = 0.0;
-float pid_d_gain_roll = 0.1;
+double pid_p_gain_roll = 0.175;
+double pid_i_gain_roll = 0.001;
+double pid_d_gain_roll = 0.03;
 int pid_max_roll = 400;
 int pid_roll_integral_limit = 10;
 
-float pid_error;
-float pid_last_error;
+double pid_error;
+double pid_last_error;
 
-float p_term;
-float i_term;
-float d_term;
+double p_term;
+double i_term;
+double d_term;
 
 float pid_roll_setpoint;
 
