@@ -1,4 +1,4 @@
-# rafael's PID versatile flight controller
+# rafael's PID: versatile flight controller
 
 Not that versatile as of now. If I keep working on it, I plan to add rate/stabilize mode, arbitrary flight modes (different PID settings and offsets) and flight mode interpolation (otherwise called transitional mixers) to smoothly switch between adjacent flight modes.
 
