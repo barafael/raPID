@@ -543,7 +543,7 @@ void inline kick_the_dog() {
     noInterrupts();
     WDOG_REFRESH = 0xA602;
     WDOG_REFRESH = 0xB480;
-    interrupts()
+    interrupts();
 }
 
 int main() {
