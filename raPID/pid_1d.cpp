@@ -424,8 +424,8 @@ void read_yaw();
 
 float pid_output_roll;
 
-double pid_p_gain_roll = 0.175;
-double pid_i_gain_roll = 0.001;
+double pid_p_gain_roll = 0.25;
+double pid_i_gain_roll = 0.0015;
 double pid_d_gain_roll = 0.03;
 int pid_max_roll = 400;
 int pid_roll_integral_limit = 10;
