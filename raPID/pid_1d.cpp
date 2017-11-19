@@ -34,6 +34,8 @@
 
 #include "error_handling.h"
 #include "settings.h"
+#include "pins.h"
+
 
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
