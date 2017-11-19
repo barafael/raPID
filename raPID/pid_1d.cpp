@@ -45,15 +45,18 @@
 #include "Servo.h"
 
 
-//  —————————————————————————————————————————————————
-//  ———              MPU6050 VARIABLES            ———
-//  —————————————————————————————————————————————————
+/*
+    —————————————————————————————————————————————————
+    ———              MPU6050 VARIABLES            ———
+    —————————————————————————————————————————————————
+*/
 
 /* Class default I2C address is 0x68
    specific I2C addresses may be passed as a parameter here
    AD0 low = 0x68
    (default for SparkFun breakout and InvenSense evaluation board)
-   AD0 high = 0x69 */
+   AD0 high = 0x69
+*/
 MPU6050 mpu;
 
 static const uint8_t mpu_address = 0x68;
@@ -75,9 +78,11 @@ uint16_t fifo_count;
 uint8_t fifo_buffer[64];
 
 
-//  —————————————————————————————————————————————————
-//  ———          ORIENTATION/MOTION VARS          ———
-//  —————————————————————————————————————————————————
+/*
+    —————————————————————————————————————————————————
+    ———          ORIENTATION/MOTION VARS          ———
+    —————————————————————————————————————————————————
+*/
 
 Quaternion q;        // [w, x, y, z]    quaternion container
 VectorInt16 aa;      // [x, y, z]       accel sensor measurements
@@ -99,9 +104,11 @@ int16_t gyro_axis[3] = { 0 };
 int64_t gyro_axis_cal[3] = { 0 };
 
 
-// ————————————————————————————————————————————————————————————————
-// ———             MPU INTERRUPT DETECTION ROUTINE              ———
-// ————————————————————————————————————————————————————————————————
+/*
+   ————————————————————————————————————————————————————————————————
+   ———             MPU INTERRUPT DETECTION ROUTINE              ———
+   ————————————————————————————————————————————————————————————————
+*/
 
 /* Indicates whether MPU interrupt pin has gone high */
 volatile bool mpu_interrupt = false;
@@ -110,9 +117,11 @@ void dmp_data_ready() {
 }
 
 
-// ———————————————————————————————————————————————————
-// ———             IMU INITIALISATION              ———
-// ———————————————————————————————————————————————————
+/*
+   ———————————————————————————————————————————————————
+   ———             IMU INITIALISATION              ———
+   ———————————————————————————————————————————————————
+*/
 
 void init_MPU6050() {
     /* Join I2C bus (I2Cdev library doesn't do this automatically) */
@@ -182,9 +191,11 @@ void init_MPU6050() {
 }
 
 
-// ————————————————————————————————————————————————————————————————
-// ———             FETCH ANGULAR RATES FROM IMU                 ———
-// ————————————————————————————————————————————————————————————————
+/*
+   ————————————————————————————————————————————————————————————————
+   ———             FETCH ANGULAR RATES FROM IMU                 ———
+   ————————————————————————————————————————————————————————————————
+*/
 
 void read_raw_rates(int16_t *rates) {
     Wire.beginTransmission(mpu_address);
@@ -213,9 +224,11 @@ void read_angular_rates() {
 }
 
 
-// ————————————————————————————————————————————————————————————————
-// ———             CALIBRATE RATES BY TAKING AVG                ———
-// ————————————————————————————————————————————————————————————————
+/*
+   ————————————————————————————————————————————————————————————————
+   ———             CALIBRATE RATES BY TAKING AVG                ———
+   ————————————————————————————————————————————————————————————————
+*/
 
 static bool rate_calibrated = false;
 
@@ -286,9 +299,11 @@ void calib_rates() {
 }
 
 
-// —————————————————————————————————————————————————————————————
-// ———             FETCH ABS ANGLES FROM IMU                 ———
-// —————————————————————————————————————————————————————————————
+/*
+   —————————————————————————————————————————————————————————————
+   ———             FETCH ABS ANGLES FROM IMU                 ———
+   —————————————————————————————————————————————————————————————
+*/
 
 void read_MPU_data() {
     /* Reset interrupt flag and get INT_STATUS byte */
@@ -343,9 +358,11 @@ void read_MPU_data() {
 }
 
 
-// ————————————————————————————————————————————————————————————————
-// ———             RECEIVER READ GLOBAL VARIABLES               ———
-// ————————————————————————————————————————————————————————————————
+/*
+   ————————————————————————————————————————————————————————————————
+   ———             RECEIVER READ GLOBAL VARIABLES               ———
+   ————————————————————————————————————————————————————————————————
+*/
 
 static volatile byte input_flags;
 
@@ -369,9 +386,11 @@ void read_receiver() {
 }
 
 
-// ————————————————————————————————————————————————————
-// ———           SERVO GLOBAL VARIABLES             ———
-// ————————————————————————————————————————————————————
+/*
+   ————————————————————————————————————————————————————
+   ———           SERVO GLOBAL VARIABLES             ———
+   ————————————————————————————————————————————————————
+*/
 
 static const uint8_t LEFT_SERVO_PIN = 21;
 static const uint8_t RIGHT_SERVO_PIN = 22;
@@ -397,9 +416,11 @@ void read_roll();
 void read_pitch();
 void read_yaw();
 
-// ————————————————————————————————————————————————————
-// ———        PID VARIABLES AND COEFFICIENTS        ———
-// ————————————————————————————————————————————————————
+/*
+   ————————————————————————————————————————————————————
+   ———        PID VARIABLES AND COEFFICIENTS        ———
+   ————————————————————————————————————————————————————
+*/
 
 float pid_output_roll;
 
@@ -530,12 +551,12 @@ void inline watchdog_init() {
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
     delayMicroseconds(1);
-    // Enable WDG
+    /* Enable WDG */
     WDOG_STCTRLH = 0x0001;
-    // The next 2 lines sets the time-out value. This is the value that the watchdog timer compare itself to.
+    /* The next 2 lines sets the time-out value. This is the value that the watchdog timer compare itself to. */
     WDOG_TOVALL = 200;
     WDOG_TOVALH = 0;
-    // This sets prescale clock so that the watchdog timer ticks at 1kHZ instead of the default 1kHZ/4 = 200 HZ
+    /* This sets prescale clock so that the watchdog timer ticks at 1kHZ instead of the default 1kHZ/4 = 200 HZ */
     // WDOG_PRESC = 0;
 }
 
@@ -591,17 +612,9 @@ int main() {
         }
 
         /*
-           int value = (gyro_axis[ROLL_RATE] + 2000) * (255.0/4000.0);
-           analogWrite(DEBUG_PIN, value);
-           */
-
-        // print_angular_rates();
-
-        // print_receiver();
-        // print_attitude();
-        // print_yaw_pitch_roll();
-
-        ///*
+        int value = (gyro_axis[ROLL_RATE] + 2000) * (255.0/4000.0);
+        analogWrite(DEBUG_PIN, value);
+        */
 
         throttle = receiver_in[THROTTLE_CHANNEL] + 10;
 
@@ -630,14 +643,6 @@ int main() {
         left_ppm.writeMicroseconds(left_throttle + 1000);
         right_ppm.writeMicroseconds(right_throttle + 1000);
 
-        /*
-           serial_print(pid_output_roll);
-           serial_print("\t");
-           serial_print(left_throttle);
-           serial_print("\t");
-           serial_println(right_throttle);
-           */
-
         /* Blink LED to indicate activity */
         blink_state = !blink_state;
         digitalWrite(DEBUG_PIN, blink_state);
@@ -647,9 +652,11 @@ int main() {
 }
 
 
-// ————————————————————————————————————————————————————————————————
-// ———             RECEIVER READ INTERRUPT ROUTINES             ———
-// ————————————————————————————————————————————————————————————————
+/*
+   ————————————————————————————————————————————————————————————————
+   ———             RECEIVER READ INTERRUPT ROUTINES             ———
+   ————————————————————————————————————————————————————————————————
+*/
 
 void read_throttle() {
     if (digitalRead(THROTTLE_INPUT_PIN) == HIGH) {
