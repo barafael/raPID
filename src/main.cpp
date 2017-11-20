@@ -1,4 +1,7 @@
 #include <Arduino.h>
+#include "../teensy3/WProgram.h"
+
+#include <stdint.h>
 
 
 /*
@@ -141,7 +144,7 @@ void init_MPU6050() {
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
     Wire.begin();
     /* 400kHz I2C clock (200kHz if CPU is 8MHz) */
-    TWBR = 24;
+    // TWBR = 24;
 #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
     Fastwire::setup(400, true);
 #endif
@@ -312,7 +315,7 @@ void calib_rates() {
         mpu.setZGyroOffset(-85);
         mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
         */
-        iterations = iterations < 2000 ? iterations += 200 : iterations;
+        iterations = iterations < 2000 ? iterations + 200 : iterations;
     }
 }
 
@@ -518,7 +521,8 @@ void inline kick_the_dog() {
     interrupts();
 }
 
-int main() {
+
+extern "C" int main(void) {
     pinMode(LED_PIN, OUTPUT);
     pinMode(DEBUG_PIN, OUTPUT);
 
@@ -717,7 +721,7 @@ void print_binary(int value, int num_places) {
     serial_println();
 }
 
-int print_all(int num, ...) {
+void print_all(int num, ...) {
     char* line;
     va_list argList;
     va_start(argList, num);

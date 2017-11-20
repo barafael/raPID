@@ -6,7 +6,7 @@ typedef enum {
 
 static const uint16_t BLINK_PERIOD = 500;
 
-void blink_pattern(char pattern[]) {
+void blink_pattern(const char* pattern) {
     while(1) {
         for(size_t index = 0; index < strlen(pattern); index++) {
             switch(pattern[index]) {
@@ -26,7 +26,7 @@ void blink_pattern(char pattern[]) {
     }
 }
 
-void error_blink(error_type error, char message[]) {
+void error_blink(error_type error, const char* message) {
     Serial.println(message);
     switch(error) {
         case DMP_INIT_MEM_LOAD_FAILED:

@@ -22,4 +22,4 @@ typedef enum {
     YAW_CHANNEL      = 3
 } input_channel;
 
-#endif SETTINGS_H // SETTINGS_H
+#endif // SETTINGS_H
