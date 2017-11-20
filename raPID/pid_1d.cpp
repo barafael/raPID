@@ -92,17 +92,29 @@ VectorInt16 aaReal;  // [x, y, z]       gravity-free accel sensor measurements
 VectorInt16 aaWorld; // [x, y, z]       world-frame accel sensor measurements
 VectorFloat gravity; // [x, y, z]       gravity vector
 
-/* [psi, theta, phi]    Euler angle container */
+/* Euler angle container
+ * [psi, theta, phi]
+ */
 float euler[3];
 
-/* [yaw, pitch, roll]   Yaw/Pitch/Roll container and gravity vector */
+/* Yaw/Pitch/Roll container and gravity vector
+ * [yaw, pitch, roll]
+ */
 float yaw_pitch_roll[3];
 
-/* Scaled yaw_pitch_roll to [0, 1000] */
+/* Scaled yaw_pitch_roll to [0, 1000]
+ * [yaw, pitch, roll]
+ */
 int16_t attitude[3];
 
-/* Angular Rates */
+/* Angular Rates
+ * [yaw_rate, pitch_rate, roll_rate]
+ */
 int16_t gyro_axis[3] = { 0 };
+
+/* Angular Rate calibration offsets
+ * [yaw_offset, pitch_offset, roll_offset]
+ */
 int64_t gyro_axis_cal[3] = { 0 };
 
 
@@ -294,10 +306,15 @@ void calib_rates() {
         gyro_axis_cal[PITCH_RATE] /= iterations;
         gyro_axis_cal[YAW_RATE]   /= iterations;
 
+        /* Supply your own gyro offsets here, scaled for min sensitivity */
+        /*
+        mpu.setXGyroOffset(220);
+        mpu.setYGyroOffset(76);
+        mpu.setZGyroOffset(-85);
+        mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
+        */
         iterations = iterations < 2000 ? iterations += 200 : iterations;
     }
-
-    serial_println(F("Done calibrating gyro rates"));
 }
 
 
@@ -716,3 +733,4 @@ int print_all(int num, ...) {
     }
     va_end(argList);
 }
+
