@@ -559,8 +559,6 @@ extern "C" int main(void) {
 
         calculate_PID_absolute();
 
-        print_yaw_pitch_roll();
-
         /* wait for MPU interrupt or extra packet(s) available */
         // if you are really paranoid you can frequently test in between other
         // stuff to see if mpu_interrupt is true, and if so, "break;" from the
@@ -585,7 +583,6 @@ extern "C" int main(void) {
         left_throttle = left_throttle > 1000 ? 1000 : left_throttle;
         right_throttle = right_throttle > 1000 ? 1000 : right_throttle;
 
-        /*
         serial_print("thr:");
         serial_print(throttle);
         serial_print("\tsetp:");
@@ -598,7 +595,6 @@ extern "C" int main(void) {
         serial_print(right_throttle);
         serial_print("\tr-p-out:");
         serial_println(pid_output_roll);
-        */
 
         left_ppm.writeMicroseconds(left_throttle + 1000);
         right_ppm.writeMicroseconds(right_throttle + 1000);
@@ -738,3 +734,4 @@ void print_all(int num, ...) {
     }
     va_end(argList);
 }
+
