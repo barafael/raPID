@@ -176,6 +176,8 @@ void init_MPU6050() {
         /* Enable Arduino interrupt detection */
         serial_println(
             F("Enabling interrupt detection (Arduino external interrupt 0)..."));
+
+        pinMode(2, INPUT);
         attachInterrupt(2, dmp_data_ready, RISING);
         mpu_int_status = mpu.getIntStatus();
 
@@ -348,10 +350,6 @@ void read_MPU_data() {
 
         /* Read a packet from FIFO */
         mpu.getFIFOBytes(fifo_buffer, packet_size);
-
-        for (int i = 0; i < packet_size; i++) {
-            Serial.println(fifo_buffer[i]);
-        }
 
         /* Track FIFO count here in case there is > 1 packet available */
         /* (this lets us immediately read more without waiting for an interrupt) */
@@ -561,7 +559,7 @@ extern "C" int main(void) {
 
         calculate_PID_absolute();
 
-        //print_yaw_pitch_roll();
+        print_yaw_pitch_roll();
 
         /* wait for MPU interrupt or extra packet(s) available */
         // if you are really paranoid you can frequently test in between other
