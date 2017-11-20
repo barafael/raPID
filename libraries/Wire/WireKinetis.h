@@ -123,9 +123,9 @@ public:
 		return requestFrom((uint8_t)address, (uint8_t)quantity,
 			(uint8_t)(sendStop ? 1 : 0));
 	}
-	uint8_t requestFrom(int address, int quantity) {
+    /*uint8_t requestFrom(int address, int quantity) {
 		return requestFrom((uint8_t)address, (uint8_t)quantity, (uint8_t)1);
-	}
+    }*/
 	virtual size_t write(uint8_t data);
 	virtual size_t write(const uint8_t *data, size_t quantity);
 	virtual int available(void) {

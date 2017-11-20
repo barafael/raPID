@@ -1,9 +1,6 @@
 #include <Arduino.h>
 #include "../teensy3/WProgram.h"
 
-#include <stdint.h>
-
-
 /*
    ——————————————————————————————————————————————
    ———             HARDWARE SETUP             ———
@@ -33,11 +30,12 @@
     #define serial_begin(a);
 #endif
 
+#include <../../tools/arm/arm-none-eabi/include/stdint.h>
+
 #include "error_handling.h"
 #include "settings.h"
 #include "pins.h"
-#include "pins.h"
-
+#include "serial_debug.h"
 
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
@@ -97,17 +95,17 @@ VectorFloat gravity; // [x, y, z]       gravity vector
 /* Euler angle container
  * [psi, theta, phi]
  */
-float euler[3];
+float euler[3] = { 0.0 };
 
 /* Yaw/Pitch/Roll container and gravity vector
  * [yaw, pitch, roll]
  */
-float yaw_pitch_roll[3];
+float yaw_pitch_roll[3] = { 0.0 };
 
 /* Scaled yaw_pitch_roll to [0, 1000]
  * [yaw, pitch, roll]
  */
-int16_t attitude[3];
+int16_t attitude[3] = { 0 };
 
 /* Angular Rates
  * [yaw_rate, pitch_rate, roll_rate]
@@ -128,6 +126,7 @@ int64_t gyro_axis_cal[3] = { 0 };
 
 /* Indicates whether MPU interrupt pin has gone high */
 volatile bool mpu_interrupt = false;
+
 void dmp_data_ready() {
     mpu_interrupt = true;
 }
@@ -144,7 +143,7 @@ void init_MPU6050() {
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
     Wire.begin();
     /* 400kHz I2C clock (200kHz if CPU is 8MHz) */
-    // TWBR = 24;
+    TWBR = 24;
 #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
     Fastwire::setup(400, true);
 #endif
@@ -350,6 +349,10 @@ void read_MPU_data() {
         /* Read a packet from FIFO */
         mpu.getFIFOBytes(fifo_buffer, packet_size);
 
+        for (int i = 0; i < packet_size; i++) {
+            Serial.println(fifo_buffer[i]);
+        }
+
         /* Track FIFO count here in case there is > 1 packet available */
         /* (this lets us immediately read more without waiting for an interrupt) */
         fifo_count -= packet_size;
@@ -549,7 +552,7 @@ extern "C" int main(void) {
     attachInterrupt(PITCH_INPUT_PIN,    read_pitch,    CHANGE);
     attachInterrupt(YAW_INPUT_PIN,      read_yaw,      CHANGE);
 
-    watchdog_init();
+    //watchdog_init();
 
     while(1) {
         read_angular_rates();
@@ -557,6 +560,8 @@ extern "C" int main(void) {
         read_receiver();
 
         calculate_PID_absolute();
+
+        //print_yaw_pitch_roll();
 
         /* wait for MPU interrupt or extra packet(s) available */
         // if you are really paranoid you can frequently test in between other
@@ -582,6 +587,7 @@ extern "C" int main(void) {
         left_throttle = left_throttle > 1000 ? 1000 : left_throttle;
         right_throttle = right_throttle > 1000 ? 1000 : right_throttle;
 
+        /*
         serial_print("thr:");
         serial_print(throttle);
         serial_print("\tsetp:");
@@ -594,6 +600,7 @@ extern "C" int main(void) {
         serial_print(right_throttle);
         serial_print("\tr-p-out:");
         serial_println(pid_output_roll);
+        */
 
         left_ppm.writeMicroseconds(left_throttle + 1000);
         right_ppm.writeMicroseconds(right_throttle + 1000);
@@ -602,7 +609,7 @@ extern "C" int main(void) {
         blink_state = !blink_state;
         digitalWrite(DEBUG_PIN, blink_state);
 
-        kick_the_dog();
+        //kick_the_dog();
     }
 }
 
@@ -733,4 +740,3 @@ void print_all(int num, ...) {
     }
     va_end(argList);
 }
-
