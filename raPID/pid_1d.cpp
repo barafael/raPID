@@ -18,8 +18,6 @@
 */
 
 
-#define DEBUG_PIN 23
-
 #define ENABLE_DEBUG_PRINT
 
 #ifdef ENABLE_DEBUG_PRINT
@@ -34,6 +32,7 @@
 
 #include "error_handling.h"
 #include "settings.h"
+#include "pins.h"
 #include "pins.h"
 
 
@@ -313,7 +312,7 @@ void calib_rates() {
         mpu.setZGyroOffset(-85);
         mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
         */
-        iterations = iterations < 2000 ? iterations += 200 : iterations;
+        iterations = iterations < 2000 ? iterations + 200 : iterations;
     }
 }
 
@@ -410,9 +409,6 @@ void read_receiver() {
    ———           SERVO GLOBAL VARIABLES             ———
    ————————————————————————————————————————————————————
 */
-
-static const uint8_t LEFT_SERVO_PIN = 21;
-static const uint8_t RIGHT_SERVO_PIN = 22;
 
 Servo left_ppm;
 Servo right_ppm;
