@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "../teensy3/WProgram.h"
+#include "WProgram.h"
 
 // TODO check out setRate from MPU6050.h
 #include "MPU6050_6Axis_MotionApps20.h"
@@ -211,6 +211,7 @@ bool calib_rates_ok() {
         (abs(accumulator[ROLL_RATE])  < tolerance) &&
         (abs(accumulator[PITCH_RATE]) < tolerance) &&
         (abs(accumulator[YAW_RATE])   < tolerance);
+
     return rate_calibrated;
 }
 
@@ -239,13 +240,6 @@ void calib_rates() {
         gyro_axis_cal[PITCH_RATE] /= iterations;
         gyro_axis_cal[YAW_RATE]   /= iterations;
 
-        /* Supply your own gyro offsets here, scaled for min sensitivity */
-        /*
-        mpu.setXGyroOffset(220);
-        mpu.setYGyroOffset(76);
-        mpu.setZGyroOffset(-85);
-        mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
-        */
         iterations = iterations < 2000 ? iterations + 200 : iterations;
     }
 }

@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "../teensy3/WProgram.h"
+#include "WProgram.h"
 
 #include <stdint.h>
 
@@ -73,9 +73,10 @@ void arm_ESC() {
     serial_println("Initialising ESCs: 1000ms pulse");
     left_ppm.writeMicroseconds(1000);
     right_ppm.writeMicroseconds(1000);
-    delay(1500);
+    delay(1000);
     serial_println("Initialised ESCs");
 }
+
 
 extern uint16_t receiver_in[NUM_CHANNELS];
 
@@ -155,10 +156,10 @@ void inline watchdog_init() {
     WDOG_TOVALL = 200;
     WDOG_TOVALH = 0;
     /* This sets prescale clock so that the watchdog timer ticks at 1kHZ instead of the default 1kHZ/4 = 200 HZ */
-    // WDOG_PRESC = 0;
+    WDOG_PRESC = 4;
 }
 
-void inline kick_the_dog() {
+void inline feed_the_dog() {
     noInterrupts();
     WDOG_REFRESH = 0xA602;
     WDOG_REFRESH = 0xB480;
@@ -181,7 +182,7 @@ extern "C" int main(void) {
 
     init_MPU6050();
 
-    //watchdog_init();
+    watchdog_init();
 
     while(1) {
         read_angular_rates();
@@ -237,7 +238,7 @@ extern "C" int main(void) {
         blink_state = !blink_state;
         digitalWrite(DEBUG_PIN, blink_state);
 
-        //kick_the_dog();
+        feed_the_dog();
     }
 }
 

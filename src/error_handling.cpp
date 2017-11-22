@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "../teensy3/WProgram.h"
+#include "WProgram.h"
 
 #include "error_handling.h"
 
