@@ -17,6 +17,7 @@
 #include "serial_debug.h"
 #include "read_receiver.h"
 #include "imu.h"
+#include "pid.h"
 
 
 /*
@@ -55,6 +56,8 @@ extern int16_t attitude[3];
 extern int16_t gyro_axis[3];
 
 
+extern float pid_output_roll;
+
 /*
    ————————————————————————————————————————————————————
    ———           SERVO GLOBAL VARIABLES             ———
@@ -80,71 +83,6 @@ void arm_ESC() {
 
 extern uint16_t receiver_in[NUM_CHANNELS];
 
-/*
-   ————————————————————————————————————————————————————
-   ———        PID VARIABLES AND COEFFICIENTS        ———
-   ————————————————————————————————————————————————————
-*/
-
-float pid_output_roll;
-
-double pid_p_gain_roll = 0.25;
-double pid_i_gain_roll = 0.0015;
-double pid_d_gain_roll = 0.03;
-int pid_max_roll = 400;
-int pid_roll_integral_limit = 10;
-
-double pid_error;
-double pid_last_error;
-
-double p_term;
-double i_term;
-double d_term;
-
-float pid_roll_setpoint;
-
-/* Calculate PID output based on absolute angle in attitude[] */
-void calculate_PID_absolute() {
-    pid_roll_setpoint = receiver_in[ROLL_CHANNEL];
-    pid_error = attitude[ROLL_ANGLE] - pid_roll_setpoint;
-
-    p_term = pid_p_gain_roll * pid_error;
-
-    i_term += (pid_i_gain_roll * pid_error);
-    if (i_term > pid_roll_integral_limit) i_term = pid_roll_integral_limit;
-    else if (i_term < (pid_roll_integral_limit * -1)) i_term = (pid_roll_integral_limit * -1);
-
-    d_term = pid_d_gain_roll * gyro_axis[ROLL_RATE];
-    //d_term = pid_d_gain_roll * (pid_error - pid_last_error);
-
-    pid_output_roll = p_term + i_term + d_term;
-
-    if (pid_output_roll > pid_max_roll) pid_output_roll = pid_max_roll;
-    else if (pid_output_roll < pid_max_roll * -1) pid_output_roll = pid_max_roll * -1;
-
-    pid_last_error = pid_error;
-}
-
-/* Calculate PID output based on angular rate */
-void calculatePID_angular_rate() {
-    pid_roll_setpoint = receiver_in[ROLL_CHANNEL];
-    pid_error = gyro_axis[ROLL_RATE] - pid_roll_setpoint;
-
-    p_term = pid_p_gain_roll * pid_error;
-
-    i_term += (pid_i_gain_roll * pid_error);
-    if (i_term > pid_roll_integral_limit) i_term = pid_roll_integral_limit;
-    else if (i_term < (pid_roll_integral_limit * -1)) i_term = (pid_roll_integral_limit * -1);
-
-    d_term = pid_d_gain_roll * (pid_error - pid_last_error);
-
-    pid_output_roll = p_term + i_term + d_term;
-
-    if (pid_output_roll > pid_max_roll) pid_output_roll = pid_max_roll;
-    else if (pid_output_roll < pid_max_roll * -1) pid_output_roll = pid_max_roll * -1;
-
-    pid_last_error = pid_error;
-}
 
 void inline watchdog_init() {
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;
@@ -189,7 +127,7 @@ extern "C" int main(void) {
 
         read_receiver();
 
-        calculate_PID_absolute();
+        calculate_PID_absolute(receiver_in[ROLL_CHANNEL], attitude[ROLL_ANGLE], gyro_axis[ROLL_RATE]);
 
         //print_receiver();
 

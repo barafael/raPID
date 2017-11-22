@@ -19,6 +19,8 @@ src/imu.cpp
 src/imu.h
 src/main.cpp
 src/message.h
+src/pid.cpp
+src/pid.h
 src/pins.h
 src/read_receiver.cpp
 src/read_receiver.h
