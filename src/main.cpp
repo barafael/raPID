@@ -64,9 +64,6 @@ MPU6050 mpu;
 
 static const uint8_t mpu_address = 0x68;
 
-static const uint8_t LED_PIN = 13;
-bool blink_state = false;
-
 /* Holds actual interrupt status byte from MPU */
 uint8_t mpu_int_status;
 
@@ -178,8 +175,8 @@ void init_MPU6050() {
         serial_println(
             F("Enabling interrupt detection (Arduino external interrupt 0)..."));
 
-        pinMode(2, INPUT);
-        attachInterrupt(2, dmp_data_ready, RISING);
+        pinMode(MPU_INTERRUPT_PIN, INPUT);
+        attachInterrupt(MPU_INTERRUPT_PIN, dmp_data_ready, RISING);
         mpu_int_status = mpu.getIntStatus();
 
         serial_println(F("DMP ready! Waiting for first interrupt..."));
