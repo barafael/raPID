@@ -3,6 +3,8 @@
 
 #include "read_receiver.h"
 
+uint16_t receiver_in[NUM_CHANNELS] = { 0 };
+
 static volatile uint8_t input_flags;
 
 /* The servo interrupt writes to this variable and the receiver function reads */
@@ -19,7 +21,7 @@ static uint64_t receiver_pulse_start_time[NUM_CHANNELS];
 */
 
 /* Read each new value, indicated by the corresponding bit set in input_flags */
-void read_receiver(uint16_t receiver_in[]) {
+void read_receiver() {
     noInterrupts();
     for (size_t channel = 0; channel < NUM_CHANNELS; channel++) {
             receiver_in[channel] = receiver_in_shared[channel];

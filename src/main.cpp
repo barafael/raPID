@@ -6,10 +6,6 @@
 #include "Servo.h"
 #include "I2Cdev.h"
 
-// TODO check out setRate from MPU6050.h
-#include "MPU6050_6Axis_MotionApps20.h"
-// #include "MPU6050_9Axis_MotionApps41.h"
-
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
 #include "Wire.h"
 #endif
@@ -20,6 +16,7 @@
 #include "pins.h"
 #include "serial_debug.h"
 #include "read_receiver.h"
+#include "imu.h"
 
 
 /*
@@ -42,334 +39,20 @@
 static bool blink_state = false;
 
 
-/*
-   —————————————————————————————————————————————————
-   ———              MPU6050 VARIABLES            ———
-   —————————————————————————————————————————————————
-*/
-
-/* Class default I2C address is 0x68
-   specific I2C addresses may be passed as a parameter here
-   AD0 low = 0x68
-   (default for SparkFun breakout and InvenSense evaluation board)
-   AD0 high = 0x69
-*/
-MPU6050 mpu;
-
-static const uint8_t mpu_address = 0x68;
-
-/* Holds actual interrupt status byte from MPU */
-uint8_t mpu_int_status;
-
-/* Return status after each device operation
-   (0 = success, !0 = error) */
-uint8_t dev_status;
-
-/* Expected DMP packet size (default is 42 bytes) */
-uint16_t packet_size;
-
-uint16_t fifo_count;
-uint8_t fifo_buffer[64];
-
-
-/*
-   —————————————————————————————————————————————————
-   ———          ORIENTATION/MOTION VARS          ———
-   —————————————————————————————————————————————————
-*/
-
-Quaternion q;        // [w, x, y, z]    quaternion container
-VectorInt16 aa;      // [x, y, z]       accel sensor measurements
-VectorInt16 aaReal;  // [x, y, z]       gravity-free accel sensor measurements
-VectorInt16 aaWorld; // [x, y, z]       world-frame accel sensor measurements
-VectorFloat gravity; // [x, y, z]       gravity vector
-
-/* Euler angle container
- * [psi, theta, phi]
- */
-float euler[3] = { 0.0 };
-
 /* Yaw/Pitch/Roll container and gravity vector
  * [yaw, pitch, roll]
  */
-float yaw_pitch_roll[3] = { 0.0 };
+extern float yaw_pitch_roll[3];
 
 /* Scaled yaw_pitch_roll to [0, 1000]
  * [yaw, pitch, roll]
  */
-int16_t attitude[3] = { 0 };
+extern int16_t attitude[3];
 
 /* Angular Rates
  * [yaw_rate, pitch_rate, roll_rate]
  */
-int16_t gyro_axis[3] = { 0 };
-
-/* Angular Rate calibration offsets
- * [yaw_offset, pitch_offset, roll_offset]
- */
-int64_t gyro_axis_cal[3] = { 0 };
-
-
-/*
-   ————————————————————————————————————————————————————————————————
-   ———             MPU INTERRUPT DETECTION ROUTINE              ———
-   ————————————————————————————————————————————————————————————————
-*/
-
-/* Indicates whether MPU interrupt pin has gone high */
-volatile bool mpu_interrupt = false;
-
-void dmp_data_ready() {
-    mpu_interrupt = true;
-}
-
-
-/*
-   ———————————————————————————————————————————————————
-   ———             IMU INITIALISATION              ———
-   ———————————————————————————————————————————————————
-*/
-
-void init_MPU6050() {
-    /* Join I2C bus (I2Cdev library doesn't do this automatically) */
-#if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
-    Wire.begin();
-    /* 400kHz I2C clock (200kHz if CPU is 8MHz) */
-    TWBR = 12;
-#elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
-    Fastwire::setup(400, true);
-#endif
-
-    /* Initialize device */
-    serial_println(F("Initializing I2C devices..."));
-    mpu.initialize();
-
-    /* Verify connection */
-    serial_println(F("Testing device connections..."));
-    serial_println(mpu.testConnection() ? F("MPU6050 connection successful")
-                   : F("MPU6050 connection failed"));
-
-    /* Load and configure the DMP */
-    serial_println(F("Initializing DMP..."));
-    dev_status = mpu.dmpInitialize();
-
-    /* Supply your own gyro offsets here, scaled for min sensitivity */
-    mpu.setXGyroOffset(220);
-    mpu.setYGyroOffset(76);
-    mpu.setZGyroOffset(-85);
-    mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
-
-    /* Make sure initialisation worked (returns 0 if so) */
-    if (dev_status == 0) {
-        /* Turn on the DMP, now that it's ready */
-        serial_println(F("Enabling DMP..."));
-        mpu.setDMPEnabled(true);
-
-        /* Enable Arduino interrupt detection */
-        serial_println(
-            F("Enabling interrupt detection (Arduino external interrupt 0)..."));
-
-        pinMode(MPU_INTERRUPT_PIN, INPUT);
-        attachInterrupt(MPU_INTERRUPT_PIN, dmp_data_ready, RISING);
-        mpu_int_status = mpu.getIntStatus();
-
-        serial_println(F("DMP ready! Waiting for first interrupt..."));
-
-        /* Get expected DMP packet size for later comparison */
-        packet_size = mpu.dmpGetFIFOPacketSize();
-    } else {
-        /* Error while init */
-        switch (dev_status) {
-        case 1:
-            error_blink(DMP_INIT_MEM_LOAD_FAILED,
-                        "DMP init error code 1: Initial Memory Load failed!");
-            break;
-        case 2:
-            error_blink(DMP_CONF_UPDATES_FAILED,
-                        "DMP init error code 2: DMP configuration updates failed!");
-            break;
-        default:
-        {
-            char msg[50] = "DMP init error code     ";
-            itoa(dev_status, msg + 20, 10);
-            error_blink(DMP_ERROR_UNKNOWN, msg);
-            break;
-        }
-        }
-    }
-}
-
-
-/*
-   ————————————————————————————————————————————————————————————————
-   ———             FETCH ANGULAR RATES FROM IMU                 ———
-   ————————————————————————————————————————————————————————————————
-*/
-
-void read_raw_rates(int16_t *rates) {
-    Wire.beginTransmission(mpu_address);
-    Wire.write(0x43);
-    Wire.endTransmission();
-    Wire.requestFrom(mpu_address, 6);
-    while (Wire.available() < 6);
-    rates[ROLL_RATE]  = Wire.read() << 8 | Wire.read();
-    rates[PITCH_RATE] = Wire.read() << 8 | Wire.read();
-    rates[YAW_RATE]   = Wire.read() << 8 | Wire.read();
-}
-
-void read_angular_rates() {
-    Wire.beginTransmission(mpu_address);
-    Wire.write(0x43);
-    Wire.endTransmission();
-    Wire.requestFrom(mpu_address, 6);
-    while (Wire.available() < 6);
-    gyro_axis[ROLL_RATE]  = Wire.read() << 8 | Wire.read();
-    gyro_axis[PITCH_RATE] = Wire.read() << 8 | Wire.read();
-    gyro_axis[YAW_RATE]   = Wire.read() << 8 | Wire.read();
-
-    gyro_axis[ROLL_RATE]  -= gyro_axis_cal[ROLL_RATE];
-    gyro_axis[PITCH_RATE] -= gyro_axis_cal[PITCH_RATE];
-    gyro_axis[YAW_RATE]   -= gyro_axis_cal[YAW_RATE];
-}
-
-
-/*
-   ————————————————————————————————————————————————————————————————
-   ———             CALIBRATE RATES BY TAKING AVG                ———
-   ————————————————————————————————————————————————————————————————
-*/
-
-static bool rate_calibrated = false;
-
-bool calib_rates_ok() {
-    const int iterations = 50;
-    const int tolerance = 10;
-
-    int64_t accumulator[3] = { 0 };
-
-    for (uint16_t count = 0; count < iterations; count++) {
-        read_angular_rates();
-        accumulator[ROLL_RATE]  += gyro_axis[ROLL_RATE];
-        accumulator[PITCH_RATE] += gyro_axis[PITCH_RATE];
-        accumulator[YAW_RATE]   += gyro_axis[YAW_RATE];
-
-        delay(5);
-    }
-
-    accumulator[ROLL_RATE]  /= iterations;
-    accumulator[PITCH_RATE] /= iterations;
-    accumulator[YAW_RATE]   /= iterations;
-
-    serial_print("Average rate over ");
-    serial_print(iterations);
-    serial_println(" iterations: ");
-    serial_print((uint32_t)accumulator[ROLL_RATE]);
-    serial_print("\t");
-    serial_print((uint32_t)accumulator[PITCH_RATE]);
-    serial_print("\t");
-    serial_println((uint32_t)accumulator[YAW_RATE]);
-
-    rate_calibrated =
-        (abs(accumulator[ROLL_RATE])  < tolerance) &&
-        (abs(accumulator[PITCH_RATE]) < tolerance) &&
-        (abs(accumulator[YAW_RATE])   < tolerance);
-    return rate_calibrated;
-}
-
-void calib_rates() {
-    uint16_t iterations = 300;
-
-    serial_println(F("Calibrating gyro rates, hold still!"));
-
-    int16_t raw_rates[3] = { 0 };
-
-    /* Attempt calibration and check if it (probably) succeeded */
-    while(!calib_rates_ok()) {
-        for (int i = 0; i < 3; i++) {
-            gyro_axis_cal[i] = 0;
-        }
-        for (uint16_t count = 0; count < iterations; count++) {
-            read_raw_rates(raw_rates);
-            gyro_axis_cal[ROLL_RATE]  += raw_rates[0];
-            gyro_axis_cal[PITCH_RATE] += raw_rates[1];
-            gyro_axis_cal[YAW_RATE]   += raw_rates[2];
-
-            delay(5);
-        }
-
-        gyro_axis_cal[ROLL_RATE]  /= iterations;
-        gyro_axis_cal[PITCH_RATE] /= iterations;
-        gyro_axis_cal[YAW_RATE]   /= iterations;
-
-        /* Supply your own gyro offsets here, scaled for min sensitivity */
-        /*
-        mpu.setXGyroOffset(220);
-        mpu.setYGyroOffset(76);
-        mpu.setZGyroOffset(-85);
-        mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
-        */
-        iterations = iterations < 2000 ? iterations + 200 : iterations;
-    }
-}
-
-
-/*
-   —————————————————————————————————————————————————————————————
-   ———             FETCH ABS ANGLES FROM IMU                 ———
-   —————————————————————————————————————————————————————————————
-*/
-
-void read_MPU_data() {
-    /* Reset interrupt flag and get INT_STATUS byte */
-    mpu_interrupt = false;
-    mpu_int_status = mpu.getIntStatus();
-
-    /* Get current FIFO count */
-    fifo_count = mpu.getFIFOCount();
-
-    /* Check for overflow (this should be rare) */
-    if ((mpu_int_status & 0x10) || fifo_count == 1024) {
-        /* reset so we can continue cleanly */
-        mpu.resetFIFO();
-        serial_println(F("FIFO overflow!"));
-
-        /* Otherwise, check for DMP data ready interrupt (this happens often) */
-    } else if (mpu_int_status & 0x02) {
-        /* Wait for correct available data length, should be a VERY short wait */
-        while (fifo_count < packet_size) {
-            fifo_count = mpu.getFIFOCount();
-        }
-
-        /* Read a packet from FIFO */
-        mpu.getFIFOBytes(fifo_buffer, packet_size);
-
-        /* Track FIFO count here in case there is > 1 packet available */
-        /* (this lets us immediately read more without waiting for an interrupt) */
-        fifo_count -= packet_size;
-
-        mpu.dmpGetQuaternion(&q, fifo_buffer);
-        mpu.dmpGetGravity(&gravity, &q);
-        mpu.dmpGetYawPitchRoll(yaw_pitch_roll, &q, &gravity);
-
-        /* Yaw degrees */
-        // Add M_PI to get positive values (yaw_pitch_roll[0] element of (-M_PI, M_PI)).
-        // Angle in degree is ratio of reading to max reading * 180
-        // where max reading: 2 * M_PI
-        // int yaw_value = (int)180 - (yaw_pitch_roll[0] + M_PI) * 180 / (M_PI * 2);
-        // yaw_value = yaw_value > 180.0 ? 180.0 : yaw_value;
-        // yaw_value = yaw_value < 0.0 ? 0.0 : yaw_value;
-
-        /* Pitch degrees */
-        // Add 90 to start at horizontal, flat position
-        // Angle in degree is ratio of reading to max reading * 180
-        // where max reading: 2 * M_PI
-        // int pitch_value = (int)(90 + yaw_pitch_roll[1] * 180 / M_PI);
-
-        for (size_t index = YAW_ANGLE; index <= ROLL_ANGLE; index++) {
-            attitude[index] = (yaw_pitch_roll[index] + M_PI) * (1000 / (2 * M_PI));
-        }
-    }
-}
+extern int16_t gyro_axis[3];
 
 
 /*
@@ -394,7 +77,7 @@ void arm_ESC() {
     serial_println("Initialised ESCs");
 }
 
-uint16_t receiver_in[NUM_CHANNELS] = { 0 };
+extern uint16_t receiver_in[NUM_CHANNELS];
 
 /*
    ————————————————————————————————————————————————————
@@ -498,27 +181,22 @@ extern "C" int main(void) {
 
     init_MPU6050();
 
-    calib_rates();
-
-
     //watchdog_init();
 
     while(1) {
         read_angular_rates();
 
-        read_receiver(receiver_in);
+        read_receiver();
 
         calculate_PID_absolute();
 
-        print_receiver();
+        //print_receiver();
 
         /* wait for MPU interrupt or extra packet(s) available */
         // if you are really paranoid you can frequently test in between other
         // stuff to see if mpu_interrupt is true, and if so, "break;" from the
         // while() loop to immediately process the MPU data
-        if(mpu_interrupt || fifo_count >= packet_size) {
-            read_MPU_data();
-        }
+        read_abs_angles();
 
         /*
         int value = (gyro_axis[ROLL_RATE] + 2000) * (255.0/4000.0);
@@ -536,7 +214,7 @@ extern "C" int main(void) {
         left_throttle = left_throttle > 1000 ? 1000 : left_throttle;
         right_throttle = right_throttle > 1000 ? 1000 : right_throttle;
 
-        //#define DEBUG_COL
+        #define DEBUG_COL
 #ifdef DEBUG_COL
         serial_print("thr:");
         serial_print(throttle);

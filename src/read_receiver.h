@@ -4,7 +4,8 @@
 #include "settings.h"
 #include "pins.h"
 
-void read_receiver(uint16_t[]);
+
+void read_receiver();
 void init_rc_interrupts();
 
 #endif // READ_RECEIVER_H

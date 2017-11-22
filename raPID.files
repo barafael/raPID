@@ -13,7 +13,10 @@ libraries/Wire/WireKinetis.cpp
 libraries/Wire/WireKinetis.h
 libraries/Wire/utility/twi.c
 libraries/Wire/utility/twi.h
+src/error_handling.cpp
 src/error_handling.h
+src/imu.cpp
+src/imu.h
 src/main.cpp
 src/message.h
 src/pins.h
