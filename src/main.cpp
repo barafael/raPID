@@ -135,7 +135,7 @@ void init_MPU6050() {
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
     Wire.begin();
     /* 400kHz I2C clock (200kHz if CPU is 8MHz) */
-    TWBR = 24;
+    TWBR = 12;
 #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
     Fastwire::setup(400, true);
 #endif
