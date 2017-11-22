@@ -3,7 +3,6 @@
 
 static const uint8_t DEBUG_PIN = 23;
 
-static bool blink_state = false;
 static const uint8_t LED_PIN = 13;
 
 static const uint8_t MPU_INTERRUPT_PIN = 12;

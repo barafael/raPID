@@ -1,6 +1,27 @@
 #include <Arduino.h>
 #include "../teensy3/WProgram.h"
 
+#include <stdint.h>
+
+#include "Servo.h"
+#include "I2Cdev.h"
+
+// TODO check out setRate from MPU6050.h
+#include "MPU6050_6Axis_MotionApps20.h"
+// #include "MPU6050_9Axis_MotionApps41.h"
+
+#if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
+#include "Wire.h"
+#endif
+
+
+#include "error_handling.h"
+#include "settings.h"
+#include "pins.h"
+#include "serial_debug.h"
+#include "read_receiver.h"
+
+
 /*
    ——————————————————————————————————————————————
    ———             HARDWARE SETUP             ———
@@ -18,34 +39,7 @@
 */
 
 
-#define ENABLE_DEBUG_PRINT
-
-#ifdef ENABLE_DEBUG_PRINT
-    #define serial_println(a); (Serial.println(a)); Serial.flush();
-    #define serial_print(a); (Serial.print(a)); Serial.flush();
-    #define serial_begin(a); (Serial.begin(a)); Serial.flush();
-#else
-    #define serial_println(a);
-    #define serial_print(a);
-    #define serial_begin(a);
-#endif
-
-#include <../../tools/arm/arm-none-eabi/include/stdint.h>
-
-#include "error_handling.h"
-#include "settings.h"
-#include "pins.h"
-#include "serial_debug.h"
-
-#include "I2Cdev.h"
-#include "MPU6050_6Axis_MotionApps20.h"
-//#include "MPU6050_9Axis_MotionApps41.h"
-
-#if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
-#include "Wire.h"
-#endif
-
-#include "Servo.h"
+static bool blink_state = false;
 
 
 /*
@@ -379,34 +373,6 @@ void read_MPU_data() {
 
 
 /*
-   ————————————————————————————————————————————————————————————————
-   ———             RECEIVER READ GLOBAL VARIABLES               ———
-   ————————————————————————————————————————————————————————————————
-*/
-
-static volatile byte input_flags;
-
-/* The servo interrupt writes to this variable and the main loop reads */
-volatile uint16_t receiver_in_shared[NUM_CHANNELS];
-
-int16_t receiver_in[NUM_CHANNELS];
-
-/* Written by interrupt when HIGH value is read */
-uint32_t receiver_in_start[NUM_CHANNELS];
-
-/* Read each new value, indicated by the corresponding bit set in input_flags */
-void read_receiver() {
-    noInterrupts();
-    for (size_t channel = 0; channel < NUM_CHANNELS; channel++) {
-        if (input_flags & (1 << channel)) {
-            receiver_in[channel] = receiver_in_shared[channel] - 1000;
-        }
-    }
-    interrupts();
-}
-
-
-/*
    ————————————————————————————————————————————————————
    ———           SERVO GLOBAL VARIABLES             ———
    ————————————————————————————————————————————————————
@@ -428,11 +394,7 @@ void arm_ESC() {
     serial_println("Initialised ESCs");
 }
 
-void read_throttle();
-void read_roll();
-void read_pitch();
-void read_yaw();
-
+uint16_t receiver_in[NUM_CHANNELS] = { 0 };
 
 /*
    ————————————————————————————————————————————————————
@@ -525,7 +487,9 @@ extern "C" int main(void) {
     pinMode(LED_PIN, OUTPUT);
     pinMode(DEBUG_PIN, OUTPUT);
 
-    serial_begin(115200);
+    serial_begin(9600);
+
+    init_rc_interrupts();
 
     left_ppm.attach(LEFT_SERVO_PIN);
     right_ppm.attach(RIGHT_SERVO_PIN);
@@ -536,26 +500,17 @@ extern "C" int main(void) {
 
     calib_rates();
 
-    /* The pinMode should be correct by default, set it anyway */
-    pinMode(THROTTLE_INPUT_PIN, INPUT);
-    pinMode(ROLL_INPUT_PIN,     INPUT);
-    pinMode(PITCH_INPUT_PIN,    INPUT);
-    pinMode(YAW_INPUT_PIN,      INPUT);
-
-    /* On each CHANGE on an input pin, an interrupt handler is called */
-    attachInterrupt(THROTTLE_INPUT_PIN, read_throttle, CHANGE);
-    attachInterrupt(ROLL_INPUT_PIN,     read_roll,     CHANGE);
-    attachInterrupt(PITCH_INPUT_PIN,    read_pitch,    CHANGE);
-    attachInterrupt(YAW_INPUT_PIN,      read_yaw,      CHANGE);
 
     //watchdog_init();
 
     while(1) {
         read_angular_rates();
 
-        read_receiver();
+        read_receiver(receiver_in);
 
         calculate_PID_absolute();
+
+        print_receiver();
 
         /* wait for MPU interrupt or extra packet(s) available */
         // if you are really paranoid you can frequently test in between other
@@ -581,6 +536,8 @@ extern "C" int main(void) {
         left_throttle = left_throttle > 1000 ? 1000 : left_throttle;
         right_throttle = right_throttle > 1000 ? 1000 : right_throttle;
 
+        //#define DEBUG_COL
+#ifdef DEBUG_COL
         serial_print("thr:");
         serial_print(throttle);
         serial_print("\tsetp:");
@@ -593,6 +550,7 @@ extern "C" int main(void) {
         serial_print(right_throttle);
         serial_print("\tr-p-out:");
         serial_println(pid_output_roll);
+#endif
 
         left_ppm.writeMicroseconds(left_throttle + 1000);
         right_ppm.writeMicroseconds(right_throttle + 1000);
@@ -605,52 +563,6 @@ extern "C" int main(void) {
     }
 }
 
-
-/*
-   ————————————————————————————————————————————————————————————————
-   ———             RECEIVER READ INTERRUPT ROUTINES             ———
-   ————————————————————————————————————————————————————————————————
-*/
-
-void read_throttle() {
-    if (digitalRead(THROTTLE_INPUT_PIN) == HIGH) {
-        receiver_in_start[THROTTLE_CHANNEL] = micros();
-    } else {
-        receiver_in_shared[THROTTLE_CHANNEL] =
-            (uint16_t)(micros() - receiver_in_start[THROTTLE_CHANNEL]);
-        input_flags |= 1 << THROTTLE_CHANNEL;
-    }
-}
-
-void read_roll() {
-    if (digitalRead(ROLL_INPUT_PIN) == HIGH) {
-        receiver_in_start[ROLL_CHANNEL] = micros();
-    } else {
-        receiver_in_shared[ROLL_CHANNEL] =
-            (uint16_t)(micros() - receiver_in_start[ROLL_CHANNEL]);
-        input_flags |= 1 << ROLL_CHANNEL;
-    }
-}
-
-void read_pitch() {
-    if (digitalRead(PITCH_INPUT_PIN) == HIGH) {
-        receiver_in_start[PITCH_CHANNEL] = micros();
-    } else {
-        receiver_in_shared[PITCH_CHANNEL] =
-            (uint16_t)(micros() - receiver_in_start[PITCH_CHANNEL]);
-        input_flags |= 1 << PITCH_CHANNEL;
-    }
-}
-
-void read_yaw() {
-    if (digitalRead(YAW_INPUT_PIN) == HIGH) {
-        receiver_in_start[YAW_CHANNEL] = micros();
-    } else {
-        receiver_in_shared[YAW_CHANNEL] =
-            (uint16_t)(micros() - receiver_in_start[YAW_CHANNEL]);
-        input_flags |= 1 << YAW_CHANNEL;
-    }
-}
 
 
 /*

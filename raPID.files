@@ -17,6 +17,8 @@ src/error_handling.h
 src/main.cpp
 src/message.h
 src/pins.h
+src/read_receiver.cpp
+src/read_receiver.h
 src/serial_debug.h
 src/settings.h
 teensy3/Arduino.h
