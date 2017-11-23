@@ -30,7 +30,7 @@ void read_receiver() {
 
     for (size_t channel = 0; channel < NUM_CHANNELS; channel++) {
         receiver_in[channel] =
-                receiver_in[channel] < 1000 ? 0 : (receiver_in[channel] - 1000);
+                receiver_in[channel] < 1000 ? 1000 : (receiver_in[channel]);
     }
 }
 

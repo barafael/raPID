@@ -10,8 +10,6 @@
 #include "../include/settings.h"
 #include "../include/serial_debug.h"
 
-/* Indicates whether MPU interrupt pin has gone high */
-volatile bool mpu_interrupt = false;
 
 /*
    —————————————————————————————————————————————————
@@ -41,6 +39,9 @@ static uint16_t packet_size;
 
 static uint16_t fifo_count;
 static uint8_t fifo_buffer[64];
+
+/* Indicates whether MPU interrupt pin has gone high */
+static volatile bool mpu_interrupt = false;
 
 
 /*
@@ -116,9 +117,11 @@ void read_angular_rates() {
 */
 
 void read_abs_angles() {
+    /* skip if no MPU interrupt or no extra packet(s) available */
     if (!mpu_interrupt && (fifo_count < packet_size)) {
         return;
     }
+
     /* Reset interrupt flag and get INT_STATUS byte */
     mpu_interrupt = false;
 
@@ -269,6 +272,7 @@ void calib_rates() {
    ———             MPU INTERRUPT DETECTION ROUTINE              ———
    ————————————————————————————————————————————————————————————————
 */
+
 void dmp_data_ready() {
     mpu_interrupt = true;
 }

@@ -22,9 +22,9 @@ static double d_term;
 
 extern double pid_output_roll_rate;
 
-static double pid_p_gain_roll_rate = 0.15;
-static double pid_i_gain_roll_rate = 0.002;
-static double pid_d_gain_roll_rate = 0.032;
+static double pid_p_gain_roll_rate = 0.05;
+static double pid_i_gain_roll_rate = 0.0;
+static double pid_d_gain_roll_rate = 0.0;
 static int pid_max_roll_rate = 400;
 static int pid_roll_integral_limit_rate = 10;
 
@@ -57,7 +57,7 @@ void calculate_PID_stabilize(double pid_roll_setpoint, double measurement, doubl
 }
 
 /* Calculate PID output based on angular rate */
-void calculatePID_rate(double pid_roll_rate_setpoint, double measurement) {
+void calculate_PID_rate(double pid_roll_rate_setpoint, double measurement) {
     pid_error_rate = measurement - pid_roll_rate_setpoint;
 
     p_term_rate = pid_p_gain_roll_rate * pid_error_rate;
