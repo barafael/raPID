@@ -50,3 +50,40 @@ void print_angular_rates() {
     Serial.print("\t");
     Serial.println(gyro_axis[YAW_RATE]);
 }
+
+void print_binary(int value, int num_places) {
+    int mask = 0;
+
+    for (int n = 1; n <= num_places; n++) {
+        mask = (mask << 1) | 0x0001;
+    }
+    /* truncate v to specified number of places */
+    value = value & mask;
+
+    while (num_places) {
+        if (value & (0x0001 << (num_places - 1))) {
+            Serial.print(F("1"));
+        } else {
+            Serial.print(F("0"));
+        }
+
+        --num_places;
+        if (((num_places % 4) == 0) && (num_places != 0)) {
+            Serial.print("_");
+        }
+    }
+    Serial.println();
+}
+
+void print_all(int num, ...) {
+    char* line;
+    va_list argList;
+    va_start(argList, num);
+
+    for (; num; num--) {
+        line = va_arg(argList, char*);
+        Serial.print("line: ");
+        Serial.println(line);
+    }
+    va_end(argList);
+}

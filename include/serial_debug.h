@@ -25,5 +25,7 @@ void print_attitude();
 void print_binary(int value, int num_places);
 void print_receiver();
 void print_yaw_pitch_roll();
+void print_all(int num, ...);
+void print_binary(int value, int num_places);
 
 #endif // SERIAL_DEBUG_H
