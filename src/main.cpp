@@ -123,7 +123,9 @@ extern "C" int main(void) {
     watchdog_init();
 
     while(1) {
+        //digitalWrite(DEBUG_PIN, HIGH);
         read_angular_rates();
+        //digitalWrite(DEBUG_PIN, LOW);
 
         read_receiver();
 
@@ -135,7 +137,10 @@ extern "C" int main(void) {
         // if you are really paranoid you can frequently test in between other
         // stuff to see if mpu_interrupt is true, and if so, "break;" from the
         // while() loop to immediately process the MPU data
+
+        digitalWrite(DEBUG_PIN, HIGH);
         read_abs_angles();
+        digitalWrite(DEBUG_PIN, LOW);
 
         /*
         int value = (gyro_axis[ROLL_RATE] + 2000) * (255.0/4000.0);

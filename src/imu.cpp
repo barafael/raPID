@@ -121,10 +121,18 @@ void read_abs_angles() {
     }
     /* Reset interrupt flag and get INT_STATUS byte */
     mpu_interrupt = false;
+
+
+    //508us at TWBR = 24, 140 us at TWBR = 12
+    //digitalWrite(DEBUG_PIN, HIGH);
     mpu_int_status = mpu.getIntStatus();
+    //digitalWrite(DEBUG_PIN, LOW);
 
     /* Get current FIFO count */
+    //608us at TWBR = 24, 160 us at TWBR = 12
+    //digitalWrite(DEBUG_PIN, HIGH);
     fifo_count = mpu.getFIFOCount();
+    //digitalWrite(DEBUG_PIN, LOW);
 
     /* Check for overflow (this should be rare) */
     if ((mpu_int_status & 0x10) || fifo_count == 1024) {
@@ -135,20 +143,28 @@ void read_abs_angles() {
         /* Otherwise, check for DMP data ready interrupt (this happens often) */
     } else if (mpu_int_status & 0x02) {
         /* Wait for correct available data length, should be a VERY short wait */
+        //digitalWrite(DEBUG_PIN, HIGH);
         while (fifo_count < packet_size) {
             fifo_count = mpu.getFIFOCount();
         }
+        //digitalWrite(DEBUG_PIN, LOW);
 
         /* Read a packet from FIFO */
+        // 4.64ms at TWBR = 24, 1.28ms at TWBR = 12
+        //digitalWrite(DEBUG_PIN, HIGH);
         mpu.getFIFOBytes(fifo_buffer, packet_size);
+        //digitalWrite(DEBUG_PIN, LOW);
 
         /* Track FIFO count here in case there is > 1 packet available */
         /* (this lets us immediately read more without waiting for an interrupt) */
         fifo_count -= packet_size;
 
+        // 230us
+        //digitalWrite(DEBUG_PIN, HIGH);
         mpu.dmpGetQuaternion(&q, fifo_buffer);
         mpu.dmpGetGravity(&gravity, &q);
         mpu.dmpGetYawPitchRoll(yaw_pitch_roll, &q, &gravity);
+        //digitalWrite(DEBUG_PIN, LOW);
 
         /* Yaw degrees */
         // Add M_PI to get positive values (yaw_pitch_roll[0] element of (-M_PI, M_PI)).
@@ -164,9 +180,12 @@ void read_abs_angles() {
         // where max reading: 2 * M_PI
         // int pitch_value = (int)(90 + yaw_pitch_roll[1] * 180 / M_PI);
 
+        //12.5us
+        //digitalWrite(DEBUG_PIN, HIGH);
         for (size_t index = YAW_ANGLE; index <= ROLL_ANGLE; index++) {
             attitude[index] = (yaw_pitch_roll[index] + M_PI) * (1000 / (2 * M_PI));
         }
+        //digitalWrite(DEBUG_PIN, LOW);
     }
 }
 
@@ -291,6 +310,8 @@ void init_MPU6050() {
     mpu.setZGyroOffset(-85);
     mpu.setZAccelOffset(1788); // 1688 factory default for my test chip
 
+    // TODO investigate if rate 2 has negative effect. Default is 4.
+    mpu.setRate(2);
     /* Make sure initialisation worked (returns 0 if so) */
     if (dev_status == 0) {
         /* Turn on the DMP, now that it's ready */
