@@ -6,9 +6,9 @@
 static const uint16_t BLINK_PERIOD = 500;
 
 void blink_pattern(const char* pattern) {
-    while(1) {
-        for(size_t index = 0; index < strlen(pattern); index++) {
-            switch(pattern[index]) {
+    while (1) {
+        for (size_t index = 0; index < strlen(pattern); index++) {
+            switch (pattern[index]) {
                 case '0':
                     digitalWrite(13, LOW);
                     delay(BLINK_PERIOD);
@@ -27,7 +27,7 @@ void blink_pattern(const char* pattern) {
 
 void error_blink(error_type error, const char* message) {
     Serial.println(message);
-    switch(error) {
+    switch (error) {
         case DMP_INIT_MEM_LOAD_FAILED:
             blink_pattern("1100");
             break;

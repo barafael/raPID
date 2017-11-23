@@ -26,6 +26,7 @@ src/read_receiver.cpp
 include/read_receiver.h
 include/serial_debug.h
 include/settings.h
+src/serial_debug.cpp
 teensy3/Arduino.h
 teensy3/AudioStream.cpp
 teensy3/AudioStream.h

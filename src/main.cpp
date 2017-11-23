@@ -90,10 +90,14 @@ void inline watchdog_init() {
     delayMicroseconds(1);
     /* Enable WDG */
     WDOG_STCTRLH = 0x0001;
-    /* The next 2 lines sets the time-out value. This is the value that the watchdog timer compare itself to. */
+    /* The next 2 lines sets the time-out value.
+     * This is the value that the watchdog timer compare itself to.
+     * */
     WDOG_TOVALL = 200;
     WDOG_TOVALH = 0;
-    /* This sets prescale clock so that the watchdog timer ticks at 1kHZ instead of the default 1kHZ/4 = 200 HZ */
+    /* This sets prescale clock so that the watchdog timer ticks at
+     * 1kHZ instead of the default 1kHZ/4 = 200 HZ
+     * */
     WDOG_PRESC = 4;
 }
 
@@ -122,16 +126,17 @@ extern "C" int main(void) {
 
     watchdog_init();
 
-    while(1) {
-        //digitalWrite(DEBUG_PIN, HIGH);
+    while (1) {
+        // digitalWrite(DEBUG_PIN, HIGH);
         read_angular_rates();
-        //digitalWrite(DEBUG_PIN, LOW);
+        // digitalWrite(DEBUG_PIN, LOW);
 
         read_receiver();
 
-        calculate_PID_absolute(receiver_in[ROLL_CHANNEL], attitude[ROLL_ANGLE], gyro_axis[ROLL_RATE]);
+        calculate_PID_absolute(receiver_in[ROLL_CHANNEL],
+                attitude[ROLL_ANGLE], gyro_axis[ROLL_RATE]);
 
-        //print_receiver();
+        // print_receiver();
 
         /* wait for MPU interrupt or extra packet(s) available */
         // if you are really paranoid you can frequently test in between other
@@ -185,49 +190,6 @@ extern "C" int main(void) {
 }
 
 
-
-/*
-   ————————————————————————————————————————————————————
-   ———             SERIAL DEBUG OUTPUT              ———
-   ————————————————————————————————————————————————————
-*/
-
-void print_yaw_pitch_roll() {
-    Serial.print(F("yaw_pitch_roll\t"));
-    Serial.print(yaw_pitch_roll[YAW_ANGLE]);
-    Serial.print(F("\t"));
-    Serial.print(yaw_pitch_roll[PITCH_ANGLE]);
-    Serial.print(F("\t"));
-    Serial.println(yaw_pitch_roll[ROLL_ANGLE]);
-}
-
-void print_attitude() {
-    Serial.print(F("Attitude\t"));
-    Serial.print(attitude[YAW_ANGLE]);
-    Serial.print(F("\t"));
-    Serial.print(attitude[PITCH_ANGLE]);
-    Serial.print(F("\t"));
-    Serial.println(attitude[ROLL_ANGLE]);
-}
-
-void print_receiver() {
-    Serial.print(receiver_in[THROTTLE_CHANNEL]);
-    Serial.print(F("\t"));
-    Serial.print(receiver_in[ROLL_CHANNEL]);
-    Serial.print(F("\t"));
-    Serial.print(receiver_in[PITCH_CHANNEL]);
-    Serial.print(F("\t"));
-    Serial.println(receiver_in[YAW_CHANNEL]);
-}
-
-void print_angular_rates() {
-    Serial.print(gyro_axis[ROLL_RATE]);
-    Serial.print("\t");
-    Serial.print(gyro_axis[PITCH_RATE]);
-    Serial.print("\t");
-    Serial.println(gyro_axis[YAW_RATE]);
-}
-
 void print_binary(int value, int num_places) {
     int mask = 0;
 
@@ -238,7 +200,6 @@ void print_binary(int value, int num_places) {
     value = value & mask;
 
     while (num_places) {
-
         if (value & (0x0001 << (num_places - 1))) {
             serial_print(F("1"));
         } else {
@@ -258,7 +219,7 @@ void print_all(int num, ...) {
     va_list argList;
     va_start(argList, num);
 
-    for(; num; num--) {
+    for (; num; num--) {
         line = va_arg(argList, char*);
         Serial.print("line: ");
         Serial.println(line);

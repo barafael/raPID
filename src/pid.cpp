@@ -30,7 +30,7 @@ void calculate_PID_absolute(float pid_roll_setpoint, float measurement, float ro
     else if (i_term < (pid_roll_integral_limit * -1)) i_term = (pid_roll_integral_limit * -1);
 
     d_term = pid_d_gain_roll * roll_rate;
-    //d_term = pid_d_gain_roll * (pid_error - pid_last_error);
+    // d_term = pid_d_gain_roll * (pid_error - pid_last_error);
 
     pid_output_roll = p_term + i_term + d_term;
 
