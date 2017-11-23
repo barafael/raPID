@@ -44,7 +44,7 @@ THE SOFTWARE.
 ===============================================
 */
 
-#include <../../tools/arm/arm-none-eabi/include/stdint.h>
+#include <stdint.h>
 #include "WireKinetis.h"
 
 #ifndef _I2CDEV_H_

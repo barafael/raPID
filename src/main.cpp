@@ -179,8 +179,7 @@ extern "C" int main(void) {
 
         /* Blink LED to indicate activity */
         blink_state = !blink_state;
-        digitalWrite(DEBUG_PIN, blink_state);
-
+        digitalWrite(LED_PIN, blink_state);
         feed_the_dog();
     }
 }
