@@ -3,7 +3,7 @@
 
 #include "../include/read_receiver.h"
 
-uint16_t receiver_in[NUM_CHANNELS] = { 0 };
+extern uint16_t receiver_in[NUM_CHANNELS];
 
 static volatile uint8_t input_flags;
 

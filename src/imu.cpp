@@ -58,17 +58,17 @@ static VectorFloat gravity;  // [x, y, z]       gravity vector
 /* Yaw/Pitch/Roll container and gravity vector
  * [yaw, pitch, roll]
  */
-float yaw_pitch_roll[3] = { 0.0 };
+extern float yaw_pitch_roll[3];
 
 /* Scaled yaw_pitch_roll to [0, 1000]
  * [yaw, pitch, roll]
  */
-int16_t attitude[3] = { 0 };
+extern int16_t attitude[3];
 
 /* Angular Rates
  * [yaw_rate, pitch_rate, roll_rate]
  */
-int16_t gyro_axis[3] = { 0 };
+extern int16_t gyro_axis[3];
 
 /* Angular Rate calibration offsets
  * [yaw_offset, pitch_offset, roll_offset]

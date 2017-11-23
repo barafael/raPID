@@ -43,20 +43,21 @@ static bool blink_state = false;
 /* Yaw/Pitch/Roll container and gravity vector
  * [yaw, pitch, roll]
  */
-extern float yaw_pitch_roll[3];
+float yaw_pitch_roll[3] = { 0.0 };
 
 /* Scaled yaw_pitch_roll to [0, 1000]
  * [yaw, pitch, roll]
  */
-extern int16_t attitude[3];
+int16_t attitude[3] = { 0 };
 
 /* Angular Rates
  * [yaw_rate, pitch_rate, roll_rate]
  */
-extern int16_t gyro_axis[3];
+int16_t gyro_axis[3] = { 0 };
 
 
-extern float pid_output_roll;
+double pid_output_roll = 0.0;
+double pid_output_roll_rate = 0.0;
 
 /*
    ————————————————————————————————————————————————————
@@ -81,7 +82,7 @@ void arm_ESC() {
 }
 
 
-extern uint16_t receiver_in[NUM_CHANNELS];
+uint16_t receiver_in[NUM_CHANNELS] = { 0 };
 
 
 void inline watchdog_init() {
@@ -133,7 +134,7 @@ extern "C" int main(void) {
 
         read_receiver();
 
-        calculate_PID_absolute(receiver_in[ROLL_CHANNEL],
+        calculate_PID_stabilize(receiver_in[ROLL_CHANNEL],
                 attitude[ROLL_ANGLE], gyro_axis[ROLL_RATE]);
 
         // print_receiver();
