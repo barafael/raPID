@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "WProgram.h"
 
-#include "error_handling.h"
+#include "../include/error_handling.h"
 
 static const uint16_t BLINK_PERIOD = 500;
 

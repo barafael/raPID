@@ -11,13 +11,13 @@
 #endif
 
 
-#include "error_handling.h"
-#include "settings.h"
-#include "pins.h"
-#include "serial_debug.h"
-#include "read_receiver.h"
-#include "imu.h"
-#include "pid.h"
+#include "../include/error_handling.h"
+#include "../include/settings.h"
+#include "../include/pins.h"
+#include "../include/serial_debug.h"
+#include "../include/read_receiver.h"
+#include "../include/imu.h"
+#include "../include/pid.h"
 
 
 /*

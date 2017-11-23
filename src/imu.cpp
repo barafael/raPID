@@ -5,10 +5,10 @@
 #include "MPU6050_6Axis_MotionApps20.h"
 // #include "MPU6050_9Axis_MotionApps41.h"
 
-#include "pins.h"
-#include "error_handling.h"
-#include "settings.h"
-#include "serial_debug.h"
+#include "../include/pins.h"
+#include "../include/error_handling.h"
+#include "../include/settings.h"
+#include "../include/serial_debug.h"
 
 /* Indicates whether MPU interrupt pin has gone high */
 volatile bool mpu_interrupt = false;

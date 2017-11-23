@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "../teensy3/WProgram.h"
 
-#include "read_receiver.h"
+#include "../include/read_receiver.h"
 
 uint16_t receiver_in[NUM_CHANNELS] = { 0 };
 
