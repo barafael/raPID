@@ -1,3 +1,5 @@
+include/state.h
+include/state_change.h
 libraries/I2Cdev/I2Cdev.cpp
 libraries/I2Cdev/I2Cdev.h
 
@@ -24,6 +26,8 @@ src/read_receiver.cpp
 src/rc_control.cpp
 src/imu.cpp
 src/pid.cpp
+src/state.cpp
+src/state_change.cpp
 src/watchdog.cpp
 
 include/pins.h

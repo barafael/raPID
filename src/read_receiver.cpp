@@ -8,10 +8,10 @@ extern uint16_t receiver_in[NUM_CHANNELS];
 static volatile uint8_t input_flags;
 
 /* The servo interrupt writes to this variable and the receiver function reads */
-static volatile uint16_t receiver_in_shared[NUM_CHANNELS];
+static volatile uint16_t receiver_in_shared[NUM_CHANNELS] = { 0 };
 
 /* Written by interrupt on rising edge */
-static uint64_t receiver_pulse_start_time[NUM_CHANNELS];
+static uint64_t receiver_pulse_start_time[NUM_CHANNELS] = { 0 };
 
 
 /*
@@ -31,9 +31,23 @@ void read_receiver() {
     for (size_t channel = 0; channel < NUM_CHANNELS; channel++) {
         receiver_in[channel] =
                 receiver_in[channel] < 1000 ? 1000 : (receiver_in[channel]);
+        receiver_in[channel] =
+                receiver_in[channel] > 2000 ? 2000 : (receiver_in[channel]);
     }
 }
 
+
+static bool has_signal_on_init() {
+    noInterrupts();
+    for (size_t channel = 0; channel < NUM_CHANNELS; channel++) {
+        if (receiver_in_shared[channel] != 0) {
+            interrupts();
+            return true;
+        }
+    }
+    interrupts();
+    return false;
+}
 
 void read_throttle();
 void read_roll();
@@ -52,6 +66,13 @@ void init_rx_interrupts() {
     attachInterrupt(ROLL_INPUT_PIN,     read_roll,     CHANGE);
     attachInterrupt(PITCH_INPUT_PIN,    read_pitch,    CHANGE);
     attachInterrupt(YAW_INPUT_PIN,      read_yaw,      CHANGE);
+
+    delay(20);
+    if (!has_signal_on_init()) {
+        Serial.println("No receiver signal! Waiting.");
+        while (!has_signal_on_init()) { };
+    }
+    Serial.println("Receiver signal detected, continuing.");
 }
 
 

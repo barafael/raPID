@@ -51,7 +51,6 @@ static uint8_t fifo_buffer[64];
 /* Indicates whether MPU interrupt pin has gone high */
 static volatile bool mpu_interrupt = false;
 
-
 /*
    —————————————————————————————————————————————————
    ———          ORIENTATION/MOTION VARS          ———
