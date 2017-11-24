@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "WProgram.h"
 
-void watchdog_init() {
+void init_watchdog() {
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
     delayMicroseconds(1);

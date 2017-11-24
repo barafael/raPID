@@ -67,7 +67,7 @@ static VectorFloat gravity;  // [x, y, z]       gravity vector
 /* Yaw/Pitch/Roll container and gravity vector
  * [yaw, pitch, roll]
  */
-extern float yaw_pitch_roll[3];
+float yaw_pitch_roll[3] = { 0.0 };
 
 /* Scaled yaw_pitch_roll to [0, 1000]
  * [yaw, pitch, roll]
@@ -292,7 +292,7 @@ void dmp_data_ready() {
    ———————————————————————————————————————————————————
 */
 
-void init_MPU6050() {
+void init_mpu6050() {
     /* Join I2C bus (I2Cdev library doesn't do this automatically) */
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
     Wire.begin();
@@ -327,7 +327,7 @@ void init_MPU6050() {
     mpu.setZAccelOffset(1788);
 
     // TODO investigate if rate 2 has negative effect. Default is 4.
-    mpu.setRate(2);
+    mpu.setRate(4);
     /* Make sure initialisation worked (returns 0 if so) */
     if (dev_status == 0) {
         /* Turn on the DMP, now that it's ready */

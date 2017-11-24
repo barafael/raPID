@@ -21,6 +21,18 @@
 #include "../include/watchdog.h"
 #include "../include/rc_control.h"
 
+#define TIMING_ANALYSIS
+#ifdef TIMING_ANALYSIS
+#define time(a) {\
+    digitalWrite(DEBUG_PIN, HIGH); \
+    a;\
+    digitalWrite(DEBUG_PIN, LOW);\
+}
+#else
+#define time(a) a
+#endif
+
+#define notime(a) a
 
 /*
    ——————————————————————————————————————————————
@@ -41,11 +53,6 @@
 
 static bool blink_state = false;
 static double setpoint_rate;
-
-/* Yaw/Pitch/Roll container and gravity vector
- * [yaw, pitch, roll]
- */
-float yaw_pitch_roll[3] = { 0.0 };
 
 /* Scaled yaw_pitch_roll to [0, 1000]
  * [yaw, pitch, roll]
@@ -79,35 +86,35 @@ extern "C" int main(void) {
     left_ppm.attach(LEFT_SERVO_PIN);
     right_ppm.attach(RIGHT_SERVO_PIN);
 
-    arm_ESC();
+    time(arm_ESC());
 
-    init_MPU6050();
+    init_mpu6050();
 
-    watchdog_init();
+    init_watchdog();
 
     while (1) {
-        read_receiver();
+        notime(read_receiver());
 
-        // digitalWrite(DEBUG_PIN, HIGH);
-        read_angular_rates();
-        // digitalWrite(DEBUG_PIN, LOW);
+        notime(read_abs_angles());
 
-        setpoint_rate = receiver_in[ROLL_CHANNEL] - 1500.0;
-        calculate_PID_rate(setpoint_rate, gyro_axis[ROLL_RATE]);
-
-        // digitalWrite(DEBUG_PIN, HIGH);
-        read_abs_angles();
-        // digitalWrite(DEBUG_PIN, LOW);
-
-        // calculate_PID_stabilize(receiver_in[ROLL_CHANNEL],
-        //        attitude[ROLL_ANGLE], gyro_axis[ROLL_RATE]);
-
-        // print_receiver();
+        notime(read_angular_rates());
 
         /*
-        int value = (gyro_axis[ROLL_RATE] + 2000) * (255.0/4000.0);
-        analogWrite(DEBUG_PIN, value);
-        */
+        Serial.print(receiver_in[ROLL_CHANNEL] - 1500);
+        Serial.print('\t');
+        Serial.print(attitude[ROLL_ANGLE]);
+        Serial.print('\t');
+        Serial.println(gyro_axis[ROLL_RATE]);
+*/
+
+        notime(calculate_PID_stabilize(receiver_in[ROLL_CHANNEL] - 1000,
+                attitude[ROLL_ANGLE], gyro_axis[ROLL_RATE]));
+
+
+        //setpoint_rate = receiver_in[ROLL_CHANNEL] - 1500.0;
+        setpoint_rate = pid_output_roll;
+
+        notime(calculate_PID_rate(-15 * setpoint_rate, gyro_axis[ROLL_RATE]));
 
         throttle = receiver_in[THROTTLE_CHANNEL];
 
@@ -136,6 +143,8 @@ extern "C" int main(void) {
         serial_print("\tright:");
         serial_print(right_throttle);
         serial_print("\tr-p-out:");
+        serial_print(pid_output_roll);
+        serial_print("\tr-p_rate-out:");
         serial_println(pid_output_roll_rate);
 #endif
 

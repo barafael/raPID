@@ -6,9 +6,9 @@
 
 extern double pid_output_roll;
 
-static double pid_p_gain_roll = 0.15;
-static double pid_i_gain_roll = 0.002;
-static double pid_d_gain_roll = 0.032;
+static double pid_p_gain_roll = 0.30;
+static double pid_i_gain_roll = 0.005;
+static double pid_d_gain_roll = 0.0;
 static int pid_max_roll = 400;
 static int pid_roll_integral_limit = 10;
 
@@ -22,9 +22,9 @@ static double d_term;
 
 extern double pid_output_roll_rate;
 
-static double pid_p_gain_roll_rate = 0.05;
+static double pid_p_gain_roll_rate = 0.035;
 static double pid_i_gain_roll_rate = 0.0;
-static double pid_d_gain_roll_rate = 0.0;
+static double pid_d_gain_roll_rate = 0.03;
 static int pid_max_roll_rate = 400;
 static int pid_roll_integral_limit_rate = 10;
 
