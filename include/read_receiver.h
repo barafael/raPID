@@ -6,6 +6,6 @@
 
 
 void read_receiver();
-void init_rc_interrupts();
+void init_rx_interrupts();
 
 #endif // READ_RECEIVER_H

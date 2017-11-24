@@ -80,7 +80,7 @@ extern "C" int main(void) {
 
     serial_begin(9600);
 
-    init_rc_interrupts();
+    init_rx_interrupts();
 
     left_ppm.attach(LEFT_SERVO_PIN);
     right_ppm.attach(RIGHT_SERVO_PIN);

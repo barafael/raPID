@@ -40,7 +40,7 @@ void read_roll();
 void read_pitch();
 void read_yaw();
 
-void init_rc_interrupts() {
+void init_rx_interrupts() {
     /* The pinMode should be set to input by default, set it anyway */
     pinMode(THROTTLE_INPUT_PIN, INPUT);
     pinMode(ROLL_INPUT_PIN,     INPUT);
