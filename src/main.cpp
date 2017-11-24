@@ -61,12 +61,6 @@ int16_t gyro_axis[3] = { 0 };
 double pid_output_roll = 0.0;
 double pid_output_roll_rate = 0.0;
 
-/*
-   ————————————————————————————————————————————————————
-   ———           SERVO GLOBAL VARIABLES             ———
-   ————————————————————————————————————————————————————
-*/
-
 Servo left_ppm;
 Servo right_ppm;
 uint16_t left_throttle;
@@ -151,4 +145,3 @@ extern "C" int main(void) {
         feed_the_dog();
     }
 }
-

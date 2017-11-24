@@ -11,6 +11,13 @@
 #include "../include/serial_debug.h"
 
 
+#define MPU6050_ACCEL_OFFSET_X -1524
+#define MPU6050_ACCEL_OFFSET_Y -444
+#define MPU6050_ACCEL_OFFSET_Z 1108
+#define MPU6050_GYRO_OFFSET_X  105
+#define MPU6050_GYRO_OFFSET_Y  95
+#define MPU6050_GYRO_OFFSET_Z  -21
+
 /*
    —————————————————————————————————————————————————
    ———              MPU6050 VARIABLES            ———
@@ -23,6 +30,7 @@
    (default for SparkFun breakout and InvenSense evaluation board)
    AD0 high = 0x69
 */
+
 static MPU6050 mpu;
 
 static const uint8_t mpu_address = 0x68;
@@ -309,10 +317,13 @@ void init_MPU6050() {
     dev_status = mpu.dmpInitialize();
 
     /* Supply your own gyro offsets here, scaled for min sensitivity */
-    mpu.setXGyroOffset(220);
-    mpu.setYGyroOffset(76);
-    mpu.setZGyroOffset(-85);
-    // 1688 factory default for my test chip
+    mpu.setXAccelOffset(MPU6050_ACCEL_OFFSET_X);
+    mpu.setYAccelOffset(MPU6050_ACCEL_OFFSET_Y);
+    mpu.setZAccelOffset(MPU6050_ACCEL_OFFSET_Z);
+    mpu.setXGyroOffset(MPU6050_GYRO_OFFSET_X);
+    mpu.setYGyroOffset(MPU6050_GYRO_OFFSET_Y);
+    mpu.setZGyroOffset(MPU6050_GYRO_OFFSET_Z);
+
     mpu.setZAccelOffset(1788);
 
     // TODO investigate if rate 2 has negative effect. Default is 4.
