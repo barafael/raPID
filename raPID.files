@@ -19,8 +19,10 @@ libraries/Wire/WireKinetis.h
 libraries/Wire/utility/twi.c
 libraries/Wire/utility/twi.h
 
+src/layout.h
 src/main.cpp
 src/error_handling.cpp
+src/pid_coefficients.h
 src/serial_debug.cpp
 src/read_receiver.cpp
 src/rc_control.cpp

@@ -22,6 +22,7 @@
 #include "../include/rc_control.h"
 #include "../include/state.h"
 #include "../include/state_change.h"
+#include "pid_coefficients.h"
 
 #define TIMING_ANALYSIS
 #ifdef TIMING_ANALYSIS
@@ -78,6 +79,7 @@ uint16_t right_throttle;
 uint16_t throttle;
 uint16_t receiver_in[NUM_CHANNELS] = { 0 };
 
+uint8_t flight_mode_index = 0;
 
 extern "C" int main(void) {
     serial_begin(9600);
