@@ -144,7 +144,7 @@ extern "C" int main(void) {
             serial_print("thr:");
             serial_print(throttle);
             serial_print("\tsetp:");
-            serial_print(setpoint_rate);
+            serial_print(pid_output_roll);
             serial_print("\tr-angl:");
             serial_print(attitude[ROLL_ANGLE]);
             serial_print("\tleft:");

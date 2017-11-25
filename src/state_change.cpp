@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include "WProgram.h"
 
+#include "../libraries/Servo/Servo.h"
+
 #include "../include/state.h"
 #include "../include/watchdog.h"
 #include "../include/read_receiver.h"
@@ -14,6 +16,9 @@
     receiver_in[ROLL_CHANNEL] < threshold \
 
 extern uint16_t receiver_in[NUM_CHANNELS];
+
+extern Servo left_ppm;
+extern Servo right_ppm;
 
 static bool disarm_started = false;
 static uint32_t since_disarm_start;
@@ -32,10 +37,16 @@ bool check_disarm_status() {
                 since_disarm_start = 0;
                 disarm_start_millis = 0;
                 disarm();
+
+                left_ppm.writeMicroseconds(1000);
+                right_ppm.writeMicroseconds(1000);
+
                 while (channels_within_threshold(DISARM_THRESHOLD)) {
                     feed_the_dog();
                     read_receiver();
                     read_abs_angles();
+                    left_ppm.writeMicroseconds(1000);
+                    right_ppm.writeMicroseconds(1000);
                     delayMicroseconds(5);
                 }
                 Serial.println("disarmed!");
