@@ -38,7 +38,6 @@
 #define notime(f) f
 
 static bool blink_state = false;
-static double setpoint_rate;
 
 /*
    ——————————————————————————————————————————————
@@ -98,6 +97,8 @@ extern "C" int main(void) {
 
     init_watchdog();
 
+    init_pid_coefficients();
+
     state = DISARMED;
     while (1) {
         switch (state) {
@@ -121,9 +122,8 @@ extern "C" int main(void) {
 
 
             //setpoint_rate = receiver_in[ROLL_CHANNEL] - 1500.0;
-            setpoint_rate = pid_output_roll;
 
-            notime(calculate_PID_rate(-15 * setpoint_rate, gyro_axis[ROLL_RATE]));
+            notime(calculate_PID_rate(-15 * pid_output_roll, gyro_axis[ROLL_RATE]));
 
             throttle = receiver_in[THROTTLE_CHANNEL];
 
@@ -139,7 +139,7 @@ extern "C" int main(void) {
             left_ppm.writeMicroseconds(left_throttle);
             right_ppm.writeMicroseconds(right_throttle);
 
-            //#define DEBUG_COL
+            #define DEBUG_COL
 #ifdef DEBUG_COL
             serial_print("thr:");
             serial_print(throttle);
