@@ -1,5 +1,5 @@
-#include <Arduino.h>
-#include "WProgram.h"
+#include "../teensy3/Arduino.h"
+#include "../teensy3/WProgram.h"
 
 #include "../include/settings.h"
 #include "../include/pins.h"

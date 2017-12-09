@@ -14,7 +14,7 @@
 */
 void init_pid_coefficients();
 
-extern uint8_t flight_mode_index;
+extern size_t flight_mode_index;
 
 struct __attribute__((packed)) coefficient_t {
     double rate_p = 0.0;

@@ -1,5 +1,5 @@
-#include <Arduino.h>
-#include "WProgram.h"
+#include "../teensy3/Arduino.h"
+#include "../teensy3/WProgram.h"
 
 void init_watchdog() {
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;

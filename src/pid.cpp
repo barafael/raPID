@@ -1,5 +1,11 @@
 #include "pid_coefficients.h"
 
+typedef struct {
+    double p;
+    double i;
+    double d;
+} pid_coeff;
+
 extern double pid_output_roll_rate;
 
 static double pid_error_rate;

@@ -1,5 +1,5 @@
-#include <Arduino.h>
-#include "WProgram.h"
+#include "../teensy3/Arduino.h"
+#include "../teensy3/WProgram.h"
 
 // TODO check out setRate from MPU6050.h
 #include "MPU6050_6Axis_MotionApps20.h"
@@ -66,17 +66,7 @@ static VectorFloat gravity;  // [x, y, z]       gravity vector
 /* Yaw/Pitch/Roll container and gravity vector
  * [yaw, pitch, roll]
  */
-float yaw_pitch_roll[3] = { 0.0 };
-
-/* Scaled yaw_pitch_roll to [0, 1000]
- * [yaw, pitch, roll]
- */
-extern int16_t attitude[3];
-
-/* Angular Rates
- * [yaw_rate, pitch_rate, roll_rate]
- */
-extern int16_t gyro_axis[3];
+static float yaw_pitch_roll[3] = { 0.0 };
 
 /* Angular Rate calibration offsets
  * [yaw_offset, pitch_offset, roll_offset]
@@ -90,7 +80,7 @@ static int64_t gyro_axis_cal[3] = { 0 };
    ————————————————————————————————————————————————————————————————
 */
 
-void read_raw_rates(int16_t *rates) {
+void read_raw_rates(int16_t rates[3]) {
     Wire.beginTransmission(mpu_address);
     Wire.write(0x43);
     Wire.endTransmission();
@@ -101,7 +91,7 @@ void read_raw_rates(int16_t *rates) {
     rates[YAW_RATE]   = Wire.read() << 8 | Wire.read();
 }
 
-void read_angular_rates() {
+void read_angular_rates(int16_t gyro_axis[3]) {
     Wire.beginTransmission(mpu_address);
     Wire.write(0x43);
     Wire.endTransmission();
@@ -123,7 +113,7 @@ void read_angular_rates() {
    —————————————————————————————————————————————————————————————
 */
 
-void read_abs_angles() {
+void read_abs_angles(int16_t attitude[3]) {
     /* skip if no MPU interrupt or no extra packet(s) available */
     if (!mpu_interrupt && (fifo_count < packet_size)) {
         return;
@@ -193,7 +183,8 @@ void read_abs_angles() {
         // 12.5us
         // digitalWrite(DEBUG_PIN, HIGH);
         for (size_t index = YAW_ANGLE; index <= ROLL_ANGLE; index++) {
-            attitude[index] = (yaw_pitch_roll[index] + M_PI) * (1000 / (2 * M_PI));
+            //TODO test if conversion from double to short is problem
+            attitude[index] = ((double)yaw_pitch_roll[index] + M_PI) * (1000.0 / (2 * M_PI));
         }
         // digitalWrite(DEBUG_PIN, LOW);
     }
@@ -208,14 +199,14 @@ void read_abs_angles() {
 
 static bool rate_calibrated = false;
 
-bool calib_rates_ok() {
+bool calib_rates_ok(int16_t gyro_axis[3]) {
     const int iterations = 50;
     const int tolerance = 10;
 
     int64_t accumulator[3] = { 0 };
 
     for (uint16_t count = 0; count < iterations; count++) {
-        read_angular_rates();
+        read_angular_rates(gyro_axis);
         accumulator[ROLL_RATE]  += gyro_axis[ROLL_RATE];
         accumulator[PITCH_RATE] += gyro_axis[PITCH_RATE];
         accumulator[YAW_RATE]   += gyro_axis[YAW_RATE];
@@ -245,22 +236,25 @@ bool calib_rates_ok() {
 }
 
 void calib_rates() {
+    int16_t gyro_axis[3] = { 0 };
+    read_angular_rates(gyro_axis);
+
+    int16_t raw_rates[3] = { 0 };
+
     uint16_t iterations = 300;
 
     serial_println(F("Calibrating gyro rates, hold still!"));
 
-    int16_t raw_rates[3] = { 0 };
-
     /* Attempt calibration and check if it (probably) succeeded */
-    while (!calib_rates_ok()) {
+    while (!calib_rates_ok(gyro_axis)) {
         for (int i = 0; i < 3; i++) {
             gyro_axis_cal[i] = 0;
         }
         for (uint16_t count = 0; count < iterations; count++) {
             read_raw_rates(raw_rates);
-            gyro_axis_cal[ROLL_RATE]  += raw_rates[0];
-            gyro_axis_cal[PITCH_RATE] += raw_rates[1];
-            gyro_axis_cal[YAW_RATE]   += raw_rates[2];
+            gyro_axis_cal[ROLL_RATE]  += raw_rates[ROLL_RATE];
+            gyro_axis_cal[PITCH_RATE] += raw_rates[PITCH_RATE];
+            gyro_axis_cal[YAW_RATE]   += raw_rates[YAW_RATE];
 
             delay(5);
         }
@@ -365,6 +359,5 @@ void init_mpu6050() {
         }
         }
     }
-    // TODO use setOffset functions
     calib_rates();
 }

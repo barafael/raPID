@@ -1,5 +1,5 @@
-#include <Arduino.h>
-#include "WProgram.h"
+#include "../teensy3/Arduino.h"
+#include "../teensy3/WProgram.h"
 
 #include <stdint.h>
 
@@ -49,10 +49,10 @@ static bool blink_state = false;
      GND ------------------ GND
      SDA ------------------ A4/pin 18
      SCL ------------------ A5/pin 19
-     INT ------------------ Digital Pin 2
+     INT ------------------ Digital Pin 12 (see pins.h)
 
-   PPM from RC RX go to pins 9, 10, 11, 12 (see pins.h)
-   Output PPM to ESC's: pins 20, 21
+   PPM from RC RX go to pins 8, 9, 10, 11 (see pins.h)
+   Output PPM to ESC's: pins 21, 22
 */
 
 state_t state;
@@ -73,12 +73,13 @@ double pid_output_roll_rate = 0.0;
 
 Servo left_ppm;
 Servo right_ppm;
+
 uint16_t left_throttle;
 uint16_t right_throttle;
-uint16_t throttle;
+
 uint16_t receiver_in[NUM_CHANNELS] = { 0 };
 
-uint8_t flight_mode_index = 0;
+size_t flight_mode_index = 0;
 
 extern "C" int main(void) {
     serial_begin(9600);
@@ -105,9 +106,9 @@ extern "C" int main(void) {
         case ARMED:
             notime(read_receiver());
 
-            notime(read_abs_angles());
+            notime(read_abs_angles(attitude));
 
-            notime(read_angular_rates());
+            notime(read_angular_rates(gyro_axis));
 
             /*
             Serial.print(receiver_in[ROLL_CHANNEL] - 1500);
@@ -125,10 +126,8 @@ extern "C" int main(void) {
 
             notime(calculate_PID_rate(-15 * pid_output_roll, gyro_axis[ROLL_RATE]));
 
-            throttle = receiver_in[THROTTLE_CHANNEL];
-
-            left_throttle  = throttle + pid_output_roll_rate;
-            right_throttle = throttle - pid_output_roll_rate;
+            left_throttle  = receiver_in[THROTTLE_CHANNEL] + pid_output_roll_rate;
+            right_throttle = receiver_in[THROTTLE_CHANNEL] - pid_output_roll_rate;
 
             left_throttle = left_throttle < 1000 ? 1000 : left_throttle;
             right_throttle = right_throttle < 1000 ? 1000 : right_throttle;
@@ -142,7 +141,7 @@ extern "C" int main(void) {
             #define DEBUG_COL
 #ifdef DEBUG_COL
             serial_print("thr:");
-            serial_print(throttle);
+            serial_print(receiver_in[THROTTLE_CHANNEL]);
             serial_print("\tsetp:");
             serial_print(pid_output_roll);
             serial_print("\tr-angl:");
@@ -163,7 +162,7 @@ extern "C" int main(void) {
             break;
         case DISARMED:
             notime(read_receiver());
-            notime(read_abs_angles());
+            notime(read_abs_angles(attitude));
 
             if (check_arm_status()) {
                 break;

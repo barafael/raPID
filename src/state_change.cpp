@@ -1,5 +1,5 @@
-#include <Arduino.h>
-#include "WProgram.h"
+#include "../teensy3/Arduino.h"
+#include "../teensy3/WProgram.h"
 
 #include "../libraries/Servo/Servo.h"
 
@@ -28,6 +28,8 @@ static bool arm_started = false;
 static uint32_t since_arm_start;
 static uint32_t arm_start_millis;
 
+int16_t ignored_data[3] = { 0 };
+
 bool check_disarm_status() {
     if (channels_within_threshold(DISARM_THRESHOLD)) {
         if (disarm_started) {
@@ -44,7 +46,7 @@ bool check_disarm_status() {
                 while (channels_within_threshold(DISARM_THRESHOLD)) {
                     feed_the_dog();
                     read_receiver();
-                    read_abs_angles();
+                    read_abs_angles(ignored_data);
                     left_ppm.writeMicroseconds(1000);
                     right_ppm.writeMicroseconds(1000);
                     delayMicroseconds(5);
@@ -75,7 +77,7 @@ bool check_arm_status() {
                 while (channels_within_threshold(ARM_THRESHOLD)) {
                     feed_the_dog();
                     read_receiver();
-                    read_abs_angles();
+                    read_abs_angles(ignored_data);
                     delayMicroseconds(5);
                 }
                 Serial.println("armed!");
