@@ -5,7 +5,7 @@
 
 #include "../include/state.h"
 #include "../include/watchdog.h"
-#include "../include/read_receiver.h"
+#include "../include/receiver.h"
 #include "../include/imu.h"
 #include "../include/imutypes.h"
 #include "../include/settings.h"
@@ -29,7 +29,8 @@ static bool arm_started = false;
 static uint32_t since_arm_start;
 static uint32_t arm_start_millis;
 
-axis_t ignored_data = { 0, 0, 0 };
+axis_t ignored_data_imu = { 0, 0, 0 };
+channels_t ignored_data_rx;
 
 bool check_disarm_status() {
     if (channels_within_threshold(DISARM_THRESHOLD)) {
@@ -46,8 +47,8 @@ bool check_disarm_status() {
 
                 while (channels_within_threshold(DISARM_THRESHOLD)) {
                     feed_the_dog();
-                    read_receiver();
-                    read_abs_angles(&ignored_data);
+                    read_receiver(&ignored_data_rx);
+                    read_abs_angles(&ignored_data_imu);
                     left_ppm.writeMicroseconds(1000);
                     right_ppm.writeMicroseconds(1000);
                     delayMicroseconds(5);
@@ -77,8 +78,8 @@ bool check_arm_status() {
                 arm();
                 while (channels_within_threshold(ARM_THRESHOLD)) {
                     feed_the_dog();
-                    read_receiver();
-                    read_abs_angles(&ignored_data);
+                    read_receiver(&ignored_data_rx);
+                    read_abs_angles(&ignored_data_imu);
                     delayMicroseconds(5);
                 }
                 Serial.println("armed!");

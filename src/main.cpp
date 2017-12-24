@@ -15,7 +15,7 @@
 #include "../include/settings.h"
 #include "../include/pins.h"
 #include "../include/serial_debug.h"
-#include "../include/read_receiver.h"
+#include "../include/receiver.h"
 #include "../include/imu.h"
 #include "../include/pid.h"
 #include "../include/watchdog.h"
@@ -77,7 +77,7 @@ Servo right_ppm;
 uint16_t left_throttle;
 uint16_t right_throttle;
 
-uint16_t receiver_in[NUM_CHANNELS] = { 0 };
+channels_t receiver_in;
 
 size_t flight_mode_index = 0;
 
@@ -104,7 +104,7 @@ extern "C" int main(void) {
     while (1) {
         switch (state) {
         case ARMED:
-            notime(read_receiver());
+            notime(read_receiver(&receiver_in));
 
             notime(read_abs_angles(&attitude));
 
@@ -118,7 +118,7 @@ extern "C" int main(void) {
             Serial.println(angular_rate.roll);
             */
 
-            notime(calculate_PID_stabilize(receiver_in[ROLL_CHANNEL] - 1000,
+            notime(calculate_PID_stabilize(receiver_in.channels[ROLL_CHANNEL] - 1000,
                                            attitude.roll, angular_rate.roll));
 
 
@@ -126,8 +126,8 @@ extern "C" int main(void) {
 
             notime(calculate_PID_rate(-15 * pid_output_roll, angular_rate.roll));
 
-            left_throttle  = receiver_in[THROTTLE_CHANNEL] + pid_output_roll_rate;
-            right_throttle = receiver_in[THROTTLE_CHANNEL] - pid_output_roll_rate;
+            left_throttle  = receiver_in.channels[THROTTLE_CHANNEL] + pid_output_roll_rate;
+            right_throttle = receiver_in.channels[THROTTLE_CHANNEL] - pid_output_roll_rate;
 
             left_throttle = left_throttle < 1000 ? 1000 : left_throttle;
             right_throttle = right_throttle < 1000 ? 1000 : right_throttle;
@@ -141,7 +141,7 @@ extern "C" int main(void) {
             #define DEBUG_COL
 #ifdef DEBUG_COL
             serial_print("thr:");
-            serial_print(receiver_in[THROTTLE_CHANNEL]);
+            serial_print(receiver_in.channels[THROTTLE_CHANNEL]);
             serial_print("\tsetp:");
             serial_print(pid_output_roll);
             serial_print("\tr-angl:");
@@ -161,7 +161,7 @@ extern "C" int main(void) {
             }
             break;
         case DISARMED:
-            notime(read_receiver());
+            notime(read_receiver(&receiver_in));
             notime(read_abs_angles(&attitude));
 
             if (check_arm_status()) {
