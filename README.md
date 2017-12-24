@@ -4,4 +4,4 @@ Not that versatile as of now. If I keep working on it, I plan to add rate/stabil
 
 Adjusting the settings should be done via bluetooth and a desktop application/website (have not thought about that part yet...)
 
-blog-in-progress @ [https://medium-endian.github.io/Arduino-based-PID-flight-controller/](https://medium-endian.github.io/Arduino-based-PID-flight-controller/)
+blog-in-progress @ [https://barafael.github.io/Simple-PID-flight-controller/](https://barafael.github.io/Simple-PID-flight-controller/)
