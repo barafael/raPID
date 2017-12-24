@@ -64,9 +64,8 @@ state_t state;
 axis_t attitude = { 0, 0, 0 };
 
 /* Angular Rates
- * [yaw_rate, pitch_rate, roll_rate]
  */
-int16_t gyro_axis[3] = { 0 };
+axis_t angular_rate = { 0, 0, 0 };
 
 
 double pid_output_roll = 0.0;
@@ -109,23 +108,23 @@ extern "C" int main(void) {
 
             notime(read_abs_angles(&attitude));
 
-            notime(read_angular_rates(gyro_axis));
+            notime(read_angular_rates(&angular_rate));
 
             /*
             Serial.print(receiver_in[ROLL_CHANNEL] - 1500);
             Serial.print('\t');
             Serial.print(attitude.roll);
             Serial.print('\t');
-            Serial.println(gyro_axis[ROLL_RATE]);
+            Serial.println(angular_rate.roll);
             */
 
             notime(calculate_PID_stabilize(receiver_in[ROLL_CHANNEL] - 1000,
-                                           attitude.roll, gyro_axis[ROLL_RATE]));
+                                           attitude.roll, angular_rate.roll));
 
 
             //setpoint_rate = receiver_in[ROLL_CHANNEL] - 1500.0;
 
-            notime(calculate_PID_rate(-15 * pid_output_roll, gyro_axis[ROLL_RATE]));
+            notime(calculate_PID_rate(-15 * pid_output_roll, angular_rate.roll));
 
             left_throttle  = receiver_in[THROTTLE_CHANNEL] + pid_output_roll_rate;
             right_throttle = receiver_in[THROTTLE_CHANNEL] - pid_output_roll_rate;
