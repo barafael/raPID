@@ -22,6 +22,7 @@
 #include "../include/rc_control.h"
 #include "../include/state.h"
 #include "../include/state_change.h"
+#include "../include/imutypes.h"
 #include "pid_coefficients.h"
 
 #define TIMING_ANALYSIS
@@ -58,9 +59,9 @@ static bool blink_state = false;
 state_t state;
 
 /* Scaled yaw_pitch_roll to [0, 1000]
- * [yaw, pitch, roll]
  */
-int16_t attitude[3] = { 0 };
+
+axis_t attitude = { 0, 0, 0 };
 
 /* Angular Rates
  * [yaw_rate, pitch_rate, roll_rate]
@@ -106,20 +107,20 @@ extern "C" int main(void) {
         case ARMED:
             notime(read_receiver());
 
-            notime(read_abs_angles(attitude));
+            notime(read_abs_angles(&attitude));
 
             notime(read_angular_rates(gyro_axis));
 
             /*
             Serial.print(receiver_in[ROLL_CHANNEL] - 1500);
             Serial.print('\t');
-            Serial.print(attitude[ROLL_ANGLE]);
+            Serial.print(attitude.roll);
             Serial.print('\t');
             Serial.println(gyro_axis[ROLL_RATE]);
             */
 
             notime(calculate_PID_stabilize(receiver_in[ROLL_CHANNEL] - 1000,
-                                           attitude[ROLL_ANGLE], gyro_axis[ROLL_RATE]));
+                                           attitude.roll, gyro_axis[ROLL_RATE]));
 
 
             //setpoint_rate = receiver_in[ROLL_CHANNEL] - 1500.0;
@@ -145,7 +146,7 @@ extern "C" int main(void) {
             serial_print("\tsetp:");
             serial_print(pid_output_roll);
             serial_print("\tr-angl:");
-            serial_print(attitude[ROLL_ANGLE]);
+            serial_print(attitude.roll);
             serial_print("\tleft:");
             serial_print(left_throttle);
             serial_print("\tright:");
@@ -162,7 +163,7 @@ extern "C" int main(void) {
             break;
         case DISARMED:
             notime(read_receiver());
-            notime(read_abs_angles(attitude));
+            notime(read_abs_angles(&attitude));
 
             if (check_arm_status()) {
                 break;

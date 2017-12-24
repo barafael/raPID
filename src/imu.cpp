@@ -10,6 +10,8 @@
 #include "../include/settings.h"
 #include "../include/serial_debug.h"
 
+#include "../include/imutypes.h"
+
 
 static const uint16_t MPU6050_ACCEL_OFFSET_X = -1524;
 static const uint16_t MPU6050_ACCEL_OFFSET_Y = -444;
@@ -17,6 +19,7 @@ static const uint16_t MPU6050_ACCEL_OFFSET_Z = 1108;
 static const uint16_t MPU6050_GYRO_OFFSET_X  = 105;
 static const uint16_t MPU6050_GYRO_OFFSET_Y  = 95;
 static const uint16_t MPU6050_GYRO_OFFSET_Z  = -21;
+
 
 /*
    —————————————————————————————————————————————————
@@ -120,7 +123,7 @@ void read_angular_rates(int16_t angular_rates[3]) {
    —————————————————————————————————————————————————————————————
 */
 
-void read_abs_angles(int16_t attitude[3]) {
+void read_abs_angles(axis_t *attitude) {
     /* skip if no MPU interrupt or no extra packet(s) available */
     if (!mpu_interrupt && (fifo_count < packet_size)) {
         return;
@@ -189,10 +192,11 @@ void read_abs_angles(int16_t attitude[3]) {
 
         // 12.5us
         // digitalWrite(DEBUG_PIN, HIGH);
-        for (size_t index = YAW_ANGLE; index <= ROLL_ANGLE; index++) {
-            //TODO test if conversion from double to short is problem
-            attitude[index] = ((double)yaw_pitch_roll[index] + M_PI) * (1000.0 / (2 * M_PI));
-        }
+        //TODO test if conversion from double to short is problem
+        //TODO try using [0..2*M_PI]
+        attitude->yaw   = ((double)yaw_pitch_roll[YAW_ANGLE] + M_PI) * (1000.0 / (2 * M_PI));
+        attitude->pitch = ((double)yaw_pitch_roll[PITCH_ANGLE] + M_PI) * (1000.0 / (2 * M_PI));
+        attitude->roll  = ((double)yaw_pitch_roll[ROLL_ANGLE] + M_PI) * (1000.0 / (2 * M_PI));
         // digitalWrite(DEBUG_PIN, LOW);
     }
 }
