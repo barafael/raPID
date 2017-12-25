@@ -54,7 +54,7 @@
    Output PPM to ESC's: pins 21, 22
 */
 
-state_t state;
+state_t state = DISARMED;
 
 /* Scaled yaw_pitch_roll to [0, 1000]
  */
@@ -99,7 +99,6 @@ extern "C" int main(void) {
 
     init_pid_coefficients();
 
-    state = DISARMED;
     while (1) {
         switch (state) {
         case ARMED:
