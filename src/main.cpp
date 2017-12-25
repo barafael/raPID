@@ -37,7 +37,6 @@
 
 #define notime(f) f
 
-static bool blink_state = false;
 
 /*
    ——————————————————————————————————————————————
@@ -62,7 +61,7 @@ state_t state;
 
 axis_t attitude = { 0, 0, 0 };
 
-/* Angular Rates
+/* Angular Rate
  */
 axis_t angular_rate = { 0, 0, 0 };
 
@@ -78,6 +77,7 @@ uint16_t right_throttle;
 
 channels_t receiver_in;
 
+/* TODO: enumify? */
 size_t flight_mode_index = 0;
 
 extern "C" int main(void) {
@@ -89,7 +89,7 @@ extern "C" int main(void) {
     left_ppm.attach(LEFT_SERVO_PIN);
     right_ppm.attach(RIGHT_SERVO_PIN);
 
-    time(arm_ESC());
+    notime(arm_ESC());
 
     init_rx_interrupts();
 
@@ -137,7 +137,7 @@ extern "C" int main(void) {
             left_ppm.writeMicroseconds(left_throttle);
             right_ppm.writeMicroseconds(right_throttle);
 
-            #define DEBUG_COL
+#define DEBUG_COL
 #ifdef DEBUG_COL
             serial_print("thr:");
             serial_print(receiver_in.channels[THROTTLE_CHANNEL]);
@@ -176,6 +176,9 @@ extern "C" int main(void) {
             disarm();
             break;
         }
+
+        static bool blink_state = false;
+
         /* Blink LED to indicate activity */
         blink_state = !blink_state;
         digitalWrite(LED_PIN, blink_state);

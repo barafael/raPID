@@ -134,7 +134,6 @@ void read_abs_angles(axis_t *attitude) {
 
 
     // 508us at TWBR = 24, 140 us at TWBR = 12
-    // TODO try TWBR = 10
     // digitalWrite(DEBUG_PIN, HIGH);
     mpu_int_status = mpu.getIntStatus();
     // digitalWrite(DEBUG_PIN, LOW);
@@ -305,8 +304,8 @@ void init_mpu6050() {
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
     Wire.begin();
     /* 400kHz I2C clock (200kHz if CPU is 8MHz) */
+    /* TODO try TWBR = 10 */
     TWBR = 12;
-    // TODO use fastwire?
 #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
     Fastwire::setup(400, true);
 #endif
@@ -332,6 +331,7 @@ void init_mpu6050() {
     mpu.setYGyroOffset(MPU6050_GYRO_OFFSET_Y);
     mpu.setZGyroOffset(MPU6050_GYRO_OFFSET_Z);
 
+    /* TODO Find suitable value */
     mpu.setZAccelOffset(1788);
 
     // TODO investigate if rate 2 has negative effect. Default is 4.
