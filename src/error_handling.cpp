@@ -1,7 +1,7 @@
 #include "../teensy3/Arduino.h"
 #include "../teensy3/WProgram.h"
 
-#include "../include/error_handling.h"
+#include "../interface/error_handling.h"
 
 static const uint16_t BLINK_PERIOD = 500;
 

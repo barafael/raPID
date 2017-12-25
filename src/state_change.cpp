@@ -3,11 +3,11 @@
 
 #include "../libraries/Servo/Servo.h"
 
-#include "../include/state.h"
-#include "../include/watchdog.h"
-#include "../include/receiver.h"
-#include "../include/imu.h"
-#include "../include/settings.h"
+#include "../interface/state.h"
+#include "../interface/watchdog.h"
+#include "../interface/receiver.h"
+#include "../interface/imu.h"
+#include "../interface/settings.h"
 
 #define channels_within_threshold(threshold) \
     receiver_in[THROTTLE_CHANNEL] < threshold && \

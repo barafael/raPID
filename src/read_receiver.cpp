@@ -1,7 +1,7 @@
 #include "../teensy3/Arduino.h"
 #include "../teensy3/WProgram.h"
 
-#include "../include/receiver.h"
+#include "../interface/receiver.h"
 
 /* TODO set and check this flag! */
 static volatile uint8_t input_flags;

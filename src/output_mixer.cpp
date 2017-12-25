@@ -1,4 +1,4 @@
-#include "../include/output_mixer.h"
+#include "../interface/output_mixer.h"
 
 Output_mixer::Output_mixer(void) {
     this->type = ESC;

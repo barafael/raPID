@@ -11,17 +11,17 @@
 #endif
 
 
-#include "../include/error_handling.h"
-#include "../include/settings.h"
-#include "../include/pins.h"
-#include "../include/serial_debug.h"
-#include "../include/receiver.h"
-#include "../include/imu.h"
-#include "../include/pid.h"
-#include "../include/watchdog.h"
-#include "../include/rc_control.h"
-#include "../include/state.h"
-#include "../include/state_change.h"
+#include "../interface/error_handling.h"
+#include "../interface/settings.h"
+#include "../interface/pins.h"
+#include "../interface/serial_debug.h"
+#include "../interface/receiver.h"
+#include "../interface/imu.h"
+#include "../interface/pid.h"
+#include "../interface/watchdog.h"
+#include "../interface/rc_control.h"
+#include "../interface/state.h"
+#include "../interface/state_change.h"
 #include "pid_coefficients.h"
 
 #define TIMING_ANALYSIS

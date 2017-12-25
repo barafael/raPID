@@ -1,8 +1,8 @@
 #include "../teensy3/Arduino.h"
 #include "../teensy3/WProgram.h"
 
-#include "../include/settings.h"
-#include "../include/pins.h"
+#include "../interface/settings.h"
+#include "../interface/pins.h"
 
 /*
    ————————————————————————————————————————————————————

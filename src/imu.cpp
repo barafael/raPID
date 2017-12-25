@@ -5,11 +5,11 @@
 #include "MPU6050_6Axis_MotionApps20.h"
 // #include "MPU6050_9Axis_MotionApps41.h"
 
-#include "../include/pins.h"
-#include "../include/error_handling.h"
-#include "../include/settings.h"
-#include "../include/serial_debug.h"
-#include "../include/imu.h"
+#include "../interface/pins.h"
+#include "../interface/error_handling.h"
+#include "../interface/settings.h"
+#include "../interface/serial_debug.h"
+#include "../interface/imu.h"
 
 static const uint16_t MPU6050_ACCEL_OFFSET_X = -1524;
 static const uint16_t MPU6050_ACCEL_OFFSET_Y = -444;
