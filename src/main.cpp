@@ -116,13 +116,12 @@ extern "C" int main(void) {
             Serial.println(angular_rate.roll);
             */
 
-            notime(calculate_PID_stabilize(receiver_in.channels[ROLL_CHANNEL] - 1000,
+            pid_output_roll = notime(calculate_PID_stabilize(receiver_in.channels[ROLL_CHANNEL] - 1000,
                                            attitude.roll, angular_rate.roll));
-
 
             //setpoint_rate = receiver_in[ROLL_CHANNEL] - 1500.0;
 
-            notime(calculate_PID_rate(-15 * pid_output_roll, angular_rate.roll));
+            pid_output_roll_rate = notime(calculate_PID_rate(-15 * pid_output_roll, angular_rate.roll));
 
             left_throttle  = receiver_in.channels[THROTTLE_CHANNEL] + pid_output_roll_rate;
             right_throttle = receiver_in.channels[THROTTLE_CHANNEL] - pid_output_roll_rate;
