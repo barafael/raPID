@@ -22,7 +22,6 @@
 #include "../include/rc_control.h"
 #include "../include/state.h"
 #include "../include/state_change.h"
-#include "../include/imutypes.h"
 #include "pid_coefficients.h"
 
 #define TIMING_ANALYSIS

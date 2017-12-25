@@ -7,7 +7,6 @@
 #include "../include/watchdog.h"
 #include "../include/receiver.h"
 #include "../include/imu.h"
-#include "../include/imutypes.h"
 #include "../include/settings.h"
 
 #define channels_within_threshold(threshold) \

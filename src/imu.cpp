@@ -9,9 +9,7 @@
 #include "../include/error_handling.h"
 #include "../include/settings.h"
 #include "../include/serial_debug.h"
-
-#include "../include/imutypes.h"
-
+#include "../include/imu.h"
 
 static const uint16_t MPU6050_ACCEL_OFFSET_X = -1524;
 static const uint16_t MPU6050_ACCEL_OFFSET_Y = -444;
