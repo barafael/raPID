@@ -134,6 +134,7 @@ void read_abs_angles(axis_t *attitude) {
 
 
     // 508us at TWBR = 24, 140 us at TWBR = 12
+    // TODO try TWBR = 10
     // digitalWrite(DEBUG_PIN, HIGH);
     mpu_int_status = mpu.getIntStatus();
     // digitalWrite(DEBUG_PIN, LOW);
@@ -197,7 +198,7 @@ void read_abs_angles(axis_t *attitude) {
         // 12.5us
         // digitalWrite(DEBUG_PIN, HIGH);
         //TODO test if conversion from double to short is problem
-        //TODO try using [0..2*M_PI]
+        //TODO try using [0..2*M_PI] everywhere without scaling or use quaternions?
         attitude->yaw   = ((double)yaw_pitch_roll[YAW_ANGLE] + M_PI) * (1000.0 / (2 * M_PI));
         attitude->pitch = ((double)yaw_pitch_roll[PITCH_ANGLE] + M_PI) * (1000.0 / (2 * M_PI));
         attitude->roll  = ((double)yaw_pitch_roll[ROLL_ANGLE] + M_PI) * (1000.0 / (2 * M_PI));
@@ -207,14 +208,14 @@ void read_abs_angles(axis_t *attitude) {
 
 
 /*
-   ————————————————————————————————————————————————————————————————
-   ———             CALIBRATE RATES BY TAKING AVG                ———
-   ————————————————————————————————————————————————————————————————
+   ———————————————————————————————————————————————————
+   ———             CALIBRATE RATES                 ———
+   ———————————————————————————————————————————————————
 */
 
-static bool rate_calibrated = false;
-
 bool calib_rates_ok(axis_t *angular_rates) {
+    static bool rate_calibrated = false;
+
     const int iterations = 50;
     const int tolerance = 10;
 
