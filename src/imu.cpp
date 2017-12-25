@@ -251,11 +251,8 @@ bool calib_rates_ok(axis_t *angular_rates) {
     return rate_calibrated;
 }
 
-/* TODO maybe simplify, combine both axis_t instances */
 void calib_rates() {
     serial_println(F("Calibrating gyro rates, hold still!"));
-
-    axis_t raw_angular_rates = { 0, 0, 0 };
 
     uint16_t iterations = 300;
 
@@ -269,10 +266,10 @@ void calib_rates() {
         gyro_offsets.yaw   = 0;
 
         for (uint16_t count = 0; count < iterations; count++) {
-            read_raw_rates(&raw_angular_rates);
-            gyro_offsets.roll  += raw_angular_rates.roll;
-            gyro_offsets.pitch += raw_angular_rates.pitch;
-            gyro_offsets.yaw   += raw_angular_rates.yaw;
+            read_raw_rates(&angular_rates);
+            gyro_offsets.roll  += angular_rates.roll;
+            gyro_offsets.pitch += angular_rates.pitch;
+            gyro_offsets.yaw   += angular_rates.yaw;
 
             delay(5);
         }
