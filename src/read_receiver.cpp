@@ -65,6 +65,11 @@ void init_rx_interrupts() {
     attachInterrupt(PITCH_INPUT_PIN,    read_pitch,    CHANGE);
     attachInterrupt(YAW_INPUT_PIN,      read_yaw,      CHANGE);
 
+    /*
+    attachInterrupt(AUX1_INPUT_PIN,    read_aux1,      CHANGE);
+    attachInterrupt(AUX2_INPUT_PIN,    read_aux2,      CHANGE);
+    */
+
     delay(20);
     /* TODO: move to main! */
     if (!has_signal_on_init()) {
@@ -114,6 +119,24 @@ void read_yaw() {
     } else {
         receiver_in_shared.channels[YAW_CHANNEL] =
             (uint16_t)(micros() - receiver_pulse_start_time[YAW_CHANNEL]);
+    }
+}
+
+void read_aux1() {
+    if (digitalRead(AUX1_INPUT_PIN) == HIGH) {
+        receiver_pulse_start_time[AUX1_CHANNEL] = micros();
+    } else {
+        receiver_in_shared.channels[AUX1_CHANNEL] =
+            (uint16_t)(micros() - receiver_pulse_start_time[AUX1_CHANNEL]);
+    }
+}
+
+void read_aux2() {
+    if (digitalRead(AUX2_INPUT_PIN) == HIGH) {
+        receiver_pulse_start_time[AUX2_CHANNEL] = micros();
+    } else {
+        receiver_in_shared.channels[AUX2_CHANNEL] =
+            (uint16_t)(micros() - receiver_pulse_start_time[AUX2_CHANNEL]);
     }
 }
 
