@@ -18,7 +18,9 @@ typedef enum {
 
 typedef enum {
     LEFT_SERVO_PIN  = 21,
-    RIGHT_SERVO_PIN = 22
+    RIGHT_SERVO_PIN = 22,
+    FRONT_SERVO_PIN = 23,
+    BACK_SERVO_PIN  = 24
 } output_pin;
 
 #endif // PINS_H

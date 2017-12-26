@@ -23,6 +23,7 @@
 #include "../interface/state.h"
 #include "../interface/state_change.h"
 #include "pid_coefficients.h"
+#include "../interface/pid_controller.h"
 
 #define TIMING_ANALYSIS
 #ifdef TIMING_ANALYSIS
@@ -66,14 +67,21 @@ axis_t attitude = { 0, 0, 0 };
 axis_t angular_rate = { 0, 0, 0 };
 
 
-double pid_output_roll = 0.0;
+double pid_output_roll_stbl = 0.0;
 double pid_output_roll_rate = 0.0;
+
+double pid_output_pitch_stbl = 0.0;
+double pid_output_pitch_rate = 0.0;
 
 Servo left_ppm;
 Servo right_ppm;
+Servo front_ppm;
+Servo back_ppm;
 
 uint16_t left_throttle;
 uint16_t right_throttle;
+uint16_t front_throttle;
+uint16_t back_throttle;
 
 channels_t receiver_in;
 
@@ -89,6 +97,9 @@ extern "C" int main(void) {
     left_ppm.attach(LEFT_SERVO_PIN);
     right_ppm.attach(RIGHT_SERVO_PIN);
 
+    front_ppm.attach(FRONT_SERVO_PIN);
+    back_ppm.attach(BACK_SERVO_PIN);
+
     notime(arm_ESC());
 
     init_rx_interrupts();
@@ -98,6 +109,12 @@ extern "C" int main(void) {
     init_watchdog();
 
     init_pid_coefficients();
+
+    pid_controller roll_controller_rate = pid_controller(1.0, 0.0, 0.0, 12.0, 200.0);
+    pid_controller roll_controller_stbl = pid_controller(1.0, 0.0, 0.0, 12.0, 200.0);
+
+    pid_controller pitch_controller_rate = pid_controller(1.0, 0.0, 0.0, 12.0, 200.0);
+    pid_controller pitch_controller_stbl = pid_controller(1.0, 0.0, 0.0, 12.0, 200.0);
 
     while (1) {
         switch (state) {
@@ -116,31 +133,50 @@ extern "C" int main(void) {
             Serial.println(angular_rate.roll);
             */
 
-            pid_output_roll = notime(calculate_PID_stabilize(receiver_in.channels[ROLL_CHANNEL] - 1000,
+            pid_output_roll_stbl = roll_controller_stbl.compute(micros(), attitude.roll, receiver_in.channels[ROLL_CHANNEL] - 1000).sum;
+
+            pid_output_roll_stbl = notime(calculate_PID_stabilize(receiver_in.channels[ROLL_CHANNEL] - 1000,
                                            attitude.roll, angular_rate.roll));
 
             //setpoint_rate = receiver_in[ROLL_CHANNEL] - 1500.0;
 
-            pid_output_roll_rate = notime(calculate_PID_rate(-15 * pid_output_roll, angular_rate.roll));
+            pid_output_roll_rate = roll_controller_rate.compute(micros(), angular_rate.roll, -15 * pid_output_roll_stbl).sum;
+
+            pid_output_roll_rate = notime(calculate_PID_rate(-15 * pid_output_roll_stbl, angular_rate.roll));
+
+            pid_output_pitch_stbl = pitch_controller_stbl.compute(micros(), attitude.pitch, receiver_in.channels[PITCH_CHANNEL] - 1000).sum;
+            pid_output_pitch_rate = pitch_controller_rate.compute(micros(), angular_rate.pitch, -15 * pid_output_pitch_stbl).sum;
 
             left_throttle  = receiver_in.channels[THROTTLE_CHANNEL] + pid_output_roll_rate;
             right_throttle = receiver_in.channels[THROTTLE_CHANNEL] - pid_output_roll_rate;
 
-            left_throttle = left_throttle < 1000 ? 1000 : left_throttle;
-            right_throttle = right_throttle < 1000 ? 1000 : right_throttle;
+            front_throttle = receiver_in.channels[THROTTLE_CHANNEL] + pid_output_pitch_rate;
+            back_throttle  = receiver_in.channels[THROTTLE_CHANNEL] - pid_output_pitch_rate;
 
+            left_throttle = left_throttle < 1000 ? 1000 : left_throttle;
             left_throttle = left_throttle > 2000 ? 2000 : left_throttle;
+
+            right_throttle = right_throttle < 1000 ? 1000 : right_throttle;
             right_throttle = right_throttle > 2000 ? 2000 : right_throttle;
+
+            front_throttle = front_throttle < 1000 ? 1000 : front_throttle;
+            front_throttle = front_throttle > 2000 ? 2000 : front_throttle;
+
+            back_throttle = back_throttle > 2000 ? 2000 : back_throttle;
+            back_throttle = back_throttle < 1000 ? 1000 : back_throttle;
 
             left_ppm.writeMicroseconds(left_throttle);
             right_ppm.writeMicroseconds(right_throttle);
+
+            front_ppm.writeMicroseconds(front_throttle);
+            back_ppm.writeMicroseconds(back_throttle);
 
 #define DEBUG_COL
 #ifdef DEBUG_COL
             serial_print("thr:");
             serial_print(receiver_in.channels[THROTTLE_CHANNEL]);
             serial_print("\tsetp:");
-            serial_print(pid_output_roll);
+            serial_print(pid_output_roll_stbl);
             serial_print("\tr-angl:");
             serial_print(attitude.roll);
             serial_print("\tleft:");
@@ -148,7 +184,7 @@ extern "C" int main(void) {
             serial_print("\tright:");
             serial_print(right_throttle);
             serial_print("\tr-p-out:");
-            serial_print(pid_output_roll);
+            serial_print(pid_output_roll_stbl);
             serial_print("\tr-p_rate-out:");
             serial_println(pid_output_roll_rate);
 #endif
