@@ -67,11 +67,11 @@ axis_t attitude = { 0, 0, 0 };
 axis_t angular_rate = { 0, 0, 0 };
 
 
-double pid_output_roll_stbl = 0.0;
-double pid_output_roll_rate = 0.0;
+float pid_output_roll_stbl = 0.0;
+float pid_output_roll_rate = 0.0;
 
-double pid_output_pitch_stbl = 0.0;
-double pid_output_pitch_rate = 0.0;
+float pid_output_pitch_stbl = 0.0;
+float pid_output_pitch_rate = 0.0;
 
 Servo left_ppm;
 Servo right_ppm;

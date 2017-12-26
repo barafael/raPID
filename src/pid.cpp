@@ -1,25 +1,25 @@
 #include "pid_coefficients.h"
 
 typedef struct {
-    double p;
-    double i;
-    double d;
+    float p;
+    float i;
+    float d;
 } pid_coeff;
 
-static double pid_error_rate;
-static double pid_last_error_rate;
+static float pid_error_rate;
+static float pid_last_error_rate;
 
-static double p_term_rate;
-static double i_term_rate;
-static double d_term_rate;
+static float p_term_rate;
+static float i_term_rate;
+static float d_term_rate;
 
 
-static double pid_error;
-static double pid_last_error;
+static float pid_error;
+static float pid_last_error;
 
-static double p_term;
-static double i_term;
-static double d_term;
+static float p_term;
+static float i_term;
+static float d_term;
 
 settings_t settings;
 
@@ -34,8 +34,8 @@ void init_pid_coefficients() {
 }
 
 /* Calculate PID output based on absolute angle in attitude[] */
-double calculate_PID_stabilize(double pid_roll_setpoint, double measurement, double roll_rate) {
-    double pid_output_roll;
+float calculate_PID_stabilize(float pid_roll_setpoint, float measurement, float roll_rate) {
+    float pid_output_roll;
 
     pid_error = measurement - pid_roll_setpoint;
 
@@ -59,8 +59,8 @@ double calculate_PID_stabilize(double pid_roll_setpoint, double measurement, dou
 }
 
 /* Calculate PID output based on angular rate */
-double calculate_PID_rate(double pid_roll_rate_setpoint, double measurement) {
-    double pid_output_roll_rate;
+float calculate_PID_rate(float pid_roll_rate_setpoint, float measurement) {
+    float pid_output_roll_rate;
     pid_error_rate = measurement - pid_roll_rate_setpoint;
 
     p_term_rate = settings.data.modes.get_current_profile()->get_roll()->rate_p * pid_error_rate;

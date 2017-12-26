@@ -196,11 +196,11 @@ void read_abs_angles(axis_t *attitude) {
 
         // 12.5us
         // digitalWrite(DEBUG_PIN, HIGH);
-        //TODO test if conversion from double to short is problem
+        //TODO test if conversion from float to short is problem
         //TODO try using [0..2*M_PI] everywhere without scaling or use quaternions?
-        attitude->yaw   = ((double)yaw_pitch_roll[YAW_ANGLE] + M_PI) * (1000.0 / (2 * M_PI));
-        attitude->pitch = ((double)yaw_pitch_roll[PITCH_ANGLE] + M_PI) * (1000.0 / (2 * M_PI));
-        attitude->roll  = ((double)yaw_pitch_roll[ROLL_ANGLE] + M_PI) * (1000.0 / (2 * M_PI));
+        attitude->yaw   = ((float)yaw_pitch_roll[YAW_ANGLE] + M_PI) * (1000.0 / (2 * M_PI));
+        attitude->pitch = ((float)yaw_pitch_roll[PITCH_ANGLE] + M_PI) * (1000.0 / (2 * M_PI));
+        attitude->roll  = ((float)yaw_pitch_roll[ROLL_ANGLE] + M_PI) * (1000.0 / (2 * M_PI));
         // digitalWrite(DEBUG_PIN, LOW);
     }
 }

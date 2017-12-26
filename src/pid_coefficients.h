@@ -18,18 +18,18 @@ void init_pid_coefficients();
 extern size_t flight_mode_index;
 
 struct __attribute__((packed)) coefficient_t {
-    double rate_p = 0.0;
-    double rate_i = 0.0;
-    double rate_d = 0.0;
+    float rate_p = 0.0;
+    float rate_i = 0.0;
+    float rate_d = 0.0;
 
     uint16_t max_rate    = 0;
     uint16_t integral_limit_rate = 0;
 
     bool rate_passthrough = false;
 
-    double stbl_p = 0.0;
-    double stbl_i = 0.0;
-    double stbl_d = 0.0;
+    float stbl_p = 0.0;
+    float stbl_i = 0.0;
+    float stbl_d = 0.0;
 
     uint16_t max_stbl    = 0;
     uint16_t integral_limit_stbl = 0;
@@ -40,8 +40,8 @@ struct __attribute__((packed)) coefficient_t {
 
     coefficient_t() { }
 
-    coefficient_t(double _rate_p, double _rate_i, double _rate_d, double _max_rate, double _integral_limit_rate, bool _rate_pass,
-                  double _stbl_p, double _stbl_i, double _stbl_d, double _max_stbl, double _integral_limit_stbl, bool _stbl_pass) {
+    coefficient_t(float _rate_p, float _rate_i, float _rate_d, float _max_rate, float _integral_limit_rate, bool _rate_pass,
+                  float _stbl_p, float _stbl_i, float _stbl_d, float _max_stbl, float _integral_limit_stbl, bool _stbl_pass) {
 
         rate_p = _rate_p;
         stbl_p = _stbl_p;
