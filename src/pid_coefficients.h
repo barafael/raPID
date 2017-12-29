@@ -13,6 +13,13 @@
    ————————————————————————————————————————————————————
 */
 
+class pid_coeff {
+    public:
+        float p;
+        float i;
+        float d;
+};
+
 void init_pid_coefficients();
 
 extern size_t flight_mode_index;

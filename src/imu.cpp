@@ -68,11 +68,12 @@ static VectorFloat gravity;  // [x, y, z]       gravity vector
 /* internal Angular Rate calibration offsets
  */
 
-typedef struct {
-    int64_t roll;
-    int64_t pitch;
-    int64_t yaw;
-} offset_axis_t;
+class offset_axis_t {
+    public:
+        int64_t roll;
+        int64_t pitch;
+        int64_t yaw;
+};
 
 static offset_axis_t gyro_offsets = { 0, 0, 0 };
 

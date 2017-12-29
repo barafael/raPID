@@ -1,11 +1,5 @@
 #include "pid_coefficients.h"
 
-typedef struct {
-    float p;
-    float i;
-    float d;
-} pid_coeff;
-
 static float pid_error_rate;
 static float pid_last_error_rate;
 

@@ -3,11 +3,12 @@
 
 #include <stdint.h>
 
-typedef struct {
-    int8_t r_vol;
-    int8_t p_vol;
-    int8_t y_vol;
-} rpy_volume_t;
+class rpy_volume_t {
+    public:
+        int8_t r_vol;
+        int8_t p_vol;
+        int8_t y_vol;
+};
 
 typedef struct {
     uint8_t throttle_vol;

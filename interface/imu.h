@@ -3,11 +3,12 @@
 
 #include <stdint.h>
 
-typedef struct {
-    int16_t roll;
-    int16_t pitch;
-    int16_t yaw;
-} axis_t;
+class axis_t {
+    public:
+        int16_t roll;
+        int16_t pitch;
+        int16_t yaw;
+};
 
 void init_mpu6050();
 void read_angular_rates(axis_t *angular_rate);
