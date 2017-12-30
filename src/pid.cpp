@@ -44,7 +44,7 @@ float calculate_PID_stabilize(float pid_roll_setpoint, float measurement, float 
 
     pid_output_roll = p_term + i_term + d_term;
 
-    if (pid_output_roll > settings.data.modes.get_current_profile()->get_roll()->max_rate) pid_output_roll =pid_output_roll > settings.data.modes.get_current_profile()->get_roll()->max_rate;
+    if (pid_output_roll > settings.data.modes.get_current_profile()->get_roll()->max_rate) pid_output_roll = pid_output_roll > settings.data.modes.get_current_profile()->get_roll()->max_rate;
     else if (pid_output_roll < settings.data.modes.get_current_profile()->get_roll()->max_rate * -1) pid_output_roll = settings.data.modes.get_current_profile()->get_roll()->max_rate * -1;
 
     pid_last_error = pid_error;
