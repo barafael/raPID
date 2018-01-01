@@ -11,9 +11,9 @@ pid_controller::pid_controller(const float kp, const float ki, const float kd,
     this->output_limit = output_limit;
 
     /* TODO test if there are problems in the first couple loops after init */
-    this-> integral = 0;
-    this-> derivative = 0;
-    this-> last_error = 0;
+    this->integral = 0;
+    this->derivative = 0;
+    this->last_error = 0;
     this->last_setpoint = 0;
     this->last_time = 0;
 };

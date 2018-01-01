@@ -72,5 +72,5 @@ float calculate_PID_rate(float pid_roll_rate_setpoint, float measurement) {
 
     pid_last_error_rate = pid_error_rate;
 
-    return pid_last_error_rate;
+    return pid_output_roll_rate;
 }
