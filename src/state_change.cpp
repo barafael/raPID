@@ -43,6 +43,7 @@ bool check_disarm_status() {
 
                 left_ppm.writeMicroseconds(1000);
                 right_ppm.writeMicroseconds(1000);
+                Serial.println("Release the sticks!");
 
                 while (channels_within_threshold(DISARM_THRESHOLD)) {
                     feed_the_dog();
@@ -52,13 +53,13 @@ bool check_disarm_status() {
                     right_ppm.writeMicroseconds(1000);
                     delayMicroseconds(5);
                 }
-                Serial.println("disarmed!");
+                Serial.println("Disarmed.");
                 return true;
             }
         } else {
             disarm_started = true;
             disarm_start_millis = millis();
-            Serial.println("disarming started!");
+            Serial.println("Disarming started!");
         }
     } else {
         disarm_started = false;
@@ -75,19 +76,20 @@ bool check_arm_status() {
                 since_arm_start = 0;
                 arm_start_millis = 0;
                 arm();
+                Serial.println("Release the sticks!");
                 while (channels_within_threshold(ARM_THRESHOLD)) {
                     feed_the_dog();
                     read_receiver(&ignored_data_rx);
                     read_abs_angles(&ignored_data_imu);
                     delayMicroseconds(5);
                 }
-                Serial.println("armed!");
+                Serial.println("Armed!");
                 return true;
             }
         } else {
             arm_started = true;
             arm_start_millis = millis();
-            Serial.println("arming started!");
+            Serial.println("Arming started!");
         }
     } else {
         arm_started = false;
