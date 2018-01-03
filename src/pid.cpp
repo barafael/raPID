@@ -1,12 +1,17 @@
 #include "pid_coefficients.h"
 
-static float pid_error_rate;
-static float pid_last_error_rate;
+typedef struct {
+    double kp;
+    double ki;
+    double kd;
+} pid_coeff;
 
 static float p_term_rate;
 static float i_term_rate;
 static float d_term_rate;
 
+static double pid_error_rate;
+static double pid_last_error_rate;
 
 static float pid_error;
 static float pid_last_error;
