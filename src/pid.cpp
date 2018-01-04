@@ -1,11 +1,5 @@
 #include "pid_coefficients.h"
 
-typedef struct {
-    double kp;
-    double ki;
-    double kd;
-} pid_coeff;
-
 static float p_term_rate;
 static float i_term_rate;
 static float d_term_rate;
