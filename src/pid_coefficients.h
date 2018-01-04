@@ -29,7 +29,7 @@ struct __attribute__((packed)) coefficient_t {
     float rate_i = 0.0;
     float rate_d = 0.0;
 
-    uint16_t max_rate    = 0;
+    uint16_t max_rate            = 0;
     uint16_t integral_limit_rate = 0;
 
     bool rate_passthrough = false;
@@ -136,7 +136,7 @@ struct __attribute__((packed)) modes_arr {
             Serial.println("List of modes is already full! Cannot add.");
             Serial.println(num_modes);
             Serial.println(MAX_NUM_MODES);
-            //return this;
+            return this;
         }
         Serial.println("Adding flight mode");
         modes[num_modes++] = mode;

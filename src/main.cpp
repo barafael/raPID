@@ -108,10 +108,10 @@ extern "C" int main(void) {
 
     init_watchdog();
 
-    init_pid_coefficients();
+    //init_pid_coefficients();
 
-    pid_controller roll_controller_rate = pid_controller(1.0, 0.0, 0.0, 12.0, 200.0);
-    pid_controller roll_controller_stbl = pid_controller(1.0, 0.0, 0.0, 12.0, 200.0);
+    pid_controller roll_controller_rate = pid_controller(1.0, 0.0, 1.0, 12.0, 200.0);
+    pid_controller roll_controller_stbl = pid_controller(1.0, 0.0, 1.0, 12.0, 200.0);
 
     pid_controller pitch_controller_rate = pid_controller(1.0, 0.0, 0.0, 12.0, 200.0);
     pid_controller pitch_controller_stbl = pid_controller(1.0, 0.0, 0.0, 12.0, 200.0);
@@ -119,6 +119,7 @@ extern "C" int main(void) {
     while (1) {
         switch (state) {
         case ARMED:
+        case DISARMED:
             notime(read_receiver(&receiver_in));
 
             notime(read_abs_angles(&attitude));
@@ -135,16 +136,17 @@ extern "C" int main(void) {
 
             pid_output_roll_stbl = roll_controller_stbl.compute(micros(), attitude.roll, receiver_in.channels[ROLL_CHANNEL] - 1000).sum;
 
-            pid_output_roll_stbl = notime(calculate_PID_stabilize(receiver_in.channels[ROLL_CHANNEL] - 1000,
-                                           attitude.roll, angular_rate.roll));
+            //pid_output_roll_stbl = notime(calculate_PID_stabilize(receiver_in.channels[ROLL_CHANNEL] - 1000,
+            //                               attitude.roll, angular_rate.roll));
 
             //setpoint_rate = receiver_in[ROLL_CHANNEL] - 1500.0;
 
             pid_output_roll_rate = roll_controller_rate.compute(micros(), angular_rate.roll, -15 * pid_output_roll_stbl).sum;
 
-            pid_output_roll_rate = notime(calculate_PID_rate(-15 * pid_output_roll_stbl, angular_rate.roll));
+            //pid_output_roll_rate = notime(calculate_PID_rate(-15 * pid_output_roll_stbl, angular_rate.roll));
 
             pid_output_pitch_stbl = pitch_controller_stbl.compute(micros(), attitude.pitch, receiver_in.channels[PITCH_CHANNEL] - 1000).sum;
+
             pid_output_pitch_rate = pitch_controller_rate.compute(micros(), angular_rate.pitch, -15 * pid_output_pitch_stbl).sum;
 
             left_throttle  = receiver_in.channels[THROTTLE_CHANNEL] + pid_output_roll_rate;
@@ -189,22 +191,22 @@ extern "C" int main(void) {
             serial_println(pid_output_roll_rate);
 #endif
 
-            if (check_disarm_status()) {
-                break;
-            }
+            //if (check_disarm_status()) {
+            //    break;
+            //}
             break;
-        case DISARMED:
-            notime(read_receiver(&receiver_in));
-            notime(read_abs_angles(&attitude));
+       //case DISARMED:
+       //    notime(read_receiver(&receiver_in));
+       //    notime(read_abs_angles(&attitude));
 
-            if (check_arm_status()) {
-                break;
-            }
-            break;
-        case CONFIG:
-            Serial.println("CONFIG!");
-            state = DISARMED;
-            break;
+       //    if (check_arm_status()) {
+       //        break;
+       //    }
+       //    break;
+       //case CONFIG:
+       //    Serial.println("CONFIG!");
+       //    state = DISARMED;
+       //    break;
         default:
             Serial.println("Unimplemented state! Will disarm.");
             disarm();

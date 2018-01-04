@@ -10,12 +10,10 @@
 #include "../interface/settings.h"
 
 #define channels_within_threshold(threshold) \
-    receiver_in[THROTTLE_CHANNEL] < threshold && \
-    receiver_in[YAW_CHANNEL] < threshold && \
-    receiver_in[PITCH_CHANNEL] < threshold && \
-    receiver_in[ROLL_CHANNEL] < threshold \
-
-extern uint16_t receiver_in[NUM_CHANNELS];
+    data_rx.channels[THROTTLE_CHANNEL] < threshold && \
+    data_rx.channels[YAW_CHANNEL] < threshold && \
+    data_rx.channels[PITCH_CHANNEL] < threshold && \
+    data_rx.channels[ROLL_CHANNEL] < threshold \
 
 extern Servo left_ppm;
 extern Servo right_ppm;
@@ -29,7 +27,7 @@ static uint32_t since_arm_start;
 static uint32_t arm_start_millis;
 
 axis_t ignored_data_imu = { 0, 0, 0 };
-channels_t ignored_data_rx;
+channels_t data_rx;
 
 bool check_disarm_status() {
     if (channels_within_threshold(DISARM_THRESHOLD)) {
@@ -47,7 +45,7 @@ bool check_disarm_status() {
 
                 while (channels_within_threshold(DISARM_THRESHOLD)) {
                     feed_the_dog();
-                    read_receiver(&ignored_data_rx);
+                    read_receiver(&data_rx);
                     read_abs_angles(&ignored_data_imu);
                     left_ppm.writeMicroseconds(1000);
                     right_ppm.writeMicroseconds(1000);
@@ -79,9 +77,18 @@ bool check_arm_status() {
                 Serial.println("Release the sticks!");
                 while (channels_within_threshold(ARM_THRESHOLD)) {
                     feed_the_dog();
-                    read_receiver(&ignored_data_rx);
+                    read_receiver(&data_rx);
                     read_abs_angles(&ignored_data_imu);
                     delayMicroseconds(5);
+                    /*
+                    Serial.print(data_rx.channels[THROTTLE_CHANNEL]);
+                    Serial.print("\t");
+                    Serial.print(data_rx.channels[ROLL_CHANNEL]);
+                    Serial.print("\t");
+                    Serial.print(data_rx.channels[PITCH_CHANNEL]);
+                    Serial.print("\t");
+                    Serial.println(data_rx.channels[YAW_CHANNEL]);
+                    */
                 }
                 Serial.println("Armed!");
                 return true;
