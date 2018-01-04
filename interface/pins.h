@@ -5,7 +5,7 @@ static const uint8_t DEBUG_PIN = 23;
 
 static const uint8_t LED_PIN = 13;
 
-static const uint8_t MPU_INTERRUPT_PIN = 12;
+static const uint8_t MPU_INTERRUPT_PIN = 14;
 
 typedef enum {
     THROTTLE_INPUT_PIN  = 11,
@@ -17,10 +17,10 @@ typedef enum {
 } input_pin;
 
 typedef enum {
-    LEFT_SERVO_PIN  = 21,
-    RIGHT_SERVO_PIN = 22,
-    FRONT_SERVO_PIN = 23,
-    BACK_SERVO_PIN  = 24
+    LEFT_SERVO_PIN  = 20,
+    RIGHT_SERVO_PIN = 21,
+    FRONT_SERVO_PIN = 22,
+    BACK_SERVO_PIN  = 23
 } output_pin;
 
 #endif // PINS_H
