@@ -116,95 +116,152 @@ extern "C" int main(void) {
     pid_controller pitch_controller_stbl = pid_controller(1.0, 0.0, 0.0, 12.0, 200.0);
 
     while (1) {
+        notime(read_receiver(&receiver_in));
+
+        notime(read_abs_angles(&attitude));
+
+        notime(read_angular_rates(&angular_rate));
+
         switch (state) {
-        case ARMED:
-        case DISARMED:
-            notime(read_receiver(&receiver_in));
+            case DISARMING:
+                Serial.println("Disarming!");
+                if (!disarming_input(&receiver_in)) {
+                    Serial.println("Disarming interrupted! Arming again.");
+                    state = ARMED;
+                    break;
+                } else {
+                    state = disarming_complete() ? DISARMED : DISARMING;
+                    if (state == DISARMED) {
+                        Serial.println("Release the hold!");
+                        while (disarming_input(&receiver_in)) {
+                            left_ppm.writeMicroseconds(1000);
+                            right_ppm.writeMicroseconds(1000);
 
-            notime(read_abs_angles(&attitude));
+                            front_ppm.writeMicroseconds(1000);
+                            back_ppm.writeMicroseconds(1000);
 
-            notime(read_angular_rates(&angular_rate));
+                            read_receiver(&receiver_in);
+                            read_abs_angles(&attitude);
+                            read_angular_rates(&angular_rate);
+                            feed_the_dog();
+                            delayMicroseconds(5000);
+                        }
+                        Serial.println("DISARMING COMPLETE!");
+                        break;
+                    }
+                }
 
-            /*
-            Serial.print(receiver_in[ROLL_CHANNEL] - 1500);
-            Serial.print('\t');
-            Serial.print(attitude.roll);
-            Serial.print('\t');
-            Serial.println(angular_rate.roll);
-            */
+                Serial.println("Proceeding to 'ARMED' state actions from 'DISARMING'");
+                /* Keep disarming, but also stay armed */
 
-            pid_output_roll_stbl = roll_controller_stbl.compute(micros(), attitude.roll, receiver_in.channels[ROLL_CHANNEL] - 1000).sum;
+            case ARMED:
 
-            //setpoint_rate = receiver_in[ROLL_CHANNEL] - 1500.0;
+                pid_output_roll_stbl = roll_controller_stbl.compute(micros(), attitude.roll, receiver_in.channels[ROLL_CHANNEL] - 1000).sum;
 
-            pid_output_roll_rate = roll_controller_rate.compute(micros(), angular_rate.roll, -15 * pid_output_roll_stbl).sum;
+                // setpoint_rate = receiver_in[ROLL_CHANNEL] - 1500.0;
 
-            pid_output_pitch_stbl = pitch_controller_stbl.compute(micros(), attitude.pitch, receiver_in.channels[PITCH_CHANNEL] - 1000).sum;
+                pid_output_roll_rate = roll_controller_rate.compute(micros(), angular_rate.roll, -15 * pid_output_roll_stbl).sum;
 
-            pid_output_pitch_rate = pitch_controller_rate.compute(micros(), angular_rate.pitch, -15 * pid_output_pitch_stbl).sum;
+                pid_output_pitch_stbl = pitch_controller_stbl.compute(micros(), attitude.pitch, receiver_in.channels[PITCH_CHANNEL] - 1000).sum;
 
-            left_throttle  = receiver_in.channels[THROTTLE_CHANNEL] + pid_output_roll_rate;
-            right_throttle = receiver_in.channels[THROTTLE_CHANNEL] - pid_output_roll_rate;
+                pid_output_pitch_rate = pitch_controller_rate.compute(micros(), angular_rate.pitch, -15 * pid_output_pitch_stbl).sum;
 
-            front_throttle = receiver_in.channels[THROTTLE_CHANNEL] + pid_output_pitch_rate;
-            back_throttle  = receiver_in.channels[THROTTLE_CHANNEL] - pid_output_pitch_rate;
+                left_throttle  = receiver_in.channels[THROTTLE_CHANNEL] + pid_output_roll_rate;
+                right_throttle = receiver_in.channels[THROTTLE_CHANNEL] - pid_output_roll_rate;
 
-            left_throttle = left_throttle < 1000 ? 1000 : left_throttle;
-            left_throttle = left_throttle > 2000 ? 2000 : left_throttle;
+                front_throttle = receiver_in.channels[THROTTLE_CHANNEL] + pid_output_pitch_rate;
+                back_throttle  = receiver_in.channels[THROTTLE_CHANNEL] - pid_output_pitch_rate;
 
-            right_throttle = right_throttle < 1000 ? 1000 : right_throttle;
-            right_throttle = right_throttle > 2000 ? 2000 : right_throttle;
+                left_throttle = left_throttle < 1000 ? 1000 : left_throttle;
+                left_throttle = left_throttle > 2000 ? 2000 : left_throttle;
 
-            front_throttle = front_throttle < 1000 ? 1000 : front_throttle;
-            front_throttle = front_throttle > 2000 ? 2000 : front_throttle;
+                right_throttle = right_throttle < 1000 ? 1000 : right_throttle;
+                right_throttle = right_throttle > 2000 ? 2000 : right_throttle;
 
-            back_throttle = back_throttle > 2000 ? 2000 : back_throttle;
-            back_throttle = back_throttle < 1000 ? 1000 : back_throttle;
+                front_throttle = front_throttle < 1000 ? 1000 : front_throttle;
+                front_throttle = front_throttle > 2000 ? 2000 : front_throttle;
 
-            left_ppm.writeMicroseconds(left_throttle);
-            right_ppm.writeMicroseconds(right_throttle);
+                back_throttle = back_throttle > 2000 ? 2000 : back_throttle;
+                back_throttle = back_throttle < 1000 ? 1000 : back_throttle;
 
-            front_ppm.writeMicroseconds(front_throttle);
-            back_ppm.writeMicroseconds(back_throttle);
+                left_ppm.writeMicroseconds(left_throttle);
+                right_ppm.writeMicroseconds(right_throttle);
+
+                front_ppm.writeMicroseconds(front_throttle);
+                back_ppm.writeMicroseconds(back_throttle);
 
 #define DEBUG_COL
 #ifdef DEBUG_COL
-            serial_print("thr:");
-            serial_print(receiver_in.channels[THROTTLE_CHANNEL]);
-            serial_print("\tsetp:");
-            serial_print(pid_output_roll_stbl);
-            serial_print("\tr-angl:");
-            serial_print(attitude.roll);
-            serial_print("\tleft:");
-            serial_print(left_throttle);
-            serial_print("\tright:");
-            serial_print(right_throttle);
-            serial_print("\tr-p-out:");
-            serial_print(pid_output_roll_stbl);
-            serial_print("\tr-p_rate-out:");
-            serial_println(pid_output_roll_rate);
+                serial_print("thr:");
+                serial_print(receiver_in.channels[THROTTLE_CHANNEL]);
+                serial_print("\tsetp:");
+                serial_print(pid_output_roll_stbl);
+                serial_print("\tr-angl:");
+                serial_print(attitude.roll);
+                serial_print("\tleft:");
+                serial_print(left_throttle);
+                serial_print("\tright:");
+                serial_print(right_throttle);
+                serial_print("\tr-p-out:");
+                serial_print(pid_output_roll_stbl);
+                serial_print("\tr-p_rate-out:");
+                serial_println(pid_output_roll_rate);
 #endif
 
-            //if (check_disarm_status()) {
-            //    break;
-            //}
-            break;
-       //case DISARMED:
-       //    notime(read_receiver(&receiver_in));
-       //    notime(read_abs_angles(&attitude));
+                if (state != DISARMING && disarming_input(&receiver_in)) {
+                    Serial.println("Initializing Disarm!");
+                    state = DISARMING;
+                    disarm_init();
+                }
+                break;
 
-       //    if (check_arm_status()) {
-       //        break;
-       //    }
-       //    break;
-       //case CONFIG:
-       //    Serial.println("CONFIG!");
-       //    state = DISARMED;
-       //    break;
-        default:
-            Serial.println("Unimplemented state! Will disarm.");
-            disarm();
-            break;
+            case ARMING:
+                Serial.println("Arming!");
+                if (!arming_input(&receiver_in)) {
+                    Serial.println("Arming interrupted! Disarming again.");
+                    state = DISARMED;
+                    break;
+                } else {
+                    state = arming_complete() ? ARMED : ARMING;
+                    if (state == ARMED) {
+                        Serial.println("Release the hold!");
+                        while (arming_input(&receiver_in)) {
+                            read_receiver(&receiver_in);
+                            read_abs_angles(&attitude);
+                            read_angular_rates(&angular_rate);
+                            feed_the_dog();
+                            delayMicroseconds(5000);
+                        }
+                        Serial.println("ARMING COMPLETE!");
+                        break;
+                    }
+                }
+                Serial.println("Proceeding to 'DISARMED' state actions from 'ARMING'");
+
+                /* Keep arming, but also stay disarmed */
+
+            case DISARMED:
+
+                left_ppm.writeMicroseconds(1000);
+                right_ppm.writeMicroseconds(1000);
+
+                front_ppm.writeMicroseconds(1000);
+                back_ppm.writeMicroseconds(1000);
+
+                if (state != ARMING && arming_input(&receiver_in)) {
+                    state = ARMING;
+                    arm_init();
+                }
+                break;
+
+            case CONFIG:
+                Serial.println("CONFIG!");
+                state = DISARMED;
+                break;
+            default:
+                Serial.println("Unimplemented state! Will disarm.");
+                state = DISARMED;
+                break;
         }
 
         static bool blink_state = false;
