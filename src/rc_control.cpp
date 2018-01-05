@@ -1,5 +1,5 @@
-#include "../teensy3/Arduino.h"
-#include "../teensy3/WProgram.h"
+#include "Arduino.h"
+#include "WProgram.h"
 
 #include "../interface/rc_control.h"
 

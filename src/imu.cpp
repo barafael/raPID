@@ -1,5 +1,5 @@
-#include "../teensy3/Arduino.h"
-#include "../teensy3/WProgram.h"
+#include "Arduino.h"
+#include "WProgram.h"
 
 // TODO check out setRate from MPU6050.h
 #include "MPU6050_6Axis_MotionApps20.h"

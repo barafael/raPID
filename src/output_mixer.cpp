@@ -2,8 +2,8 @@
 
 /* TODO remove when not using warning output in apply(x) */
 
-#include "../teensy3/Arduino.h"
-#include "../teensy3/WProgram.h"
+#include "Arduino.h"
+#include "WProgram.h"
 
 static const uint16_t THROTTLE_LOW_CUTOFF_MS = 1025;
 
