@@ -14,7 +14,6 @@
 #include "../interface/error_handling.h"
 #include "../interface/settings.h"
 #include "../interface/pins.h"
-#include "../interface/serial_debug.h"
 #include "../interface/receiver.h"
 #include "../interface/imu.h"
 #include "../interface/pid.h"
@@ -88,7 +87,7 @@ channels_t receiver_in;
 size_t flight_mode_index = 0;
 
 extern "C" int main(void) {
-    serial_begin(9600);
+    Serial.begin(9600);
 
     pinMode(LED_PIN, OUTPUT);
     pinMode(DEBUG_PIN, OUTPUT);
@@ -99,7 +98,7 @@ extern "C" int main(void) {
     front_ppm.attach(FRONT_SERVO_PIN);
     back_ppm.attach(BACK_SERVO_PIN);
 
-    notime(arm_ESC());
+    notime(arm_ESC(&left_ppm, &right_ppm, &front_ppm, &back_ppm));
 
     init_rx_interrupts();
 
@@ -190,20 +189,20 @@ extern "C" int main(void) {
 
 #define DEBUG_COL
 #ifdef DEBUG_COL
-                serial_print("thr:");
-                serial_print(receiver_in.channels[THROTTLE_CHANNEL]);
-                serial_print("\tsetp:");
-                serial_print(pid_output_roll_stbl);
-                serial_print("\tr-angl:");
-                serial_print(attitude.roll);
-                serial_print("\tleft:");
-                serial_print(left_throttle);
-                serial_print("\tright:");
-                serial_print(right_throttle);
-                serial_print("\tr-p-out:");
-                serial_print(pid_output_roll_stbl);
-                serial_print("\tr-p_rate-out:");
-                serial_println(pid_output_roll_rate);
+                Serial.print("thr:");
+                Serial.print(receiver_in.channels[THROTTLE_CHANNEL]);
+                Serial.print("\tsetp:");
+                Serial.print(pid_output_roll_stbl);
+                Serial.print("\tr-angl:");
+                Serial.print(attitude.roll);
+                Serial.print("\tleft:");
+                Serial.print(left_throttle);
+                Serial.print("\tright:");
+                Serial.print(right_throttle);
+                Serial.print("\tr-p-out:");
+                Serial.print(pid_output_roll_stbl);
+                Serial.print("\tr-p_rate-out:");
+                Serial.println(pid_output_roll_rate);
 #endif
 
                 if (state != DISARMING && disarming_input(&receiver_in)) {

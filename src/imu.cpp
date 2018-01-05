@@ -8,7 +8,6 @@
 #include "../interface/pins.h"
 #include "../interface/error_handling.h"
 #include "../interface/settings.h"
-#include "../interface/serial_debug.h"
 #include "../interface/imu.h"
 
 static const uint16_t MPU6050_ACCEL_OFFSET_X = -1524;
@@ -149,7 +148,7 @@ void read_abs_angles(axis_t *attitude) {
     if ((mpu_int_status & 0x10) || fifo_count == 1024) {
         /* reset so we can continue cleanly */
         mpu.resetFIFO();
-        serial_println(F("FIFO overflow!"));
+        Serial.println(F("FIFO overflow!"));
 
         /* Otherwise, check for DMP data ready interrupt (this happens often) */
     } else if (mpu_int_status & 0x02) {
@@ -234,14 +233,14 @@ bool calib_rates_ok(axis_t *angular_rates) {
     accumulator.pitch  /= iterations;
     accumulator.yaw    /= iterations;
 
-    serial_print("Average rate over ");
-    serial_print(iterations);
-    serial_println(" iterations: ");
-    serial_print((uint32_t)accumulator.roll);
-    serial_print("\t");
-    serial_print((uint32_t)accumulator.pitch);
-    serial_print("\t");
-    serial_println((uint32_t)accumulator.yaw);
+    Serial.print("Average rate over ");
+    Serial.print(iterations);
+    Serial.println(" iterations: ");
+    Serial.print((uint32_t)accumulator.roll);
+    Serial.print("\t");
+    Serial.print((uint32_t)accumulator.pitch);
+    Serial.print("\t");
+    Serial.println((uint32_t)accumulator.yaw);
 
     rate_calibrated =
         (abs(accumulator.roll)  < tolerance) &&
@@ -252,7 +251,7 @@ bool calib_rates_ok(axis_t *angular_rates) {
 }
 
 void calib_rates() {
-    serial_println(F("Calibrating gyro rates, hold still!"));
+    Serial.println(F("Calibrating gyro rates, hold still!"));
 
     uint16_t iterations = 300;
 
@@ -312,16 +311,16 @@ void init_mpu6050() {
 #endif
 
     /* Initialize device */
-    serial_println(F("Initializing I2C devices..."));
+    Serial.println(F("Initializing I2C devices..."));
     mpu.initialize();
 
     /* Verify connection */
-    serial_println(F("Testing device connections..."));
-    serial_println(mpu.testConnection() ? F("MPU6050 connection successful")
+    Serial.println(F("Testing device connections..."));
+    Serial.println(mpu.testConnection() ? F("MPU6050 connection successful")
                    : F("MPU6050 connection failed"));
 
     /* Load and configure the DMP */
-    serial_println(F("Initializing DMP..."));
+    Serial.println(F("Initializing DMP..."));
     dev_status = mpu.dmpInitialize();
 
     /* Supply your own gyro offsets here, scaled for min sensitivity */
@@ -340,18 +339,18 @@ void init_mpu6050() {
     /* Make sure initialisation worked (returns 0 if so) */
     if (dev_status == 0) {
         /* Turn on the DMP, now that it's ready */
-        serial_println(F("Enabling DMP..."));
+        Serial.println(F("Enabling DMP..."));
         mpu.setDMPEnabled(true);
 
         /* Enable Arduino interrupt detection */
-        serial_println(
+        Serial.println(
             F("Enabling interrupt detection (Arduino external interrupt 0)..."));
 
         pinMode(MPU_INTERRUPT_PIN, INPUT);
         attachInterrupt(MPU_INTERRUPT_PIN, dmp_data_ready, RISING);
         mpu_int_status = mpu.getIntStatus();
 
-        serial_println(F("DMP ready! Waiting for first interrupt..."));
+        Serial.println(F("DMP ready! Waiting for first interrupt..."));
 
         /* Get expected DMP packet size for later comparison */
         packet_size = mpu.dmpGetFIFOPacketSize();

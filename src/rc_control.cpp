@@ -1,8 +1,7 @@
 #include "../teensy3/Arduino.h"
 #include "../teensy3/WProgram.h"
 
-#include "Servo.h"
-
+#include "../interface/rc_control.h"
 
 /*
    ————————————————————————————————————————————————————
@@ -10,15 +9,14 @@
    ————————————————————————————————————————————————————
 */
 
-extern Servo left_ppm;
-extern Servo right_ppm;
-
 /* Arm ESC's with a long low pulse */
 
-void arm_ESC() {
+void arm_ESC(Servo *left, Servo *right, Servo *front, Servo *back) {
     Serial.println("Initialising ESCs: 1000ms pulse");
-    left_ppm.writeMicroseconds(1000);
-    right_ppm.writeMicroseconds(1000);
+    left->writeMicroseconds(1000);
+    right->writeMicroseconds(1000);
+    front->writeMicroseconds(1000);
+    back->writeMicroseconds(1000);
     delay(1000);
     Serial.println("Initialised ESCs");
 }
