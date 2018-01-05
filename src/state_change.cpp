@@ -1,7 +1,7 @@
 #include "../teensy3/Arduino.h"
 #include "../teensy3/WProgram.h"
 
-#include "../libraries/Servo/Servo.h"
+#include "Servo.h"
 
 #include "../interface/state.h"
 #include "../interface/watchdog.h"
