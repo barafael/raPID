@@ -21,7 +21,6 @@ static uint64_t receiver_pulse_start_time[NUM_CHANNELS] = { 0 };
 
 /* Read each new value (TODO: indicated by the corresponding bit set in input_flags)*/
 void read_receiver(channels_t *receiver_in) {
-
     noInterrupts();
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         receiver_in->channels[index] = receiver_in_shared.channels[index];
@@ -74,7 +73,7 @@ void init_rx_interrupts() {
     /* TODO: move to main! */
     if (!has_signal_on_init()) {
         Serial.println("No receiver signal! Waiting.");
-        while (!has_signal_on_init()) { };
+        while (!has_signal_on_init()) { }
     }
     Serial.println("Receiver signal detected, continuing.");
 }

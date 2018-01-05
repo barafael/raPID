@@ -16,7 +16,7 @@ pid_controller::pid_controller(const float kp, const float ki, const float kd,
     this->last_error = 0;
     this->last_setpoint = 0;
     this->last_time = 0;
-};
+}
 
 /* TODO: handle overflows for 'now' using rollover or somesuch. */
 pid_result pid_controller::compute(const uint64_t now, const float measured,

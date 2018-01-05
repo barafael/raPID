@@ -76,12 +76,11 @@ void print_binary(int value, int num_places) {
 }
 
 void print_all(int num, ...) {
-    char* line;
     va_list argList;
     va_start(argList, num);
 
     for (; num; num--) {
-        line = va_arg(argList, char*);
+        char* line = va_arg(argList, char*);
         Serial.print("line: ");
         Serial.println(line);
     }

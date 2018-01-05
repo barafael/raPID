@@ -43,26 +43,26 @@
    ———             HARDWARE SETUP             ———
    ——————————————————————————————————————————————
 
-     MPU6050 Breakout ----- Teensy 3.2
-     3.3V ----------------- 3.3V
-     GND ------------------ GND
-     SDA ------------------ A4/pin 18
-     SCL ------------------ A5/pin 19
-     INT ------------------ Digital Pin 12 (see pins.h)
+   MPU6050 Breakout ----- Teensy 3.2
+   3.3V ----------------- 3.3V
+   GND ------------------ GND
+   SDA ------------------ A4/pin 18
+   SCL ------------------ A5/pin 19
+   INT ------------------ Digital Pin 12 (see pins.h)
 
    PPM from RC RX go to pins 8, 9, 10, 11 (see pins.h)
    Output PPM to ESC's: pins 21, 22
-*/
+   */
 
 state_t state = DISARMED;
 
 /* Scaled yaw_pitch_roll to [0, 1000]
- */
+*/
 
 axis_t attitude = { 0, 0, 0 };
 
 /* Angular Rate
- */
+*/
 axis_t angular_rate = { 0, 0, 0 };
 
 
@@ -106,8 +106,6 @@ extern "C" int main(void) {
     init_mpu6050();
 
     init_watchdog();
-
-    //init_pid_coefficients();
 
     pid_controller roll_controller_rate = pid_controller(1.0, 0.0, 1.0, 12.0, 200.0);
     pid_controller roll_controller_stbl = pid_controller(1.0, 0.0, 1.0, 12.0, 200.0);
