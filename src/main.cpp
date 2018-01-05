@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#include "Servo.h"
 #include "I2Cdev.h"
+#include "Servo.h"
 
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
 #include "Wire.h"
@@ -12,24 +12,25 @@
 
 
 #include "../interface/error_handling.h"
-#include "../interface/settings.h"
-#include "../interface/pins.h"
-#include "../interface/receiver.h"
 #include "../interface/imu.h"
 #include "../interface/pid.h"
-#include "../interface/watchdog.h"
+#include "../interface/pid_controller.h"
+#include "../interface/pins.h"
 #include "../interface/rc_control.h"
+#include "../interface/receiver.h"
+#include "../interface/settings.h"
 #include "../interface/state.h"
 #include "../interface/state_change.h"
-#include "../interface/pid_controller.h"
+#include "../interface/watchdog.h"
 
 #define TIMING_ANALYSIS
 #ifdef TIMING_ANALYSIS
-#define time(f) {\
-    digitalWrite(DEBUG_PIN, HIGH); \
-    f;\
-    digitalWrite(DEBUG_PIN, LOW);\
-}
+#define time(f)                                                                                                        \
+    {                                                                                                                  \
+        digitalWrite(DEBUG_PIN, HIGH);                                                                                 \
+        f;                                                                                                             \
+        digitalWrite(DEBUG_PIN, LOW);                                                                                  \
+    }
 #else
 #define time(f) f
 #endif

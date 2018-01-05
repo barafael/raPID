@@ -5,10 +5,10 @@
 #include "MPU6050_6Axis_MotionApps20.h"
 // #include "MPU6050_9Axis_MotionApps41.h"
 
-#include "../interface/pins.h"
 #include "../interface/error_handling.h"
-#include "../interface/settings.h"
 #include "../interface/imu.h"
+#include "../interface/pins.h"
+#include "../interface/settings.h"
 
 static const uint16_t MPU6050_ACCEL_OFFSET_X = -1524;
 static const uint16_t MPU6050_ACCEL_OFFSET_Y = -444;
@@ -46,7 +46,7 @@ static uint8_t dev_status;
 static uint16_t packet_size;
 
 static uint16_t fifo_count;
-static uint8_t fifo_buffer[64];
+static uint8_t  fifo_buffer[64];
 
 /* Indicates whether MPU interrupt pin has gone high */
 static volatile bool mpu_interrupt = false;
@@ -88,7 +88,7 @@ static void read_raw_rates(axis_t *raw_rates) {
     Wire.write(0x43);
     Wire.endTransmission();
     Wire.requestFrom(mpu_address, 6);
-    while (Wire.available() < 6) { }
+    while (Wire.available() < 6) {}
     raw_rates->roll  = Wire.read() << 8 | Wire.read();
     raw_rates->pitch = Wire.read() << 8 | Wire.read();
     raw_rates->yaw   = Wire.read() << 8 | Wire.read();
@@ -216,7 +216,7 @@ bool calib_rates_ok(axis_t *angular_rates) {
     static bool rate_calibrated = false;
 
     const int iterations = 50;
-    const int tolerance = 10;
+    const int tolerance  = 10;
 
     offset_axis_t accumulator = { 0, 0, 0 };
 
@@ -236,11 +236,11 @@ bool calib_rates_ok(axis_t *angular_rates) {
     Serial.print("Average rate over ");
     Serial.print(iterations);
     Serial.println(" iterations: ");
-    Serial.print((uint32_t)accumulator.roll);
+    Serial.print((uint32_t) accumulator.roll);
     Serial.print("\t");
-    Serial.print((uint32_t)accumulator.pitch);
+    Serial.print((uint32_t) accumulator.pitch);
     Serial.print("\t");
-    Serial.println((uint32_t)accumulator.yaw);
+    Serial.println((uint32_t) accumulator.yaw);
 
     rate_calibrated =
         (abs(accumulator.roll)  < tolerance) &&
@@ -300,7 +300,7 @@ void dmp_data_ready() {
 */
 
 void init_mpu6050() {
-    /* Join I2C bus (I2Cdev library doesn't do this automatically) */
+/* Join I2C bus (I2Cdev library doesn't do this automatically) */
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
     Wire.begin();
     /* 400kHz I2C clock (200kHz if CPU is 8MHz) */
@@ -343,8 +343,7 @@ void init_mpu6050() {
         mpu.setDMPEnabled(true);
 
         /* Enable Arduino interrupt detection */
-        Serial.println(
-            F("Enabling interrupt detection (Arduino external interrupt 0)..."));
+        Serial.println(F("Enabling interrupt detection (Arduino external interrupt 0)..."));
 
         pinMode(MPU_INTERRUPT_PIN, INPUT);
         attachInterrupt(MPU_INTERRUPT_PIN, dmp_data_ready, RISING);
@@ -357,21 +356,16 @@ void init_mpu6050() {
     } else {
         /* Error while init */
         switch (dev_status) {
-        case 1:
-            error_blink(DMP_INIT_MEM_LOAD_FAILED,
-                        "DMP init error code 1: Initial Memory Load failed!");
-            break;
-        case 2:
-            error_blink(DMP_CONF_UPDATES_FAILED,
-                        "DMP init error code 2: DMP configuration updates failed!");
-            break;
-        default:
-        {
-            char msg[50] = "DMP init error code     ";
-            itoa(dev_status, msg + 20, 10);
-            error_blink(DMP_ERROR_UNKNOWN, msg);
-            break;
-        }
+            case 1: error_blink(DMP_INIT_MEM_LOAD_FAILED, "DMP init error code 1: Initial Memory Load failed!"); break;
+            case 2:
+                error_blink(DMP_CONF_UPDATES_FAILED, "DMP init error code 2: DMP configuration updates failed!");
+                break;
+            default: {
+                char msg[50] = "DMP init error code     ";
+                itoa(dev_status, msg + 20, 10);
+                error_blink(DMP_ERROR_UNKNOWN, msg);
+                break;
+            }
         }
     }
     calib_rates();

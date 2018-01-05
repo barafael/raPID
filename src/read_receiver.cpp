@@ -73,7 +73,7 @@ void init_rx_interrupts() {
     /* TODO: move to main! */
     if (!has_signal_on_init()) {
         Serial.println("No receiver signal! Waiting.");
-        while (!has_signal_on_init()) { }
+        while (!has_signal_on_init()) {}
     }
     Serial.println("Receiver signal detected, continuing.");
 }
@@ -98,8 +98,7 @@ void read_roll() {
     if (digitalRead(ROLL_INPUT_PIN) == HIGH) {
         receiver_pulse_start_time[ROLL_CHANNEL] = micros();
     } else {
-        receiver_in_shared.channels[ROLL_CHANNEL] =
-            (uint16_t)(micros() - receiver_pulse_start_time[ROLL_CHANNEL]);
+        receiver_in_shared.channels[ROLL_CHANNEL] = (uint16_t)(micros() - receiver_pulse_start_time[ROLL_CHANNEL]);
     }
 }
 
@@ -107,8 +106,7 @@ void read_pitch() {
     if (digitalRead(PITCH_INPUT_PIN) == HIGH) {
         receiver_pulse_start_time[PITCH_CHANNEL] = micros();
     } else {
-        receiver_in_shared.channels[PITCH_CHANNEL] =
-            (uint16_t)(micros() - receiver_pulse_start_time[PITCH_CHANNEL]);
+        receiver_in_shared.channels[PITCH_CHANNEL] = (uint16_t)(micros() - receiver_pulse_start_time[PITCH_CHANNEL]);
     }
 }
 
@@ -116,8 +114,7 @@ void read_yaw() {
     if (digitalRead(YAW_INPUT_PIN) == HIGH) {
         receiver_pulse_start_time[YAW_CHANNEL] = micros();
     } else {
-        receiver_in_shared.channels[YAW_CHANNEL] =
-            (uint16_t)(micros() - receiver_pulse_start_time[YAW_CHANNEL]);
+        receiver_in_shared.channels[YAW_CHANNEL] = (uint16_t)(micros() - receiver_pulse_start_time[YAW_CHANNEL]);
     }
 }
 
@@ -125,8 +122,7 @@ void read_aux1() {
     if (digitalRead(AUX1_INPUT_PIN) == HIGH) {
         receiver_pulse_start_time[AUX1_CHANNEL] = micros();
     } else {
-        receiver_in_shared.channels[AUX1_CHANNEL] =
-            (uint16_t)(micros() - receiver_pulse_start_time[AUX1_CHANNEL]);
+        receiver_in_shared.channels[AUX1_CHANNEL] = (uint16_t)(micros() - receiver_pulse_start_time[AUX1_CHANNEL]);
     }
 }
 
@@ -134,8 +130,6 @@ void read_aux2() {
     if (digitalRead(AUX2_INPUT_PIN) == HIGH) {
         receiver_pulse_start_time[AUX2_CHANNEL] = micros();
     } else {
-        receiver_in_shared.channels[AUX2_CHANNEL] =
-            (uint16_t)(micros() - receiver_pulse_start_time[AUX2_CHANNEL]);
+        receiver_in_shared.channels[AUX2_CHANNEL] = (uint16_t)(micros() - receiver_pulse_start_time[AUX2_CHANNEL]);
     }
 }
-

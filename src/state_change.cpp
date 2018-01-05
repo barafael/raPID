@@ -3,10 +3,10 @@
 
 #include "Servo.h"
 
-#include "../interface/state.h"
-#include "../interface/watchdog.h"
 #include "../interface/imu.h"
 #include "../interface/settings.h"
+#include "../interface/state.h"
+#include "../interface/watchdog.h"
 
 static uint64_t disarm_init_time;
 static uint64_t arm_init_time;
@@ -43,4 +43,3 @@ bool arming_complete() {
     uint64_t elapsed = millis() - arm_init_time;
     return elapsed > ARM_TIMEOUT;
 }
-
