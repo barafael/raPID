@@ -1,0 +1,3 @@
+[submodule "CalibrateMPU6050"]
+	path = CalibrateMPU6050
+	url = https://github.com/kkpoon/CalibrateMPU6050
