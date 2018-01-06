@@ -27,8 +27,9 @@ class Output_mixer {
     public:
         Output_mixer();
         Output_mixer(out_type_t type, uint8_t pin, mixer_t mixer);
+        void shut_off();
         void apply(uint16_t throttle,
-                pid_result roll_stbl, pid_result pitch_stbl, pid_result yaw_stbl//,
+                float roll_stbl, float pitch_stbl, float yaw_stbl//,
                 /*pid_result roll_rate, pid_result pitch_rate, pid_result yaw_rate*/);
 
     private:

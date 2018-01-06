@@ -17,6 +17,7 @@
 #include "../interface/pid_controller.h"
 #include "../interface/pins.h"
 #include "../interface/rc_control.h"
+#include "../interface/output_mixer.h"
 #include "../interface/receiver.h"
 #include "../interface/settings.h"
 #include "../interface/state.h"
@@ -72,16 +73,6 @@ float pid_output_roll_rate = 0.0;
 float pid_output_pitch_stbl = 0.0;
 float pid_output_pitch_rate = 0.0;
 
-Servo left_ppm;
-Servo right_ppm;
-Servo front_ppm;
-Servo back_ppm;
-
-uint16_t left_throttle;
-uint16_t right_throttle;
-uint16_t front_throttle;
-uint16_t back_throttle;
-
 channels_t receiver_in;
 
 /* TODO: enumify? */
@@ -93,25 +84,37 @@ extern "C" int main(void) {
     pinMode(LED_PIN, OUTPUT);
     pinMode(DEBUG_PIN, OUTPUT);
 
-    left_ppm.attach(LEFT_SERVO_PIN);
-    right_ppm.attach(RIGHT_SERVO_PIN);
-
-    front_ppm.attach(FRONT_SERVO_PIN);
-    back_ppm.attach(BACK_SERVO_PIN);
-
-    notime(arm_ESC(&left_ppm, &right_ppm, &front_ppm, &back_ppm));
-
     init_rx_interrupts();
 
     init_mpu6050();
 
     init_watchdog();
 
-    pid_controller roll_controller_rate = pid_controller(1.0, 0.0, 1.0, 12.0, 200.0);
-    pid_controller roll_controller_stbl = pid_controller(1.0, 0.0, 1.0, 12.0, 200.0);
+    pid_controller roll_controller_rate = pid_controller(1.0, 0.0, 0.0, 12.0, 200.0);
+    pid_controller roll_controller_stbl = pid_controller(1.0, 0.0, 0.0, 12.0, 200.0);
 
     pid_controller pitch_controller_rate = pid_controller(1.0, 0.0, 0.0, 12.0, 200.0);
     pid_controller pitch_controller_stbl = pid_controller(1.0, 0.0, 0.0, 12.0, 200.0);
+
+    mixer_t roll_left_mixer;
+    roll_left_mixer.throttle_vol = 100;
+    roll_left_mixer.volumes = { 100, 0, 0 };
+    Output_mixer out_mixer_left(SERVO, LEFT_SERVO_PIN, roll_left_mixer);
+
+    mixer_t roll_right_mixer;
+    roll_right_mixer.throttle_vol = 100;
+    roll_right_mixer.volumes = { -100, 0, 0 };
+    Output_mixer out_mixer_right(SERVO, RIGHT_SERVO_PIN, roll_right_mixer);
+
+    mixer_t pitch_front_mixer;
+    pitch_front_mixer.throttle_vol = 100;
+    pitch_front_mixer.volumes = { 0, 100, 0 };
+    Output_mixer out_mixer_front(SERVO, FRONT_SERVO_PIN, pitch_front_mixer);
+
+    mixer_t pitch_back_mixer;
+    pitch_back_mixer.throttle_vol = 100;
+    pitch_back_mixer.volumes = { 0, -100, 0 };
+    Output_mixer out_mixer_back(SERVO, BACK_SERVO_PIN, pitch_back_mixer);
 
     while (1) {
         notime(read_receiver(&receiver_in));
@@ -132,17 +135,16 @@ extern "C" int main(void) {
                     if (state == DISARMED) {
                         Serial.println("Release the hold!");
                         while (disarming_input(&receiver_in)) {
-                            left_ppm.writeMicroseconds(1000);
-                            right_ppm.writeMicroseconds(1000);
-
-                            front_ppm.writeMicroseconds(1000);
-                            back_ppm.writeMicroseconds(1000);
+                            out_mixer_left.shut_off();
+                            out_mixer_right.shut_off();
+                            out_mixer_front.shut_off();
+                            out_mixer_back.shut_off();
 
                             read_receiver(&receiver_in);
                             read_abs_angles(&attitude);
                             read_angular_rates(&angular_rate);
                             feed_the_dog();
-                            delayMicroseconds(5000);
+                            delay(10);
                         }
                         Serial.println("DISARMING COMPLETE!");
                         break;
@@ -150,10 +152,9 @@ extern "C" int main(void) {
                 }
 
                 Serial.println("Proceeding to 'ARMED' state actions from 'DISARMING'");
-                /* Keep disarming, but also stay armed */
+                /* Keep disarming, but stay armed */
 
             case ARMED:
-
                 pid_output_roll_stbl = roll_controller_stbl.compute(micros(), attitude.roll, receiver_in.channels[ROLL_CHANNEL] - 1000).sum;
 
                 // setpoint_rate = receiver_in[ROLL_CHANNEL] - 1500.0;
@@ -164,29 +165,10 @@ extern "C" int main(void) {
 
                 pid_output_pitch_rate = pitch_controller_rate.compute(micros(), angular_rate.pitch, -15 * pid_output_pitch_stbl).sum;
 
-                left_throttle  = receiver_in.channels[THROTTLE_CHANNEL] + pid_output_roll_rate;
-                right_throttle = receiver_in.channels[THROTTLE_CHANNEL] - pid_output_roll_rate;
-
-                front_throttle = receiver_in.channels[THROTTLE_CHANNEL] + pid_output_pitch_rate;
-                back_throttle  = receiver_in.channels[THROTTLE_CHANNEL] - pid_output_pitch_rate;
-
-                left_throttle = left_throttle < 1000 ? 1000 : left_throttle;
-                left_throttle = left_throttle > 2000 ? 2000 : left_throttle;
-
-                right_throttle = right_throttle < 1000 ? 1000 : right_throttle;
-                right_throttle = right_throttle > 2000 ? 2000 : right_throttle;
-
-                front_throttle = front_throttle < 1000 ? 1000 : front_throttle;
-                front_throttle = front_throttle > 2000 ? 2000 : front_throttle;
-
-                back_throttle = back_throttle > 2000 ? 2000 : back_throttle;
-                back_throttle = back_throttle < 1000 ? 1000 : back_throttle;
-
-                left_ppm.writeMicroseconds(left_throttle);
-                right_ppm.writeMicroseconds(right_throttle);
-
-                front_ppm.writeMicroseconds(front_throttle);
-                back_ppm.writeMicroseconds(back_throttle);
+                out_mixer_left. apply(receiver_in.channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, 0.0);
+                out_mixer_right.apply(receiver_in.channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, 0.0);
+                out_mixer_front.apply(receiver_in.channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, 0.0);
+                out_mixer_back. apply(receiver_in.channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, 0.0);
 
 #define DEBUG_COL
 #ifdef DEBUG_COL
@@ -196,10 +178,6 @@ extern "C" int main(void) {
                 Serial.print(pid_output_roll_stbl);
                 Serial.print("\tr-angl:");
                 Serial.print(attitude.roll);
-                Serial.print("\tleft:");
-                Serial.print(left_throttle);
-                Serial.print("\tright:");
-                Serial.print(right_throttle);
                 Serial.print("\tr-p-out:");
                 Serial.print(pid_output_roll_stbl);
                 Serial.print("\tr-p_rate-out:");
@@ -224,27 +202,30 @@ extern "C" int main(void) {
                     if (state == ARMED) {
                         Serial.println("Release the hold!");
                         while (arming_input(&receiver_in)) {
+                            /* Still don't fire the motors up */
+                            out_mixer_left.shut_off();
+                            out_mixer_right.shut_off();
+                            out_mixer_front.shut_off();
+                            out_mixer_back.shut_off();
+
                             read_receiver(&receiver_in);
                             read_abs_angles(&attitude);
                             read_angular_rates(&angular_rate);
                             feed_the_dog();
-                            delayMicroseconds(5000);
+                            delay(10);
                         }
                         Serial.println("ARMING COMPLETE!");
                         break;
                     }
                 }
                 Serial.println("Proceeding to 'DISARMED' state actions from 'ARMING'");
-
-                /* Keep arming, but also stay disarmed */
+                /* Keep arming, but stay disarmed */
 
             case DISARMED:
-
-                left_ppm.writeMicroseconds(1000);
-                right_ppm.writeMicroseconds(1000);
-
-                front_ppm.writeMicroseconds(1000);
-                back_ppm.writeMicroseconds(1000);
+                out_mixer_left.shut_off();
+                out_mixer_right.shut_off();
+                out_mixer_front.shut_off();
+                out_mixer_back.shut_off();
 
                 if (state != ARMING && arming_input(&receiver_in)) {
                     state = ARMING;
