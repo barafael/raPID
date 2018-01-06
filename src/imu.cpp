@@ -5,7 +5,7 @@
 #include "MPU6050_6Axis_MotionApps20.h"
 // #include "MPU6050_9Axis_MotionApps41.h"
 
-#include "../interface/error_handling.h"
+#include "../interface/error_blink.h"
 #include "../interface/imu.h"
 #include "../interface/pins.h"
 #include "../interface/settings.h"

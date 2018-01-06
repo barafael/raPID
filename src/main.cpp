@@ -6,12 +6,7 @@
 #include "I2Cdev.h"
 #include "Servo.h"
 
-#if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
-#include "Wire.h"
-#endif
-
-
-#include "../interface/error_handling.h"
+#include "../interface/error_blink.h"
 #include "../interface/imu.h"
 #include "../interface/pid.h"
 #include "../interface/pid_controller.h"
@@ -20,7 +15,7 @@
 #include "../interface/receiver.h"
 #include "../interface/settings.h"
 #include "../interface/state.h"
-#include "../interface/state_change.h"
+#include "../interface/arming_state.h"
 #include "../interface/watchdog.h"
 
 #define TIMING_ANALYSIS
