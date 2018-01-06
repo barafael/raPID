@@ -1,4 +1,4 @@
-#include "../interface/output_mixer.h"
+#include "../interface/output.h"
 
 /* TODO support inverting output */
 /* TODO support arming for ESC type? */
@@ -11,37 +11,37 @@ static const uint16_t THROTTLE_LOW_CUTOFF_MS = 1025;
 
 #define clamp(value, low, high) (value = ((value) < (low) ? (low) : ((value) > (high) ? (high) : (value))))
 
-Output_mixer::Output_mixer(void) {
+Output::Output(void) {
     out_type = ESC;
     pin      = 22;
     mixer_t mixer;
     mixer.throttle_vol = 100;
     mixer.volumes      = { 100, 0, 0 };
     this->mixer        = mixer;
-    out_servo.attach(pin);
+    output.attach(pin);
     upper_limit = 2000;
     lower_limit = 1000;
 }
 
-Output_mixer::Output_mixer(out_type_t type, uint8_t pin, mixer_t mixer) {
+Output::Output(out_type_t type, uint8_t pin, mixer_t mixer) {
     out_type    = type;
     this->pin   = pin;
     this->mixer = mixer;
     this->lower_limit = 1000;
     this->upper_limit = 2000;
-    out_servo.attach(pin);
+    output.attach(pin);
 }
 
-void Output_mixer::shut_off() {
-    out_servo.writeMicroseconds(lower_limit);
+void Output::shut_off() {
+    output.writeMicroseconds(lower_limit);
 }
 
-void Output_mixer::apply(uint16_t throttle, float roll_stbl, float pitch_stbl, float yaw_stbl
+void Output::apply(uint16_t throttle, float roll_stbl, float pitch_stbl, float yaw_stbl
                          /*,pid_result roll_rate, pid_result pitch_rate, pid_result yaw_rate*/) {
 
     /* Throttle cutoff to avoid spinning props due to movement when throttle is low but state is armed */
     if (out_type == ESC && throttle < THROTTLE_LOW_CUTOFF_MS) {
-        out_servo.writeMicroseconds(lower_limit);
+        output.writeMicroseconds(lower_limit);
         return;
     }
 
@@ -71,5 +71,5 @@ void Output_mixer::apply(uint16_t throttle, float roll_stbl, float pitch_stbl, f
     */
     clamp(throttle, lower_limit, upper_limit);
 
-    out_servo.writeMicroseconds(throttle);
+    output.writeMicroseconds(throttle);
 }

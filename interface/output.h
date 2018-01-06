@@ -1,5 +1,5 @@
-#ifndef OUTPUT_MIXER_H
-#define OUTPUT_MIXER_H
+#ifndef OUTPUT_H
+#define OUTPUT_H
 
 #include <stdint.h>
 #include "Servo.h"
@@ -23,10 +23,10 @@ class mixer_t {
 typedef enum { SERVO, ESC } out_type_t;
 //typedef enum { STBL, RATE } mode_t;
 
-class Output_mixer {
+class Output{
     public:
-        Output_mixer();
-        Output_mixer(out_type_t type, uint8_t pin, mixer_t mixer);
+        Output();
+        Output(out_type_t type, uint8_t pin, mixer_t mixer);
         void shut_off();
         void apply(uint16_t throttle,
                 float roll_stbl, float pitch_stbl, float yaw_stbl//,
@@ -40,7 +40,7 @@ class Output_mixer {
         uint16_t upper_limit = 2000;
         uint16_t lower_limit = 1000;
         uint16_t throttle = 0;
-        Servo out_servo;
+        Servo output;
 };
 
-#endif // OUTPUT_MIXER_H
+#endif // OUTPUT_H

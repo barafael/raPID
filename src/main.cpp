@@ -16,8 +16,7 @@
 #include "../interface/pid.h"
 #include "../interface/pid_controller.h"
 #include "../interface/pins.h"
-#include "../interface/rc_control.h"
-#include "../interface/output_mixer.h"
+#include "../interface/output.h"
 #include "../interface/receiver.h"
 #include "../interface/settings.h"
 #include "../interface/state.h"
@@ -99,22 +98,22 @@ extern "C" int main(void) {
     mixer_t roll_left_mixer;
     roll_left_mixer.throttle_vol = 100;
     roll_left_mixer.volumes = { 100, 0, 0 };
-    Output_mixer out_mixer_left(SERVO, LEFT_SERVO_PIN, roll_left_mixer);
+    Output out_mixer_left(SERVO, LEFT_SERVO_PIN, roll_left_mixer);
 
     mixer_t roll_right_mixer;
     roll_right_mixer.throttle_vol = 100;
     roll_right_mixer.volumes = { -100, 0, 0 };
-    Output_mixer out_mixer_right(SERVO, RIGHT_SERVO_PIN, roll_right_mixer);
+    Output out_mixer_right(SERVO, RIGHT_SERVO_PIN, roll_right_mixer);
 
     mixer_t pitch_front_mixer;
     pitch_front_mixer.throttle_vol = 100;
     pitch_front_mixer.volumes = { 0, 100, 0 };
-    Output_mixer out_mixer_front(SERVO, FRONT_SERVO_PIN, pitch_front_mixer);
+    Output out_mixer_front(SERVO, FRONT_SERVO_PIN, pitch_front_mixer);
 
     mixer_t pitch_back_mixer;
     pitch_back_mixer.throttle_vol = 100;
     pitch_back_mixer.volumes = { 0, -100, 0 };
-    Output_mixer out_mixer_back(SERVO, BACK_SERVO_PIN, pitch_back_mixer);
+    Output out_mixer_back(SERVO, BACK_SERVO_PIN, pitch_back_mixer);
 
     while (1) {
         notime(read_receiver(&receiver_in));
