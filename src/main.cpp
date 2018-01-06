@@ -72,10 +72,8 @@ size_t flight_mode_index = 0;
 extern "C" int main(void) {
     Serial.begin(9600);
 
-    //while(true) {
-    //    Serial.println("Hello?");
-    //    delay(50);
-    //}
+    delay(2000);
+
     pinMode(LED_PIN, OUTPUT);
     pinMode(DEBUG_PIN, OUTPUT);
 
