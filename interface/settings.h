@@ -13,12 +13,6 @@ const static uint16_t CONFIG_THRESHOLD = 1150;
 const static uint16_t CONFIG_TIMEOUT = 1500;
 
 typedef enum {
-    YAW_ANGLE   = 0,
-    PITCH_ANGLE = 1,
-    ROLL_ANGLE  = 2
-} angle;
-
-typedef enum {
     ROLL_RATE  = 0,
     PITCH_RATE = 1,
     YAW_RATE   = 2

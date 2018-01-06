@@ -33,7 +33,7 @@ void update_receiver(channels_t *receiver_in) {
     }
 }
 
-static bool has_signal() {
+bool has_signal() {
     noInterrupts();
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         if (receiver_in_shared.channels[index] != 0) {
@@ -50,7 +50,7 @@ void update_roll();
 void update_pitch();
 void update_yaw();
 
-bool init_receiver() {
+void init_receiver() {
     /* The pinMode should be set to input by default, set it anyway */
     pinMode(THROTTLE_INPUT_PIN, INPUT);
     pinMode(ROLL_INPUT_PIN,     INPUT);
@@ -67,10 +67,7 @@ bool init_receiver() {
     attachInterrupt(AUX1_INPUT_PIN,     update_aux1,      CHANGE);
     attachInterrupt(AUX2_INPUT_PIN,     update_aux2,      CHANGE);
     */
-
-    delay(20);
-
-    return has_signal();
+    delay(10);
 }
 
 

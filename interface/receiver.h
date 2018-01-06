@@ -10,6 +10,7 @@ class channels_t {
 };
 
 void update_receiver(channels_t *channels);
-bool init_receiver();
+bool has_signal();
+void init_receiver();
 
 #endif // RECEIVER_H

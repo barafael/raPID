@@ -17,7 +17,6 @@ static const uint16_t MPU6050_GYRO_OFFSET_X  = 105;
 static const uint16_t MPU6050_GYRO_OFFSET_Y  = 95;
 static const uint16_t MPU6050_GYRO_OFFSET_Z  = -21;
 
-
 /*
    —————————————————————————————————————————————————
    ———              MPU6050 VARIABLES            ———
@@ -122,6 +121,11 @@ void update_angular_rates(axis_t *angular_rates) {
    ———             FETCH ABS ANGLES FROM IMU                 ———
    —————————————————————————————————————————————————————————————
 */
+typedef enum {
+    YAW_ANGLE   = 0,
+    PITCH_ANGLE = 1,
+    ROLL_ANGLE  = 2
+} angle;
 
 void update_abs_angles(axis_t *attitude) {
     /* skip if no MPU interrupt or no extra packet(s) available */
@@ -201,6 +205,7 @@ void update_abs_angles(axis_t *attitude) {
         attitude->yaw   = ((float)yaw_pitch_roll[YAW_ANGLE] + M_PI) * (1000.0 / (2 * M_PI));
         attitude->pitch = ((float)yaw_pitch_roll[PITCH_ANGLE] + M_PI) * (1000.0 / (2 * M_PI));
         attitude->roll  = ((float)yaw_pitch_roll[ROLL_ANGLE] + M_PI) * (1000.0 / (2 * M_PI));
+        //Serial.println(attitude->roll);
         // digitalWrite(DEBUG_PIN, LOW);
     }
 }

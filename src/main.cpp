@@ -72,10 +72,22 @@ size_t flight_mode_index = 0;
 extern "C" int main(void) {
     Serial.begin(9600);
 
+    //while(true) {
+    //    Serial.println("Hello?");
+    //    delay(50);
+    //}
     pinMode(LED_PIN, OUTPUT);
     pinMode(DEBUG_PIN, OUTPUT);
 
-    while(!init_receiver()) {
+    init_receiver();
+
+    unsigned long interval = 100;
+    unsigned long previous = millis();
+    while(!has_signal()) {
+        unsigned long current = millis();
+        while(current - previous < interval) {
+            current = millis();
+        }
         Serial.println("No receiver signal! Waiting.");
     }
     Serial.println("Receiver signal detected, continuing.");
