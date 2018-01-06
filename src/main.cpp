@@ -46,18 +46,15 @@
    INT ------------------ Digital Pin 12 (see pins.h)
 
    PPM from RC RX go to pins 8, 9, 10, 11 (see pins.h)
-   Output PPM to ESC's: pins 21, 22
+   Output signal to ESCs/Servos: pins 20, 21, 22, 23 (see pins.h)
    */
 
 state_t state = DISARMED;
 
-/* Scaled yaw_pitch_roll to [0, 1000]
-*/
-
+/* Scaled yaw_pitch_roll to [0, 1000] */
 axis_t attitude = { 0, 0, 0 };
 
-/* Angular Rate
-*/
+/* Angular Rate */
 axis_t angular_rate = { 0, 0, 0 };
 
 
@@ -78,7 +75,10 @@ extern "C" int main(void) {
     pinMode(LED_PIN, OUTPUT);
     pinMode(DEBUG_PIN, OUTPUT);
 
-    init_rx_interrupts();
+    while(!init_receiver()) {
+        Serial.println("No receiver signal! Waiting.");
+    }
+    Serial.println("Receiver signal detected, continuing.");
 
     init_mpu6050();
 
@@ -110,12 +110,17 @@ extern "C" int main(void) {
     pitch_back_mixer.volumes = { 0, -100, 0 };
     Output out_mixer_back(SERVO, BACK_SERVO_PIN, pitch_back_mixer);
 
+    out_mixer_left.shut_off();
+    out_mixer_right.shut_off();
+    out_mixer_front.shut_off();
+    out_mixer_back.shut_off();
+
     while (1) {
-        notime(read_receiver(&receiver_in));
+        notime(update_receiver(&receiver_in));
 
-        notime(read_abs_angles(&attitude));
+        notime(update_abs_angles(&attitude));
 
-        notime(read_angular_rates(&angular_rate));
+        notime(update_angular_rates(&angular_rate));
 
         switch (state) {
             case DISARMING:
@@ -134,9 +139,9 @@ extern "C" int main(void) {
                             out_mixer_front.shut_off();
                             out_mixer_back.shut_off();
 
-                            read_receiver(&receiver_in);
-                            read_abs_angles(&attitude);
-                            read_angular_rates(&angular_rate);
+                            update_receiver(&receiver_in);
+                            update_abs_angles(&attitude);
+                            update_angular_rates(&angular_rate);
                             feed_the_dog();
                             delay(10);
                         }
@@ -202,9 +207,9 @@ extern "C" int main(void) {
                             out_mixer_front.shut_off();
                             out_mixer_back.shut_off();
 
-                            read_receiver(&receiver_in);
-                            read_abs_angles(&attitude);
-                            read_angular_rates(&angular_rate);
+                            update_receiver(&receiver_in);
+                            update_abs_angles(&attitude);
+                            update_angular_rates(&angular_rate);
                             feed_the_dog();
                             delay(10);
                         }

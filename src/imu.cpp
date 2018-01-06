@@ -83,7 +83,7 @@ static offset_axis_t gyro_offsets = { 0, 0, 0 };
    ————————————————————————————————————————————————————————————————
 */
 
-static void read_raw_rates(axis_t *raw_rates) {
+static void update_raw_rates(axis_t *raw_rates) {
     Wire.beginTransmission(mpu_address);
     Wire.write(0x43);
     Wire.endTransmission();
@@ -101,7 +101,7 @@ static void read_raw_rates(axis_t *raw_rates) {
    ————————————————————————————————————————————————————————————————
 */
 
-void read_angular_rates(axis_t *angular_rates) {
+void update_angular_rates(axis_t *angular_rates) {
     Wire.beginTransmission(mpu_address);
     Wire.write(0x43);
     Wire.endTransmission();
@@ -123,7 +123,7 @@ void read_angular_rates(axis_t *angular_rates) {
    —————————————————————————————————————————————————————————————
 */
 
-void read_abs_angles(axis_t *attitude) {
+void update_abs_angles(axis_t *attitude) {
     /* skip if no MPU interrupt or no extra packet(s) available */
     if (!mpu_interrupt && (fifo_count < packet_size)) {
         return;
@@ -221,7 +221,7 @@ bool calib_rates_ok(axis_t *angular_rates) {
     offset_axis_t accumulator = { 0, 0, 0 };
 
     for (uint16_t count = 0; count < iterations; count++) {
-        read_angular_rates(angular_rates);
+        update_angular_rates(angular_rates);
         accumulator.roll  += angular_rates->roll;
         accumulator.pitch += angular_rates->pitch;
         accumulator.yaw   += angular_rates->yaw;
@@ -256,7 +256,7 @@ void calib_rates() {
     uint16_t iterations = 300;
 
     axis_t angular_rates = { 0, 0, 0 };
-    read_angular_rates(&angular_rates);
+    update_angular_rates(&angular_rates);
 
     /* Attempt calibration and check if it (probably) succeeded */
     while (!calib_rates_ok(&angular_rates)) {
@@ -265,7 +265,7 @@ void calib_rates() {
         gyro_offsets.yaw   = 0;
 
         for (uint16_t count = 0; count < iterations; count++) {
-            read_raw_rates(&angular_rates);
+            update_raw_rates(&angular_rates);
             gyro_offsets.roll  += angular_rates.roll;
             gyro_offsets.pitch += angular_rates.pitch;
             gyro_offsets.yaw   += angular_rates.yaw;

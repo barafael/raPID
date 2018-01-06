@@ -9,7 +9,7 @@ class channels_t {
         uint16_t channels[NUM_CHANNELS];
 };
 
-void read_receiver(channels_t *channels);
-void init_rx_interrupts();
+void update_receiver(channels_t *channels);
+bool init_receiver();
 
 #endif // RECEIVER_H
