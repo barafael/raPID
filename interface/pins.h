@@ -1,7 +1,7 @@
 #ifndef PINS_H
 #define PINS_H
 
-static const uint8_t DEBUG_PIN = 23;
+static const uint8_t DEBUG_PIN = 15;
 
 static const uint8_t LED_PIN = 13;
 
