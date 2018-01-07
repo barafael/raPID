@@ -63,7 +63,7 @@ float pid_output_roll_rate = 0.0;
 float pid_output_pitch_stbl = 0.0;
 float pid_output_pitch_rate = 0.0;
 
-channels_t receiver_in;
+uint16_t receiver_in[NUM_CHANNELS] = { 0 };
 
 /* TODO: enumify? */
 size_t flight_mode_index = 0;
@@ -125,7 +125,7 @@ extern "C" int main(void) {
     out_mixer_back.shut_off();
 
     while (1) {
-        notime(update_receiver(&receiver_in));
+        update_receiver(receiver_in);
 
         notime(update_abs_angles(&attitude));
 
@@ -134,7 +134,7 @@ extern "C" int main(void) {
         switch (state) {
             case DISARMING:
                 Serial.println("Disarming!");
-                if (!disarming_input(&receiver_in)) {
+                if (!disarming_input(receiver_in)) {
                     Serial.println("Disarming interrupted! Arming again.");
                     state = ARMED;
                     break;
@@ -142,13 +142,13 @@ extern "C" int main(void) {
                     state = disarming_complete() ? DISARMED : DISARMING;
                     if (state == DISARMED) {
                         Serial.println("Release the hold!");
-                        while (disarming_input(&receiver_in)) {
+                        while (disarming_input(receiver_in)) {
                             out_mixer_left.shut_off();
                             out_mixer_right.shut_off();
                             out_mixer_front.shut_off();
                             out_mixer_back.shut_off();
 
-                            update_receiver(&receiver_in);
+                            update_receiver(receiver_in);
                             update_abs_angles(&attitude);
                             update_angular_rates(&angular_rate);
                             feed_the_dog();
@@ -163,25 +163,23 @@ extern "C" int main(void) {
                 /* Keep disarming, but stay armed */
 
             case ARMED:
-                pid_output_roll_stbl = roll_controller_stbl.compute(micros(), attitude.roll, receiver_in.channels[ROLL_CHANNEL] - 1000).sum;
-
-                // setpoint_rate = receiver_in[ROLL_CHANNEL] - 1500.0;
+                pid_output_roll_stbl = roll_controller_stbl.compute(micros(), attitude.roll, receiver_in[ROLL_CHANNEL] - 1000).sum;
 
                 pid_output_roll_rate = roll_controller_rate.compute(micros(), angular_rate.roll, -15 * pid_output_roll_stbl).sum;
 
-                pid_output_pitch_stbl = pitch_controller_stbl.compute(micros(), attitude.pitch, receiver_in.channels[PITCH_CHANNEL] - 1000).sum;
+                pid_output_pitch_stbl = pitch_controller_stbl.compute(micros(), attitude.pitch, receiver_in[PITCH_CHANNEL] - 1000).sum;
 
                 pid_output_pitch_rate = pitch_controller_rate.compute(micros(), angular_rate.pitch, -15 * pid_output_pitch_stbl).sum;
 
-                out_mixer_left. apply(receiver_in.channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, 0.0);
-                out_mixer_right.apply(receiver_in.channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, 0.0);
-                out_mixer_front.apply(receiver_in.channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, 0.0);
-                out_mixer_back. apply(receiver_in.channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, 0.0);
+                out_mixer_left. apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, 0.0);
+                out_mixer_right.apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, 0.0);
+                out_mixer_front.apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, 0.0);
+                out_mixer_back. apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, 0.0);
 
 #define DEBUG_COL
 #ifdef DEBUG_COL
                 Serial.print("thr:");
-                Serial.print(receiver_in.channels[THROTTLE_CHANNEL]);
+                Serial.print(receiver_in[THROTTLE_CHANNEL]);
                 Serial.print("\tsetp:");
                 Serial.print(pid_output_roll_stbl);
                 Serial.print("\tr-angl:");
@@ -192,7 +190,7 @@ extern "C" int main(void) {
                 Serial.println(pid_output_roll_rate);
 #endif
 
-                if (state != DISARMING && disarming_input(&receiver_in)) {
+                if (state != DISARMING && disarming_input(receiver_in)) {
                     Serial.println("Initializing Disarm!");
                     state = DISARMING;
                     disarm_init();
@@ -201,7 +199,7 @@ extern "C" int main(void) {
 
             case ARMING:
                 Serial.println("Arming!");
-                if (!arming_input(&receiver_in)) {
+                if (!arming_input(receiver_in)) {
                     Serial.println("Arming interrupted! Disarming again.");
                     state = DISARMED;
                     break;
@@ -209,14 +207,14 @@ extern "C" int main(void) {
                     state = arming_complete() ? ARMED : ARMING;
                     if (state == ARMED) {
                         Serial.println("Release the hold!");
-                        while (arming_input(&receiver_in)) {
+                        while (arming_input(receiver_in)) {
                             /* Still don't fire the motors up */
                             out_mixer_left.shut_off();
                             out_mixer_right.shut_off();
                             out_mixer_front.shut_off();
                             out_mixer_back.shut_off();
 
-                            update_receiver(&receiver_in);
+                            update_receiver(receiver_in);
                             update_abs_angles(&attitude);
                             update_angular_rates(&angular_rate);
                             feed_the_dog();
@@ -235,7 +233,7 @@ extern "C" int main(void) {
                 out_mixer_front.shut_off();
                 out_mixer_back.shut_off();
 
-                if (state != ARMING && arming_input(&receiver_in)) {
+                if (state != ARMING && arming_input(receiver_in)) {
                     state = ARMING;
                     arm_init();
                 }

@@ -4,12 +4,16 @@
 #include "settings.h"
 #include "pins.h"
 
-class channels_t {
-    public:
-        uint16_t channels[NUM_CHANNELS];
-};
+/*
+typedef struct {
+    uint16_t& operator[](size_t i) { return c[i]; }
+    uint16_t c[NUM_CHANNELS] = { 0 };
+} channels_t;
+*/
 
-void update_receiver(channels_t *channels);
+
+
+void update_receiver(uint16_t channels[NUM_CHANNELS]);
 bool has_signal();
 void init_receiver();
 

@@ -12,7 +12,7 @@ const static uint16_t ARM_TIMEOUT = 2500;
 const static uint16_t CONFIG_THRESHOLD = 1150;
 const static uint16_t CONFIG_TIMEOUT = 1500;
 
-static const uint8_t NUM_CHANNELS = 6;
+static const size_t NUM_CHANNELS = 6;
 
 typedef enum {
     THROTTLE_CHANNEL  = 0,
