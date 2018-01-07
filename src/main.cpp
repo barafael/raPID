@@ -19,12 +19,10 @@
 
 #define TIMING_ANALYSIS
 #ifdef TIMING_ANALYSIS
-#define time(f)                                                                                                        \
-    {                                                                                                                  \
-        digitalWrite(DEBUG_PIN, HIGH);                                                                                 \
-        f;                                                                                                             \
-        digitalWrite(DEBUG_PIN, LOW);                                                                                  \
-    }
+#define time(f) {\
+        digitalWrite(DEBUG_PIN, HIGH);\
+        f;\
+        digitalWrite(DEBUG_PIN, LOW);}
 #else
 #define time(f) f
 #endif
@@ -68,19 +66,29 @@ uint16_t receiver_in[NUM_CHANNELS] = { 0 };
 /* TODO: enumify? */
 size_t flight_mode_index = 0;
 
+void print_channels(uint16_t receiver_in[NUM_CHANNELS]) {
+    for (size_t index = 0; index < NUM_CHANNELS; index++) {
+        Serial.print(receiver_in[index]);
+        Serial.print("\t");
+    }
+    Serial.println();
+}
+
+Receiver receiver(THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
+                  PITCH_INPUT_PIN,    YAW_INPUT_PIN,
+                  AUX1_INPUT_PIN,     AUX2_INPUT_PIN);
+
 extern "C" int main(void) {
     Serial.begin(9600);
 
-    delay(2000);
+    delay(3000);
 
     pinMode(LED_PIN, OUTPUT);
     pinMode(DEBUG_PIN, OUTPUT);
 
-    init_receiver();
-
     unsigned long interval = 100;
     unsigned long previous = millis();
-    while(!has_signal()) {
+    while(!receiver.has_signal()) {
         unsigned long current = millis();
         while(current - previous < interval) {
             current = millis();
@@ -125,7 +133,9 @@ extern "C" int main(void) {
     out_mixer_back.shut_off();
 
     while (1) {
-        update_receiver(receiver_in);
+        receiver.update(receiver_in);
+
+        print_channels(receiver_in);
 
         notime(update_abs_angles(&attitude));
 
@@ -148,7 +158,7 @@ extern "C" int main(void) {
                             out_mixer_front.shut_off();
                             out_mixer_back.shut_off();
 
-                            update_receiver(receiver_in);
+                            receiver.update(receiver_in);
                             update_abs_angles(&attitude);
                             update_angular_rates(&angular_rate);
                             feed_the_dog();
@@ -214,7 +224,7 @@ extern "C" int main(void) {
                             out_mixer_front.shut_off();
                             out_mixer_back.shut_off();
 
-                            update_receiver(receiver_in);
+                            receiver.update(receiver_in);
                             update_abs_angles(&attitude);
                             update_angular_rates(&angular_rate);
                             feed_the_dog();
