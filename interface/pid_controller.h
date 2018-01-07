@@ -3,11 +3,6 @@
 
 #include <stdint.h>
 
-class pid_result {
-    public:
-        float sum;
-};
-
 class pid_controller {
     public:
         float kp;
@@ -17,7 +12,7 @@ class pid_controller {
         pid_controller(const float kp, const float ki, const float kd,
                 const float integral_limit, const float output_limit);
 
-        pid_result compute(const uint64_t now, const float measured,
+        float compute(const uint64_t now, const float measured,
                 const float setpoint);
 
         pid_controller* set_p(const float kp);

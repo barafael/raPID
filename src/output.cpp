@@ -37,7 +37,7 @@ void Output::shut_off() {
 }
 
 void Output::apply(uint16_t throttle, float roll_stbl, float pitch_stbl, float yaw_stbl
-                         /*,pid_result roll_rate, pid_result pitch_rate, pid_result yaw_rate*/) {
+                         /*,float roll_rate, float pitch_rate, float yaw_rate*/) {
 
     /* Throttle cutoff to avoid spinning props due to movement when throttle is low but state is armed */
     if (out_type == ESC && throttle < THROTTLE_LOW_CUTOFF_MS) {

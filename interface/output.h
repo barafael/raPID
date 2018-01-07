@@ -30,7 +30,7 @@ class Output{
         void shut_off();
         void apply(uint16_t throttle,
                 float roll_stbl, float pitch_stbl, float yaw_stbl//,
-                /* pid_result roll_rate, pid_result pitch_rate, pid_result yaw_rate*/);
+                /* float roll_rate, float pitch_rate, float yaw_rate*/);
 
     private:
         mixer_t mixer;

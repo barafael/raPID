@@ -19,16 +19,16 @@ pid_controller::pid_controller(const float kp, const float ki, const float kd,
 }
 
 /* TODO: handle overflows for 'now' using rollover or somesuch. */
-pid_result pid_controller::compute(const uint64_t now, const float measured, const float setpoint) {
+float pid_controller::compute(const uint64_t now, const float measured, const float setpoint) {
 
     uint32_t elapsed_time = now - last_time;
 
-    pid_result result{ 0.0 };
-
     float error = measured - setpoint;
 
+    float result = 0.0;
+
     /* Proportional term */
-    result.sum += this->kp * error;
+    result += this->kp * error;
 
     /* Integral term */
     this->integral += elapsed_time * error * this->ki;
@@ -36,17 +36,17 @@ pid_result pid_controller::compute(const uint64_t now, const float measured, con
     this->integral = this->integral > this->integral_limit ? this->integral_limit : this->integral;
     this->integral = this->integral < this->integral_limit * -1 ? this->integral_limit * -1 : this->integral;
 
-    result.sum += this->integral;
+    result += this->integral;
 
     /* Derivative term on error */
-    result.sum += ((error - last_error) / elapsed_time) * this->kd;
+    result += ((error - last_error) / elapsed_time) * this->kd;
 
     /* Derivative term on input */
-    // result.sum += (setpoint - last_setpoint) / elapsed_time;
+    // result += (setpoint - last_setpoint) / elapsed_time;
 
     /* Output limit */
-    result.sum = result.sum > this->output_limit ? this->output_limit : result.sum;
-    result.sum = result.sum < this->output_limit * -1 ? this->output_limit * -1 : result.sum;
+    result = result > this->output_limit ? this->output_limit : result;
+    result = result < this->output_limit * -1 ? this->output_limit * -1 : result;
 
     this->last_error    = error;
     this->last_time     = now;
