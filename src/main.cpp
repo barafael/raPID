@@ -15,7 +15,6 @@
 #include "../interface/receiver.h"
 #include "../interface/settings.h"
 #include "../interface/state.h"
-#include "../interface/arming_state.h"
 #include "../interface/watchdog.h"
 
 #define TIMING_ANALYSIS
