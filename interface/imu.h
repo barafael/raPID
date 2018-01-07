@@ -11,7 +11,7 @@ class axis_t {
 };
 
 void init_mpu6050();
-void update_angular_rates(axis_t *angular_rate);
+void update_angular_rates(axis_t *angular_rates);
 void update_abs_angles(axis_t *attitude);
 
 #endif // IMU_H

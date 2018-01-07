@@ -86,10 +86,10 @@ extern "C" int main(void) {
     pinMode(LED_PIN, OUTPUT);
     pinMode(DEBUG_PIN, OUTPUT);
 
-    unsigned long interval = 100;
-    unsigned long previous = millis();
-    while(!receiver.has_signal()) {
-        unsigned long current = millis();
+    uint64_t interval = 500;
+    uint64_t previous = millis();
+    while (!receiver.has_signal()) {
+        uint64_t current = millis();
         while(current - previous < interval) {
             current = millis();
         }
@@ -135,7 +135,7 @@ extern "C" int main(void) {
     while (1) {
         receiver.update(receiver_in);
 
-        print_channels(receiver_in);
+        // print_channels(receiver_in);
 
         notime(update_abs_angles(&attitude));
 

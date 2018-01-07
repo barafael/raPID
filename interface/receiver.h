@@ -1,8 +1,8 @@
 #ifndef RECEIVER_H
 #define RECEIVER_H
 
-#include "settings.h"
-#include "pins.h"
+#include "../interface/settings.h"
+#include "../interface/pins.h"
 
 class Receiver {
     /*
@@ -26,12 +26,12 @@ class Receiver {
         volatile uint64_t receiver_pulse_start_time[NUM_CHANNELS] = { 0 };
 
     public:
-        Receiver(uint8_t _throttle_pin, uint8_t _aileron_pin,
-                 uint8_t _elevator_pin, uint8_t _rudder_pin,
+        Receiver(uint8_t _throttle_pin, uint8_t _roll_pin,
+                 uint8_t _pitch_pin,    uint8_t _yaw_pin,
                  uint8_t _aux1_pin,     uint8_t _aux2_pin);
 
-        void update(uint16_t channels[NUM_CHANNELS]);
-        bool has_signal();
+        const void update(uint16_t channels[NUM_CHANNELS]);
+        const bool has_signal();
 
         friend void update_throttle();
         friend void update_roll();

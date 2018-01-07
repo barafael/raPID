@@ -99,13 +99,14 @@ Receiver::Receiver(uint8_t _throttle_pin, uint8_t _roll_pin,
     delay(10);
 }
 
+
 /*
    —————————————————————————————————————————————————————————
    ———             RECEIVER UPDATE FUNCTION              ———
    —————————————————————————————————————————————————————————
 */
 
-void Receiver::update(uint16_t channels[NUM_CHANNELS]) {
+const void Receiver::update(uint16_t channels[NUM_CHANNELS]) {
     noInterrupts();
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         channels[index] = receiver_in_shared[index];
@@ -118,7 +119,7 @@ void Receiver::update(uint16_t channels[NUM_CHANNELS]) {
     }
 }
 
-bool Receiver::has_signal() {
+const bool Receiver::has_signal() {
     noInterrupts();
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         if (receiver_in_shared[index] == 0) {
