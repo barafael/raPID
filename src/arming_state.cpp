@@ -3,18 +3,18 @@
 
 #include "../interface/imu.h"
 #include "../interface/settings.h"
+#include "../interface/state.h"
 #include "../interface/watchdog.h"
 
 static uint64_t disarm_init_time;
 static uint64_t arm_init_time;
 
-static bool channels_within_threshold(uint16_t rx_input[NUM_CHANNELS], const int threshold) {
+static inline bool channels_within_threshold(uint16_t channels[NUM_CHANNELS], const int threshold) {
     bool in_threshold = true;
-    for (size_t index = 0; index < NUM_CHANNELS; index++) {
-        if (rx_input[index] > threshold) {
-            in_threshold = false;
-        }
-    }
+    if (channels[THROTTLE_CHANNEL] > threshold) in_threshold = false;
+    if (channels[YAW_CHANNEL]      > threshold) in_threshold = false;
+    if (channels[PITCH_CHANNEL]    > threshold) in_threshold = false;
+    if (channels[ROLL_CHANNEL]     > threshold) in_threshold = false;
     return in_threshold;
 }
 

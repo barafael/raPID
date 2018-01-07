@@ -18,10 +18,4 @@ bool arming_input(uint16_t channels[NUM_CHANNELS]);
 bool disarming_complete();
 bool arming_complete();
 
-void arm();
-
-void disarm();
-
-void config();
-
 #endif // STATE_H

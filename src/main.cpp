@@ -19,11 +19,11 @@
 
 #define TIMING_ANALYSIS
 #ifdef TIMING_ANALYSIS
-#define time(f)                                                                                                        \
-    {                                                                                                                  \
-        digitalWrite(DEBUG_PIN, HIGH);                                                                                 \
-        f;                                                                                                             \
-        digitalWrite(DEBUG_PIN, LOW);                                                                                  \
+#define time(f)                           \
+    {                                     \
+        digitalWrite(DEBUG_PIN, HIGH);    \
+        f;                                \
+        digitalWrite(DEBUG_PIN, LOW);     \
     }
 #else
 #define time(f) f
@@ -72,21 +72,26 @@ Receiver receiver(THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
 /* TODO: enumify? */
 size_t flight_mode_index = 0;
 
+void print_channels(uint16_t receiver_in[NUM_CHANNELS]) {
+    for (size_t index = 0; index < NUM_CHANNELS; index++) {
+        Serial.print(receiver_in[index]);
+        Serial.print("\t");
+    }
+    Serial.println();
+}
+
 extern "C" int main(void) {
     Serial.begin(9600);
 
-    Serial.println("hello!");
-    while(1) { }
-
-    delay(2000);
+    delay(3000);
 
     pinMode(LED_PIN, OUTPUT);
     pinMode(DEBUG_PIN, OUTPUT);
 
-    unsigned long interval = 100;
-    unsigned long previous = millis();
-    while(!receiver.has_signal()) {
-        unsigned long current = millis();
+    uint64_t interval = 500;
+    uint64_t previous = millis();
+    while (!receiver.has_signal()) {
+        uint64_t current = millis();
         while(current - previous < interval) {
             current = millis();
         }
@@ -130,7 +135,9 @@ extern "C" int main(void) {
     out_mixer_back.shut_off();
 
     while (1) {
-        notime(receiver.update(receiver_in));
+        receiver.update(receiver_in);
+
+        // print_channels(receiver_in);
 
         notime(update_abs_angles(&attitude));
 
@@ -168,23 +175,23 @@ extern "C" int main(void) {
                 /* Keep disarming, but stay armed */
 
             case ARMED:
-                pid_output_roll_stbl = roll_controller_stbl.compute(micros(), attitude.roll, receiver.get_aileron() - 1000).sum;
+                pid_output_roll_stbl = roll_controller_stbl.compute(micros(), attitude.roll, receiver_in[ROLL_CHANNEL] - 1000).sum;
 
                 pid_output_roll_rate = roll_controller_rate.compute(micros(), angular_rate.roll, -15 * pid_output_roll_stbl).sum;
 
-                pid_output_pitch_stbl = pitch_controller_stbl.compute(micros(), attitude.pitch, receiver.get_elevator() - 1000).sum;
+                pid_output_pitch_stbl = pitch_controller_stbl.compute(micros(), attitude.pitch, receiver_in[PITCH_CHANNEL] - 1000).sum;
 
                 pid_output_pitch_rate = pitch_controller_rate.compute(micros(), angular_rate.pitch, -15 * pid_output_pitch_stbl).sum;
 
-                out_mixer_left. apply(receiver.get_throttle(), pid_output_roll_rate, pid_output_pitch_rate, 0.0);
-                out_mixer_right.apply(receiver.get_throttle(), pid_output_roll_rate, pid_output_pitch_rate, 0.0);
-                out_mixer_front.apply(receiver.get_throttle(), pid_output_roll_rate, pid_output_pitch_rate, 0.0);
-                out_mixer_back. apply(receiver.get_throttle(), pid_output_roll_rate, pid_output_pitch_rate, 0.0);
+                out_mixer_left. apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, 0.0);
+                out_mixer_right.apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, 0.0);
+                out_mixer_front.apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, 0.0);
+                out_mixer_back. apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, 0.0);
 
 #define DEBUG_COL
 #ifdef DEBUG_COL
                 Serial.print("thr:");
-                Serial.print(receiver.get_throttle());
+                Serial.print(receiver_in[THROTTLE_CHANNEL]);
                 Serial.print("\tsetp:");
                 Serial.print(pid_output_roll_stbl);
                 Serial.print("\tr-angl:");

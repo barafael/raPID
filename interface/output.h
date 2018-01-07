@@ -21,7 +21,7 @@ class mixer_t {
 };
 
 typedef enum { SERVO, ESC } out_type_t;
-//typedef enum { STBL, RATE } mode_t;
+// typedef enum { STBL, RATE } mode_t;
 
 class Output{
     public:
@@ -30,12 +30,12 @@ class Output{
         void shut_off();
         void apply(uint16_t throttle,
                 float roll_stbl, float pitch_stbl, float yaw_stbl//,
-                /*pid_result roll_rate, pid_result pitch_rate, pid_result yaw_rate*/);
+                /* pid_result roll_rate, pid_result pitch_rate, pid_result yaw_rate*/);
 
     private:
         mixer_t mixer;
         uint8_t pin;
-        //mode_t mode;
+        // mode_t mode;
         out_type_t out_type;
         uint16_t upper_limit = 2000;
         uint16_t lower_limit = 1000;
