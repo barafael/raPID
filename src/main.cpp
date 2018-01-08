@@ -63,7 +63,7 @@ float pid_output_roll_rate = 0.0;
 float pid_output_pitch_stbl = 0.0;
 float pid_output_pitch_rate = 0.0;
 
-uint16_t receiver_in[NUM_CHANNELS] = { 0 };
+channels_t receiver_in = { 0 };
 
 Receiver receiver(THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
                   PITCH_INPUT_PIN,    YAW_INPUT_PIN,
@@ -72,7 +72,7 @@ Receiver receiver(THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
 /* TODO: enumify? */
 size_t flight_mode_index = 0;
 
-void print_channels(uint16_t receiver_in[NUM_CHANNELS]) {
+static void print_channels(channels_t receiver_in) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         Serial.print(receiver_in[index]);
         Serial.print("\t");

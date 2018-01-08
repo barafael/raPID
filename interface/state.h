@@ -1,7 +1,7 @@
 #ifndef STATE_H
 #define STATE_H
 
-#include "../interface/receiver.h"
+using channels_t = uint16_t[NUM_CHANNELS];
 
 // TRANSITION
 // PASS_THROUGH
@@ -12,8 +12,8 @@ typedef enum {
 void disarm_init();
 void arm_init();
 
-bool disarming_input(uint16_t channels[NUM_CHANNELS]);
-bool arming_input(uint16_t channels[NUM_CHANNELS]);
+bool disarming_input(channels_t channels);
+bool arming_input(channels_t channels);
 
 bool disarming_complete();
 bool arming_complete();

@@ -9,7 +9,7 @@
 static uint64_t disarm_init_time;
 static uint64_t arm_init_time;
 
-static inline bool channels_within_threshold(uint16_t channels[NUM_CHANNELS], const int threshold) {
+static inline bool channels_within_threshold(channels_t channels, const int threshold) {
     bool in_threshold = true;
     if (channels[THROTTLE_CHANNEL] > threshold) in_threshold = false;
     if (channels[YAW_CHANNEL]      > threshold) in_threshold = false;
@@ -18,7 +18,7 @@ static inline bool channels_within_threshold(uint16_t channels[NUM_CHANNELS], co
     return in_threshold;
 }
 
-bool disarming_input(uint16_t channels[NUM_CHANNELS]) {
+bool disarming_input(channels_t channels) {
     return channels_within_threshold(channels, DISARM_THRESHOLD);
 }
 
@@ -31,7 +31,7 @@ bool disarming_complete() {
     return elapsed > DISARM_TIMEOUT;
 }
 
-bool arming_input(uint16_t channels[NUM_CHANNELS]) {
+bool arming_input(channels_t channels) {
     return channels_within_threshold(channels, DISARM_THRESHOLD);
 }
 

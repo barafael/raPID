@@ -2,7 +2,8 @@
 #define RECEIVER_H
 
 #include "../interface/settings.h"
-#include "../interface/pins.h"
+
+using channels_t = uint16_t[NUM_CHANNELS];
 
 class Receiver {
     /*
@@ -20,17 +21,17 @@ class Receiver {
         uint8_t aux2_pin;
 
         /* The servo interrupt writes to this variable and the receiver function reads */
-        volatile uint16_t receiver_in_shared[NUM_CHANNELS] = { 0 };
+        volatile channels_t receiver_in_shared = { 0 };
 
         /* Written by interrupt on rising edge */
-        volatile uint64_t receiver_pulse_start_time[NUM_CHANNELS] = { 0 };
+        volatile channels_t receiver_pulse_start_time = { 0 };
 
     public:
         Receiver(uint8_t _throttle_pin, uint8_t _roll_pin,
                  uint8_t _pitch_pin,    uint8_t _yaw_pin,
                  uint8_t _aux1_pin,     uint8_t _aux2_pin);
 
-        const void update(uint16_t channels[NUM_CHANNELS]);
+        const void update(channels_t channels);
         const bool has_signal();
 
         friend void update_throttle();

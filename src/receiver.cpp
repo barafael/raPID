@@ -106,7 +106,7 @@ Receiver::Receiver(uint8_t _throttle_pin, uint8_t _roll_pin,
    —————————————————————————————————————————————————————————
 */
 
-const void Receiver::update(uint16_t channels[NUM_CHANNELS]) {
+const void Receiver::update(channels_t channels) {
     noInterrupts();
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         channels[index] = receiver_in_shared[index];
