@@ -8,8 +8,8 @@ cache:
     directories:
         - "~/.platformio"
 
-#env:
-#    - PLATFORMIO_CI_SRC=examples/backSoon/backSoon.ino
+env:
+    - PLATFORMIO_CI_SRC=./src/
 
 install:
     - pip install -U platformio
