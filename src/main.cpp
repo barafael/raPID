@@ -134,7 +134,7 @@ extern "C" int main(void) {
     out_mixer_front.shut_off();
     out_mixer_back.shut_off();
 
-    while (1) {
+    while (true) {
         receiver.update(receiver_in);
 
         // print_channels(receiver_in);

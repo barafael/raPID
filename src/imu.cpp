@@ -217,7 +217,7 @@ void update_abs_angles(axis_t *attitude) {
    ———————————————————————————————————————————————————
 */
 
-bool calib_rates_ok(axis_t *angular_rates) {
+static bool calib_rates_ok(axis_t *angular_rates) {
     static bool rate_calibrated = false;
 
     const int iterations = 50;
@@ -255,7 +255,7 @@ bool calib_rates_ok(axis_t *angular_rates) {
     return rate_calibrated;
 }
 
-void calib_rates() {
+static void calib_rates() {
     Serial.println(F("Calibrating gyro rates, hold still!"));
 
     uint16_t iterations = 300;
@@ -293,7 +293,7 @@ void calib_rates() {
    ————————————————————————————————————————————————————————————————
 */
 
-void dmp_data_ready() {
+/*static*/ void dmp_data_ready() {
     mpu_interrupt = true;
 }
 

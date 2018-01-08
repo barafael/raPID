@@ -1,6 +1,8 @@
 #include "Arduino.h"
 #include "WProgram.h"
 
+#include "../interface/watchdog.h"
+
 void init_watchdog() {
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
