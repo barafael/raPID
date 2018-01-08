@@ -8,12 +8,8 @@ cache:
     directories:
         - "~/.platformio"
 
-env:
-    - PLATFORMIO_CI_SRC=./interface/
-    - PLATFORMIO_CI_SRC=./src/
-
 install:
     - pip install -U platformio
 
 script:
-    - platformio ci --project-conf=platformio.ini
+    - platformio ci --project-conf=platformio.ini .
