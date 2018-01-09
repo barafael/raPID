@@ -13,3 +13,4 @@ deploy:
   file: ".pioenvs/teensy31/firmware.elf"
   on:
     repo: barafael/raPID
+    tags: true
