@@ -6,6 +6,7 @@ install:
 - pip install -U platformio
 script:
 - platformio run
+- sonar-scanner
 deploy:
   skip_cleanup: true
   provider: releases
@@ -15,3 +16,12 @@ deploy:
   on:
     repo: barafael/raPID
     tags: true
+addons:
+  sonarcloud:
+    organization: rapid
+    token:
+      secure: eSqiPjQXzoeAvqDvFiWkwyWFrWBRGvNBfrGDrHKx45qsMCQIxgy14cEUZy8Kj1K+6Mk9mUDZvS+ZZqoW6n7Wkb0pN+ud2/PQo+Sr6kiI/JiQ7zKJPMypxHy4VOgiTqDSNZYVhK2QUtqahFnULE8MYMh5mf1VEAYe/hOmJGNCDSOUmCndMSkWRAIelom1Qqxde+f7u4ImTEqfri+1gY+3tyOrH574Et9mXomRbek9E/oOtyCDsB8//G3AKrbAcP8Cz4VDiAYyBei66t4yvf4bGIExliuvRIyAFHZscP6NsqCIZPMOj+NJbj3/qlOIp+FoXc+fxZdivpDQZtSUQURwdxj/SpZRbLwdbC7u/iJjO4yzbToHLjZAYLD03a20j9gH8QKRPqfPEG2lyW6G0T+sarBT77S2F+4PKriSt1xshOHzJxLGnc/GA3yAnLOutHf1WuFkjkN6oe7CJ/J6g5wRdhOYiAC6UMxVWxLllP1y5A8u2nVLZQpPX+SwEBWcMW0Q240R22U7OnEHIUEqrgi94Adk+iLtPjMIv4CKTVnC+KAbYfWnLm7VH9E4B4opRYr7KhXrbQOE4oFUnSPK3yuGbRFBkmDTiTyy3pdgna6audBJW9Hg9ptn3eK4KgYP4yTfITX597PHUKaqydfY/QX+XWt256GBrmxUE0FNc7s34GY=
+
+cache:
+  directories:
+    - '$HOME/.sonar/cache'
