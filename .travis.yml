@@ -1,15 +1,15 @@
 language: python
 python:
-    - "2.7"
-
-# Cache PlatformIO packages using Travis CI container-based infrastructure
+- '2.7'
 sudo: false
-cache:
-    directories:
-        - "~/.platformio"
-
 install:
-    - pip install -U platformio
-
+- pip install -U platformio
 script:
-    - platformio ci --project-conf=platformio.ini --exclude=lib .
+- platformio run
+deploy:
+  provider: releases
+  api_key:
+    secure: hI69fruEtXaicJ9Hb8QiAjGYOzFRswGIcu6gVywgKMqmAuG5DlEFEPSx8iV9DlmZaLQWtPXDhk7xlL+0ADnnECBBqJPBOzLw3TA1I2bfvFf0ulC/zGYnTVNTzkKise4XQO/DtnDy4Qo4pUw860BSxbRwDAvAnbiSsu7Cl/dsUAgyThCxDOUSM3sAvYmZeHDpx/srQmI7DTjs6kEXCyDAnY6TZr/p2gnLuEU2hSFBjYQOZ2dpTpTIMxoGI9etessoFskpvEA8lMZgHXSDOXiT+6cCvLuduM/8kfaYuCdv4ExUxy0XjkCC/8QrvwgL/FbbXeUdekk67D1sCDfqE4Lkws/a0Xn9RX/AoWDMvjOXZIC7ts2k3wPaF6v1IGvANyQHM6LHgFUEAH/7tuiV6wROfZ5HUxtIYB5qGeqhtzIgLZhhnVA6nOLPF8GaUi9+xPU45CT2YjFgyat+sg2V6JNYyHTEeBDSGQhYGbhFYCOYWjCbErrXxAwCdmbWHEgjfL9+JfwHBAZSC7Ixy3vpznx9OzA3qOoqc1C4xkMrC0KBJ3cQe831afqptiHt7aLcEVoVIOeCWkHZPwckgTOjxbXpeXqVtknYegPYJ56KFocYPF2KS2cN1zbzWSYG166R0CcLhQUKMfaRefkFzxPfERNzqfPKNh6pUztbk4QuGVQpAig=
+  file: ".pioenvs/teensy31/firmware.elf"
+  on:
+    repo: barafael/raPID
