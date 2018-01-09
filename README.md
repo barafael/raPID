@@ -10,3 +10,5 @@ Blog-in-progress @ [https://barafael.github.io/Simple-PID-flight-controller/](ht
 
 * Jeff Rowberg's MPU6050 library and example code.
 * Inspiration for this project was OpenAeroVTOL from the RCGroups forums, by HappySundays. Awesome project.
+
+[![Build Status](https://travis-ci.org/barafael/raPID.svg?branch=master)](https://travis-ci.org/barafael/raPID)
