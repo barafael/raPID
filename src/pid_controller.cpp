@@ -1,21 +1,27 @@
 #include "../interface/pid_controller.h"
 
+#define clamp(value, low, high) ((value) = ((value) < (low) ? (low) : ((value) > (high) ? (high) : (value))))
+
 pid_controller::pid_controller(const float kp, const float ki, const float kd,
-        const float integral_limit, const float output_limit) {
+        const float integral_limit, const float output_limit)
+    : kp { kp }
+    , ki { ki }
+    , kd { kd }
 
-    this->kp = kp;
-    this->ki = ki;
-    this->kd = kd;
+    /* TODO test if there are problems in the first couple loops after init
+     * (because of 0 init for derivtive and integral) */
+    , integral      { 0 }
+    , integral_limit { integral_limit }
 
-    this->integral_limit = integral_limit;
-    this->output_limit   = output_limit;
+    , derivative    { 0 }
+    , last_error    { 0 }
+    , last_setpoint { 0 }
 
-    /* TODO test if there are problems in the first couple loops after init */
-    this->integral      = 0;
-    this->derivative    = 0;
-    this->last_error    = 0;
-    this->last_setpoint = 0;
-    this->last_time     = 0;
+    , output_limit   { output_limit }
+
+    , last_time     { 0 }
+{
+
 }
 
 /* TODO: handle overflows for 'now' using rollover or somesuch. */
@@ -27,9 +33,11 @@ float pid_controller::compute(const uint64_t now, const float measured, const fl
 
     float result = 0.0;
 
+    /* Give me some P! */
     /* Proportional term */
     result += this->kp * error;
 
+    /* Give me some I! */
     /* Integral term */
     this->integral += elapsed_time * error * this->ki;
     /* Integral windup limit */
@@ -38,6 +46,7 @@ float pid_controller::compute(const uint64_t now, const float measured, const fl
 
     result += this->integral;
 
+    /* Give me some D! */
     /* Derivative term on error */
     result += ((error - last_error) / elapsed_time) * this->kd;
 
@@ -45,8 +54,7 @@ float pid_controller::compute(const uint64_t now, const float measured, const fl
     // result += (setpoint - last_setpoint) / elapsed_time;
 
     /* Output limit */
-    result = result > this->output_limit ? this->output_limit : result;
-    result = result < this->output_limit * -1 ? this->output_limit * -1 : result;
+    clamp(result, -output_limit, output_limit);
 
     this->last_error    = error;
     this->last_time     = now;
