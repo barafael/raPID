@@ -3,13 +3,13 @@
 
 #include <stdint.h>
 
-static const uint16_t DISARM_THRESHOLD = 1150;
+static const uint16_t DISARM_THRESHOLD = 150;
 static const uint16_t DISARM_TIMEOUT = 2500;
 
-static const uint16_t ARM_THRESHOLD = 1150;
+static const uint16_t ARM_THRESHOLD = 150;
 static const uint16_t ARM_TIMEOUT = 2500;
 
-static const uint16_t CONFIG_THRESHOLD = 1150;
+static const uint16_t CONFIG_THRESHOLD = 150;
 static const uint16_t CONFIG_TIMEOUT = 1500;
 
 static const size_t NUM_CHANNELS = 6;

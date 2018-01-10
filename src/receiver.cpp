@@ -116,6 +116,7 @@ const void Receiver::update(channels_t channels) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         if (channels[index] < 1000) channels[index] = 1000;
         if (channels[index] > 2000) channels[index] = 2000;
+        channels[index] -= 1000;
     }
 }
 
