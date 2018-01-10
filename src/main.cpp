@@ -63,6 +63,8 @@ float pid_output_roll_rate = 0.0;
 float pid_output_pitch_stbl = 0.0;
 float pid_output_pitch_rate = 0.0;
 
+float pid_output_yaw_rate = 0.0;
+
 channels_t receiver_in = { 0 };
 
 Receiver receiver(THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
@@ -92,7 +94,7 @@ extern "C" int main(void) {
     uint64_t previous = millis();
     while (!receiver.has_signal()) {
         uint64_t current = millis();
-        while(current - previous < interval) {
+        while (current - previous < interval) {
             current = millis();
         }
         Serial.println("No receiver signal! Waiting.");
@@ -109,24 +111,27 @@ extern "C" int main(void) {
     pid_controller pitch_controller_rate = pid_controller(1.0, 0.0, 0.0, 12.0, 200.0);
     pid_controller pitch_controller_stbl = pid_controller(1.0, 0.0, 0.0, 12.0, 200.0);
 
+    pid_controller yaw_controller_rate = pid_controller(1.0, 0.0, 0.0, 12.0, 200.0);
+
+    /* TODO builder pattern for output sets members of mixer */
     mixer_t roll_left_mixer;
     roll_left_mixer.throttle_vol = 100;
-    roll_left_mixer.volumes = { 100, 0, 0 };
+    roll_left_mixer.volumes = { 100, 0, -10 };
     Output out_mixer_left(SERVO, LEFT_SERVO_PIN, roll_left_mixer);
 
     mixer_t roll_right_mixer;
     roll_right_mixer.throttle_vol = 100;
-    roll_right_mixer.volumes = { -100, 0, 0 };
+    roll_right_mixer.volumes = { -100, 0, 10 };
     Output out_mixer_right(SERVO, RIGHT_SERVO_PIN, roll_right_mixer);
 
     mixer_t pitch_front_mixer;
     pitch_front_mixer.throttle_vol = 100;
-    pitch_front_mixer.volumes = { 0, 100, 0 };
+    pitch_front_mixer.volumes = { 0, 100, -10 };
     Output out_mixer_front(SERVO, FRONT_SERVO_PIN, pitch_front_mixer);
 
     mixer_t pitch_back_mixer;
     pitch_back_mixer.throttle_vol = 100;
-    pitch_back_mixer.volumes = { 0, -100, 0 };
+    pitch_back_mixer.volumes = { 0, -100, 10 };
     Output out_mixer_back(SERVO, BACK_SERVO_PIN, pitch_back_mixer);
 
     out_mixer_left.shut_off();
@@ -134,6 +139,7 @@ extern "C" int main(void) {
     out_mixer_front.shut_off();
     out_mixer_back.shut_off();
 
+    /* Flight loop */
     while (true) {
         receiver.update(receiver_in);
 
@@ -172,7 +178,7 @@ extern "C" int main(void) {
                 }
 
                 Serial.println("Proceeding to 'ARMED' state actions from 'DISARMING'");
-                /* Keep disarming, but stay armed */
+                /* Keep disarming, but stay armed (no break) */
 
             case ARMED:
                 pid_output_roll_stbl = roll_controller_stbl.compute(micros(), attitude.roll, receiver_in[ROLL_CHANNEL] - 1000);
@@ -183,10 +189,13 @@ extern "C" int main(void) {
 
                 pid_output_pitch_rate = pitch_controller_rate.compute(micros(), angular_rate.pitch, -15 * pid_output_pitch_stbl);
 
-                out_mixer_left. apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, 0.0);
-                out_mixer_right.apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, 0.0);
-                out_mixer_front.apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, 0.0);
-                out_mixer_back. apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, 0.0);
+                /* Yaw needs rate only - yaw stick controls rate of rotation, there is no fixed reference */
+                pid_output_yaw_rate = yaw_controller_rate.compute(micros(), angular_rate.yaw, receiver_in[YAW_CHANNEL] - 1000);
+
+                out_mixer_left. apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
+                out_mixer_right.apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
+                out_mixer_front.apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
+                out_mixer_back. apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
 
 #define DEBUG_COL
 #ifdef DEBUG_COL
@@ -237,7 +246,7 @@ extern "C" int main(void) {
                     }
                 }
                 Serial.println("Proceeding to 'DISARMED' state actions from 'ARMING'");
-                /* Keep arming, but stay disarmed */
+                /* Keep arming, but stay disarmed (no break) */
 
             case DISARMED:
                 out_mixer_left.shut_off();
