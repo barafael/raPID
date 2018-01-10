@@ -4,7 +4,7 @@
 #include "../interface/receiver.h"
 
 /* Access variable for ISRs */
-Receiver *instance = NULL;
+Receiver *instance = nullptr;
 
 /*
    ————————————————————————————————————————————————————————————————

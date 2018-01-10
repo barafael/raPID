@@ -3,69 +3,93 @@
 
 #include "../interface/output.h"
 
-/* TODO support inverting output */
-/* TODO support arming for ESC type? */
-/* TODO support lower and upper limit everywhere */
+/* TODO implement inverting output */
+/* TODO implement arming for ESC type? */
+/* TODO implement lower and upper limit everywhere */
+/* TODO implement flight mode offset? */
 /* TODO remove includes  when not using warning output in apply(x) */
-static const uint16_t THROTTLE_LOW_CUTOFF_MS = 1025;
+
+static const uint16_t THROTTLE_LOW_CUTOFF = 25;
 
 #define clamp(value, low, high) ((value) = ((value) < (low) ? (low) : ((value) > (high) ? (high) : (value))))
 
 Output::Output()
-    : mixer { 100, { 100, 0, 0 }}
+    : out_type { SERVO }
     , pin { 22 }
-    , out_type { ESC }
+    , mixer { 1.0, 1.0, 0.0, 0.0 }
     , upper_limit { 1000 }
-    , lower_limit { 1000 }
+    , lower_limit { 0 }
 {
     output.attach(pin);
 }
 
-Output::Output(out_type_t type, uint8_t pin, mixer_t mixer) 
-    : mixer { mixer }
+Output::Output(out_type_t type, uint8_t pin)
+    : out_type { type }
     , pin { pin }
-    , out_type { type }
+    , mixer { 0.0, 0.0, 0.0, 0.0 }
     , upper_limit { 1000 }
-    , lower_limit { 1000 }
+    , lower_limit { 0 }
 {
     output.attach(pin);
 }
 
 void Output::shut_off() {
-    output.writeMicroseconds(lower_limit);
+    output.writeMicroseconds(1000 + lower_limit);
 }
 
-void Output::apply(uint16_t throttle, float roll_stbl, float pitch_stbl, float yaw_stbl
-                         /*,float roll_rate, float pitch_rate, float yaw_rate*/) {
+void Output::apply(uint16_t throttle,
+        float roll_stbl, float pitch_stbl, float yaw_stbl
+        /*,float roll_rate, float pitch_rate, float yaw_rate*/) {
 
     /* Throttle cutoff to avoid spinning props due to movement when throttle is low but state is armed */
-    if (out_type == ESC && throttle < THROTTLE_LOW_CUTOFF_MS) {
-        output.writeMicroseconds(lower_limit);
+    if (out_type == ESC && throttle < THROTTLE_LOW_CUTOFF) {
+        output.writeMicroseconds(1000 + lower_limit);
         return;
     }
 
     // TODO take this out to settings init
-    if (mixer.throttle_vol  > 100  || mixer.throttle_vol  < -100 || mixer.volumes.r_vol > 100 ||
-        mixer.volumes.r_vol < -100 || mixer.volumes.p_vol > 100  || mixer.volumes.p_vol < -100 ||
-        mixer.volumes.y_vol > 100  || mixer.volumes.y_vol < -100) {
+    if (mixer.throttle_volume > 1.0 || mixer.throttle_volume < -1.0 ||
+        mixer.roll_volume     > 1.0 || mixer.roll_volume     < -1.0 ||
+        mixer.pitch_volume    > 1.0 || mixer.pitch_volume    < -1.0 ||
+        mixer.yaw_volume      > 1.0 || mixer.yaw_volume      < -1.0) {
 
-        Serial.println("one of the volume parameters is out of range of [-100, 100]");
+        Serial.println("one of the volume parameters is out of range of [-1.0, 1.0]");
 
-        clamp(mixer.throttle_vol,  -100, 100);
-        clamp(mixer.volumes.r_vol, -100, 100);
-        clamp(mixer.volumes.p_vol, -100, 100);
-        clamp(mixer.volumes.y_vol, -100, 100);
+        clamp(mixer.throttle_volume, - 1.0, 1.0);
+        clamp(mixer.roll_volume,     - 1.0, 1.0);
+        clamp(mixer.pitch_volume,    - 1.0, 1.0);
+        clamp(mixer.yaw_volume,      - 1.0, 1.0);
     }
 
-    throttle = 1000 + (throttle - 1000) * (uint16_t) mixer.throttle_vol / 100.0;
+    throttle =  (uint16_t) (throttle   * mixer.throttle_volume);
 
-    throttle += (uint16_t) roll_stbl *  (mixer.volumes.r_vol / 100.0);
+    throttle += (uint16_t) (roll_stbl  * mixer.roll_volume);
 
-    throttle += (uint16_t) pitch_stbl * (mixer.volumes.p_vol / 100.0);
+    throttle += (uint16_t) (pitch_stbl * mixer.pitch_volume);
 
-    throttle += (uint16_t) yaw_stbl *   (mixer.volumes.y_vol / 100.0);
+    throttle += (uint16_t) (yaw_stbl   * mixer.yaw_volume);
 
     clamp(throttle, lower_limit, upper_limit);
 
-    output.writeMicroseconds(throttle);
+    output.writeMicroseconds(1000 + throttle);
+}
+
+Output* Output::set_throttle_volume (float volume) {
+    this->mixer.throttle_volume = volume;
+    return this;
+}
+
+Output* Output::set_roll_volume (float volume) {
+    this->mixer.roll_volume = volume;
+    return this;
+}
+
+Output* Output::set_pitch_volume (float volume) {
+    this->mixer.pitch_volume = volume;
+    return this;
+}
+
+Output* Output::set_yaw_volume (float volume) {
+    this->mixer.yaw_volume = volume;
+    return this;
 }

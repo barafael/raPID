@@ -113,26 +113,29 @@ extern "C" int main(void) {
 
     pid_controller yaw_controller_rate = pid_controller(1.0, 0.0, 0.0, 12.0, 200.0);
 
-    /* TODO builder pattern for output sets members of mixer */
-    mixer_t roll_left_mixer;
-    roll_left_mixer.throttle_vol = 100;
-    roll_left_mixer.volumes = { 100, 0, -10 };
-    Output out_mixer_left(SERVO, LEFT_SERVO_PIN, roll_left_mixer);
+    Output out_mixer_left(SERVO, LEFT_SERVO_PIN);
+    out_mixer_left
+         .set_throttle_volume(1.0)
+        ->set_roll_volume(1.0)
+        ->set_yaw_volume(-0.1);
 
-    mixer_t roll_right_mixer;
-    roll_right_mixer.throttle_vol = 100;
-    roll_right_mixer.volumes = { -100, 0, 10 };
-    Output out_mixer_right(SERVO, RIGHT_SERVO_PIN, roll_right_mixer);
+    Output out_mixer_right(SERVO, RIGHT_SERVO_PIN);
+    out_mixer_right
+         .set_throttle_volume(1.0)
+        ->set_roll_volume(-1.0)
+        ->set_yaw_volume(0.1);
 
-    mixer_t pitch_front_mixer;
-    pitch_front_mixer.throttle_vol = 100;
-    pitch_front_mixer.volumes = { 0, 100, -10 };
-    Output out_mixer_front(SERVO, FRONT_SERVO_PIN, pitch_front_mixer);
+    Output out_mixer_front(SERVO, FRONT_SERVO_PIN);
+    out_mixer_front
+         .set_throttle_volume(1.0)
+        ->set_pitch_volume(1.0)
+        ->set_yaw_volume(-0.1);
 
-    mixer_t pitch_back_mixer;
-    pitch_back_mixer.throttle_vol = 100;
-    pitch_back_mixer.volumes = { 0, -100, 10 };
-    Output out_mixer_back(SERVO, BACK_SERVO_PIN, pitch_back_mixer);
+    Output out_mixer_back(SERVO, BACK_SERVO_PIN);
+    out_mixer_back
+         .set_throttle_volume(1.0)
+        ->set_pitch_volume(-1.0)
+        ->set_yaw_volume(0.1);
 
     out_mixer_left.shut_off();
     out_mixer_right.shut_off();

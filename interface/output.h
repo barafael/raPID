@@ -6,41 +6,45 @@
 
 #include "../interface/pid_controller.h"
 
-class rpy_volume_t {
+class Mixer {
+    private:
     public:
-        int8_t r_vol;
-        int8_t p_vol;
-        int8_t y_vol;
+        float throttle_volume;
+
+        float roll_volume;
+        float pitch_volume;
+        float yaw_volume;
 };
 
-class mixer_t {
-    public:
-        int8_t throttle_vol;
-
-        rpy_volume_t volumes;
-};
-
-typedef enum { SERVO, ESC } out_type_t;
+typedef enum { SERVO, ESC, STEPPER } out_type_t;
 // typedef enum { STBL, RATE } mode_t;
 
-class Output{
+class Output {
     public:
         Output();
-        Output(out_type_t type, uint8_t pin, mixer_t mixer);
+        Output(const out_type_t type, const uint8_t pin);
         void shut_off();
         void apply(uint16_t throttle,
                 float roll_stbl, float pitch_stbl, float yaw_stbl//,
+                /* what params are needed? */
                 /* float roll_rate, float pitch_rate, float yaw_rate*/);
 
+        Output* set_throttle_volume(float volume);
+
+        Output* set_roll_volume  (float volume);
+        Output* set_pitch_volume (float volume);
+        Output* set_yaw_volume   (float volume);
+
     private:
-        mixer_t mixer;
-        uint8_t pin;
         // mode_t mode;
         out_type_t out_type;
-        uint16_t upper_limit = 2000;
-        uint16_t lower_limit = 1000;
-        uint16_t throttle = 0;
+        uint8_t pin;
+        Mixer mixer;
+        uint16_t upper_limit = 1000;
+        uint16_t lower_limit = 0;
+        //uint16_t throttle = 0;
         Servo output;
 };
 
 #endif // OUTPUT_H
+

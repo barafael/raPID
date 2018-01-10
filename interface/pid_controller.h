@@ -1,6 +1,7 @@
 #ifndef PID_CONTROLLER_H
 #define PID_CONTROLLER_H
 
+/* TODO implement explicit cascaded pid controller? */
 #include <stdint.h>
 
 class pid_controller {
