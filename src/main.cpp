@@ -8,7 +8,6 @@
 
 #include "../interface/error_blink.h"
 #include "../interface/imu.h"
-#include "../interface/pid.h"
 #include "../interface/pid_controller.h"
 #include "../interface/pins.h"
 #include "../interface/output.h"
