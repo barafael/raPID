@@ -2,11 +2,11 @@
 
 #define clamp(value, low, high) ((value) = ((value) < (low) ? (low) : ((value) > (high) ? (high) : (value))))
 
-pid_controller::pid_controller(const float kp, const float ki, const float kd,
+pid_controller::pid_controller(const float p_coeff, const float i_coeff, const float d_coeff,
         const float integral_limit, const float output_limit)
-    : kp { kp }
-    , ki { ki }
-    , kd { kd }
+    : p_coeff { p_coeff }
+    , i_coeff { i_coeff }
+    , d_coeff { d_coeff }
 
     /* TODO test if there are problems in the first couple loops after init
      * (because of 0 init for derivtive and integral) */
@@ -35,11 +35,11 @@ float pid_controller::compute(const uint64_t now, const float measured, const fl
 
     /* Give me some P! */
     /* Proportional term */
-    result += this->kp * error;
+    result += this->p_coeff * error;
 
     /* Give me some I! */
     /* Integral term */
-    this->integral += elapsed_time * error * this->ki;
+    this->integral += elapsed_time * error * this->i_coeff;
     /* Integral windup limit */
     this->integral = this->integral > this->integral_limit ? this->integral_limit : this->integral;
     this->integral = this->integral < this->integral_limit * -1 ? this->integral_limit * -1 : this->integral;
@@ -48,7 +48,7 @@ float pid_controller::compute(const uint64_t now, const float measured, const fl
 
     /* Give me some D! */
     /* Derivative term on error */
-    result += ((error - last_error) / elapsed_time) * this->kd;
+    result += ((error - last_error) / elapsed_time) * this->d_coeff;
 
     /* Derivative term on input */
     // result += (setpoint - last_setpoint) / elapsed_time;
@@ -64,16 +64,21 @@ float pid_controller::compute(const uint64_t now, const float measured, const fl
 }
 
 pid_controller *pid_controller::set_p(const float kp) {
-    this->kp = kp;
+    this->p_coeff = p_coeff;
     return this;
 }
 
 pid_controller *pid_controller::set_i(const float ki) {
-    this->ki = ki;
+    this->i_coeff = i_coeff;
     return this;
 }
 
 pid_controller *pid_controller::set_d(const float kd) {
-    this->kd = kd;
+    this->d_coeff = d_coeff;
+    return this;
+}
+
+pid_controller *pid_controller::integral_reset() {
+    integral = 0;
     return this;
 }

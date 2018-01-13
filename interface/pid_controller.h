@@ -6,19 +6,21 @@
 
 class pid_controller {
     public:
-        float kp;
-        float ki;
-        float kd;
+        float p_coeff;
+        float i_coeff;
+        float d_coeff;
 
-        pid_controller(const float kp, const float ki, const float kd,
+        pid_controller(const float p_coeff, const float i_coeff, const float d_coeff,
                 const float integral_limit, const float output_limit);
 
         float compute(const uint64_t now, const float measured,
                 const float setpoint);
 
-        pid_controller* set_p(const float kp);
-        pid_controller* set_i(const float ki);
-        pid_controller* set_d(const float kd);
+        pid_controller* integral_reset();
+
+        pid_controller* set_p(const float p_coeff);
+        pid_controller* set_i(const float i_coeff);
+        pid_controller* set_d(const float d_coeff);
 
     private:
         float integral;
