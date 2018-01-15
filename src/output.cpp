@@ -11,25 +11,28 @@
 
 static const uint16_t THROTTLE_LOW_CUTOFF = 25;
 
-#define clamp(value, low, high) ((value) = ((value) < (low) ? (low) : ((value) > (high) ? (high) : (value))))
+#define clamp(value, low, high) \
+    ((value) = \
+    ((value) < (low)  ? (low) : \
+    ((value) > (high) ? (high) : (value))))
 
 Output::Output()
-    : out_type { SERVO }
-    , pin { 22 }
-    , mixer { 1.0, 1.0, 0.0, 0.0 }
+    : out_type    { SERVO }
+    , pin         { 22 }
+    , mixer       { 1.0, 1.0, 0.0, 0.0 }
     , upper_limit { 1000 }
     , lower_limit { 0 }
-{
+                  {
     output.attach(pin);
 }
 
 Output::Output(out_type_t type, uint8_t pin)
-    : out_type { type }
-    , pin { pin }
-    , mixer { 0.0, 0.0, 0.0, 0.0 }
+    : out_type    { type }
+    , pin         { pin }
+    , mixer       { 0.0, 0.0, 0.0, 0.0 }
     , upper_limit { 1000 }
     , lower_limit { 0 }
-{
+                  {
     output.attach(pin);
 }
 
@@ -74,22 +77,22 @@ void Output::apply(uint16_t throttle,
     output.writeMicroseconds(1000 + throttle);
 }
 
-Output* Output::set_throttle_volume (float volume) {
-    this->mixer.throttle_volume = volume;
+Output* Output::set_throttle_volume(float volume) {
+    mixer.throttle_volume = volume;
     return this;
 }
 
-Output* Output::set_roll_volume (float volume) {
-    this->mixer.roll_volume = volume;
+Output* Output::set_roll_volume(float volume) {
+    mixer.roll_volume = volume;
     return this;
 }
 
-Output* Output::set_pitch_volume (float volume) {
-    this->mixer.pitch_volume = volume;
+Output* Output::set_pitch_volume(float volume) {
+    mixer.pitch_volume = volume;
     return this;
 }
 
-Output* Output::set_yaw_volume (float volume) {
-    this->mixer.yaw_volume = volume;
+Output* Output::set_yaw_volume(float volume) {
+    mixer.yaw_volume = volume;
     return this;
 }

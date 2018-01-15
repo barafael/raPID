@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "Servo.h"
 
-#include "../interface/pid_controller.h"
+#include "../interface/PIDController.h"
 
 class Mixer {
     private:

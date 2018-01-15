@@ -2,25 +2,26 @@
 #define PID_CONTROLLER_H
 
 /* TODO implement explicit cascaded pid controller? */
+
 #include <stdint.h>
 
-class pid_controller {
+class PIDController {
     public:
-        float p_coeff;
-        float i_coeff;
-        float d_coeff;
+        float p_gain;
+        float i_gain;
+        float d_gain;
 
-        pid_controller(const float p_coeff, const float i_coeff, const float d_coeff,
-                const float integral_limit, const float output_limit);
+        PIDController(const float _p_gain, const float _i_gain, const float _d_gain,
+                      const float _integral_limit, const float _output_limit);
 
         float compute(const uint64_t now, const float measured,
                 const float setpoint);
 
-        pid_controller* integral_reset();
+        PIDController* set_p(const float _p_gain);
+        PIDController* set_i(const float _i_gain);
+        PIDController* set_d(const float _d_gain);
 
-        pid_controller* set_p(const float p_coeff);
-        pid_controller* set_i(const float i_coeff);
-        pid_controller* set_d(const float d_coeff);
+        PIDController* integral_reset();
 
     private:
         float integral;

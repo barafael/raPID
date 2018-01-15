@@ -8,7 +8,7 @@
 
 #include "../interface/error_blink.h"
 #include "../interface/imu.h"
-#include "../interface/pid_controller.h"
+#include "../interface/PIDController.h"
 #include "../interface/pins.h"
 #include "../interface/output.h"
 #include "../interface/PWMReceiver.h"
@@ -104,13 +104,13 @@ extern "C" int main(void) {
 
     init_watchdog();
 
-    pid_controller roll_controller_rate = pid_controller(1.0, 0.0, 0.0, 12.0, 200.0);
-    pid_controller roll_controller_stbl = pid_controller(1.0, 0.0, 0.0, 12.0, 200.0);
+    PIDController roll_controller_rate = PIDController (1.0, 0.0, 0.0, 12.0, 200.0);
+    PIDController roll_controller_stbl = PIDController (1.0, 0.0, 0.0, 12.0, 200.0);
 
-    pid_controller pitch_controller_rate = pid_controller(1.0, 0.0, 0.0, 12.0, 200.0);
-    pid_controller pitch_controller_stbl = pid_controller(1.0, 0.0, 0.0, 12.0, 200.0);
+    PIDController pitch_controller_rate = PIDController(1.0, 0.0, 0.0, 12.0, 200.0);
+    PIDController pitch_controller_stbl = PIDController(1.0, 0.0, 0.0, 12.0, 200.0);
 
-    pid_controller yaw_controller_rate = pid_controller(1.0, 0.0, 0.0, 12.0, 200.0);
+    PIDController yaw_controller_rate = PIDController  (1.0, 0.0, 0.0, 12.0, 200.0);
 
     Output out_mixer_left(SERVO, LEFT_SERVO_PIN);
     out_mixer_left
@@ -183,16 +183,17 @@ extern "C" int main(void) {
                 /* Keep disarming, but stay armed (no break) */
 
             case ARMED:
-                pid_output_roll_stbl = roll_controller_stbl.compute(micros(), attitude.roll, receiver_in[ROLL_CHANNEL]);
+                pid_output_roll_stbl = roll_controller_stbl.  compute(micros(), attitude.roll, receiver_in[ROLL_CHANNEL]);
 
-                pid_output_roll_rate = roll_controller_rate.compute(micros(), angular_rate.roll, -15 * pid_output_roll_stbl);
+                pid_output_roll_rate = roll_controller_rate.  compute(micros(), angular_rate.roll, -15 * pid_output_roll_stbl);
+
 
                 pid_output_pitch_stbl = pitch_controller_stbl.compute(micros(), attitude.pitch, receiver_in[PITCH_CHANNEL]);
 
                 pid_output_pitch_rate = pitch_controller_rate.compute(micros(), angular_rate.pitch, -15 * pid_output_pitch_stbl);
 
                 /* Yaw needs rate only - yaw stick controls rate of rotation, there is no fixed reference */
-                pid_output_yaw_rate = yaw_controller_rate.compute(micros(), angular_rate.yaw, receiver_in[YAW_CHANNEL]);
+                pid_output_yaw_rate = yaw_controller_rate.    compute(micros(), angular_rate.yaw, receiver_in[YAW_CHANNEL]);
 
                 out_mixer_left. apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
                 out_mixer_right.apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
