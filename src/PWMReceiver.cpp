@@ -1,14 +1,14 @@
 #include "Arduino.h"
 #include "WProgram.h"
 
-#include "../interface/receiver.h"
+#include "../interface/PWMReceiver.h"
 
 /* Access variable for ISRs */
-Receiver *instance = nullptr;
+PWMReceiver *instance = nullptr;
 
 /*
    ————————————————————————————————————————————————————————————————
-   ———             RECEIVER READ INTERRUPT ROUTINES             ———
+   ———           PWMRECEIVER READ INTERRUPT ROUTINES            ———
    ————————————————————————————————————————————————————————————————
 */
 
@@ -66,7 +66,7 @@ void update_aux2() {
     }
 }
 
-Receiver::Receiver(uint8_t _throttle_pin, uint8_t _roll_pin,
+PWMReceiver::PWMReceiver(uint8_t _throttle_pin, uint8_t _roll_pin,
                    uint8_t _pitch_pin,    uint8_t _yaw_pin,
                    uint8_t _aux1_pin,     uint8_t _aux2_pin) {
 
@@ -102,11 +102,11 @@ Receiver::Receiver(uint8_t _throttle_pin, uint8_t _roll_pin,
 
 /*
    —————————————————————————————————————————————————————————
-   ———             RECEIVER UPDATE FUNCTION              ———
+   ———             PWMRECEIVER UPDATE FUNCTION              ———
    —————————————————————————————————————————————————————————
 */
 
-const void Receiver::update(channels_t channels) {
+const void PWMReceiver::update(channels_t channels) {
     noInterrupts();
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         channels[index] = receiver_in_shared[index];
@@ -120,7 +120,7 @@ const void Receiver::update(channels_t channels) {
     }
 }
 
-const bool Receiver::has_signal() {
+const bool PWMReceiver::has_signal() {
     noInterrupts();
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         if (receiver_in_shared[index] == 0) {

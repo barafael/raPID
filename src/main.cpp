@@ -11,7 +11,7 @@
 #include "../interface/pid_controller.h"
 #include "../interface/pins.h"
 #include "../interface/output.h"
-#include "../interface/receiver.h"
+#include "../interface/PWMReceiver.h"
 #include "../interface/settings.h"
 #include "../interface/state.h"
 #include "../interface/watchdog.h"
@@ -66,9 +66,9 @@ float pid_output_yaw_rate = 0.0;
 
 channels_t receiver_in = { 0 };
 
-Receiver receiver(THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
-                  PITCH_INPUT_PIN,    YAW_INPUT_PIN,
-                  AUX1_INPUT_PIN,     AUX2_INPUT_PIN);
+PWMReceiver receiver(THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
+                     PITCH_INPUT_PIN,    YAW_INPUT_PIN,
+                     AUX1_INPUT_PIN,     AUX2_INPUT_PIN);
 
 /* TODO: enumify? */
 size_t flight_mode_index = 0;

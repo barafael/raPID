@@ -1,17 +1,9 @@
-#ifndef RECEIVER_H
-#define RECEIVER_H
+#ifndef PWMRECEIVER_H
+#define PWMRECEIVER_H
 
-#include "../interface/settings.h"
+#include "../interface/Receiver.h"
 
-using channels_t = uint16_t[NUM_CHANNELS];
-
-class Receiver {
-    /*
-    typedef struct {
-        uint16_t& operator[](size_t i) { return c[i]; }
-        uint16_t c[NUM_CHANNELS] = { 0 };
-    } channels_t;
-    */
+class PWMReceiver : Receiver {
     private:
         uint8_t throttle_pin;
         uint8_t roll_pin;
@@ -27,9 +19,9 @@ class Receiver {
         volatile channels_t receiver_pulse_start_time = { 0 };
 
     public:
-        Receiver(uint8_t _throttle_pin, uint8_t _roll_pin,
-                 uint8_t _pitch_pin,    uint8_t _yaw_pin,
-                 uint8_t _aux1_pin,     uint8_t _aux2_pin);
+        PWMReceiver(uint8_t _throttle_pin, uint8_t _roll_pin,
+                    uint8_t _pitch_pin,    uint8_t _yaw_pin,
+                    uint8_t _aux1_pin,     uint8_t _aux2_pin);
 
         const void update(channels_t channels);
         const bool has_signal();
@@ -42,4 +34,4 @@ class Receiver {
         friend void update_aux2();
 };
 
-#endif // RECEIVER_H
+#endif // PWMRECEIVER_H
