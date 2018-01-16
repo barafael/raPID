@@ -1,4 +1,4 @@
-#include "../include/PPM_Receiver.h"
+#include "../include/PPMReceiver.h"
 
 PPMReceiver::PPMReceiver(uint8_t _input_pin) {
     
