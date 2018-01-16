@@ -10,7 +10,7 @@
 #include "../interface/imu.h"
 #include "../interface/PIDController.h"
 #include "../interface/pins.h"
-#include "../interface/output.h"
+#include "../interface/Output.h"
 #include "../interface/PWMReceiver.h"
 #include "../interface/settings.h"
 #include "../interface/state.h"
