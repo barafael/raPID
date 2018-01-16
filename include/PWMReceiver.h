@@ -1,7 +1,7 @@
 #ifndef PWMRECEIVER_H
 #define PWMRECEIVER_H
 
-#include "../include/Receiver.h"
+#include "Receiver.h"
 
 class PWMReceiver : Receiver {
     private:

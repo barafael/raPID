@@ -1,5 +1,4 @@
 #include "Arduino.h"
-#include "WProgram.h"
 
 #include "../include/PWMReceiver.h"
 

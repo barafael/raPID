@@ -1,6 +1,3 @@
-#include "Arduino.h"
-#include "WProgram.h"
-
 #include "../include/watchdog.h"
 
 void init_watchdog() {

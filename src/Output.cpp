@@ -1,6 +1,3 @@
-#include "Arduino.h"
-#include "WProgram.h"
-
 #include "../include/Output.h"
 
 /* TODO implement inverting output */

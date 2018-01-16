@@ -1,10 +1,15 @@
 #ifndef STATE_H
 #define STATE_H
 
+#include "Arduino.h"
+
+#include "settings.h"
+
 using channels_t = uint16_t[NUM_CHANNELS];
 
 // TRANSITION
 // PASS_THROUGH
+// FAILSAFE
 typedef enum {
     ARMED, DISARMING, DISARMED, ARMING, CONFIG
 } state_t;

@@ -1,6 +1,8 @@
 #ifndef ERROR_HANDLING_H
 #define ERROR_HANDLING_H
 
+#include "Arduino.h"
+
 typedef enum {
     DMP_INIT_MEM_LOAD_FAILED,
     DMP_CONF_UPDATES_FAILED,

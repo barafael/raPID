@@ -1,10 +1,11 @@
 #ifndef OUTPUT_H
 #define OUTPUT_H
 
-#include <stdint.h>
-#include "Servo.h"
+#include "Arduino.h"
 
-#include "../include/PIDController.h"
+#include <stdint.h>
+
+#include "Servo.h"
 
 class Mixer {
     private:
