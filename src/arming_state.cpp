@@ -1,10 +1,10 @@
 #include "Arduino.h"
 #include "WProgram.h"
 
-#include "../interface/imu.h"
-#include "../interface/settings.h"
-#include "../interface/state.h"
-#include "../interface/watchdog.h"
+#include "../include/imu.h"
+#include "../include/settings.h"
+#include "../include/state.h"
+#include "../include/watchdog.h"
 
 static uint64_t disarm_init_time;
 static uint64_t arm_init_time;

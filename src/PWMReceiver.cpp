@@ -1,7 +1,7 @@
 #include "Arduino.h"
 #include "WProgram.h"
 
-#include "../interface/PWMReceiver.h"
+#include "../include/PWMReceiver.h"
 
 /* Access variable for ISRs */
 PWMReceiver *instance = nullptr;

@@ -1,7 +1,7 @@
 #include "Arduino.h"
 #include "WProgram.h"
 
-#include "../interface/PPM_Receiver.h"
+#include "../include/PPM_Receiver.h"
 
 PPMReceiver::PPMReceiver(uint8_t _input_pin) {
     

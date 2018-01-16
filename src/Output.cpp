@@ -1,7 +1,7 @@
 #include "Arduino.h"
 #include "WProgram.h"
 
-#include "../interface/Output.h"
+#include "../include/Output.h"
 
 /* TODO implement inverting output */
 /* TODO implement arming for ESC type? */

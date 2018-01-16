@@ -6,15 +6,15 @@
 #include "I2Cdev.h"
 #include "Servo.h"
 
-#include "../interface/error_blink.h"
-#include "../interface/imu.h"
-#include "../interface/PIDController.h"
-#include "../interface/pins.h"
-#include "../interface/Output.h"
-#include "../interface/PWMReceiver.h"
-#include "../interface/settings.h"
-#include "../interface/state.h"
-#include "../interface/watchdog.h"
+#include "../include/error_blink.h"
+#include "../include/imu.h"
+#include "../include/PIDController.h"
+#include "../include/pins.h"
+#include "../include/Output.h"
+#include "../include/PWMReceiver.h"
+#include "../include/settings.h"
+#include "../include/state.h"
+#include "../include/watchdog.h"
 
 #define TIMING_ANALYSIS
 #ifdef TIMING_ANALYSIS
