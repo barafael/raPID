@@ -30,6 +30,9 @@ class Output {
                 /* what params are needed? */
                 /* float roll_rate, float pitch_rate, float yaw_rate*/);
 
+        bool is_inverted();
+        void invert_servo_direction();
+
         Output *set_throttle_volume(float volume);
 
         Output *set_roll_volume    (float volume);
@@ -41,6 +44,7 @@ class Output {
         out_type_t out_type;
         uint8_t pin;
         Mixer mixer;
+        bool inverted = false;
         uint16_t upper_limit = 1000;
         uint16_t lower_limit = 0;
         //uint16_t throttle = 0;

@@ -13,24 +13,25 @@ static const uint16_t THROTTLE_LOW_CUTOFF = 25;
     ((value) < (low)  ? (low) : \
     ((value) > (high) ? (high) : (value))))
 
-Output::Output()
-    : out_type    { SERVO }
-    , pin         { 22 }
-    , mixer       { 1.0, 1.0, 0.0, 0.0 }
-    , upper_limit { 1000 }
-    , lower_limit { 0 }
-                  {
-    output.attach(pin);
-}
-
 Output::Output(out_type_t type, uint8_t pin)
     : out_type    { type }
     , pin         { pin }
     , mixer       { 0.0, 0.0, 0.0, 0.0 }
+    , inverted    { false }
     , upper_limit { 1000 }
     , lower_limit { 0 }
-                  {
+{
     output.attach(pin);
+}
+
+void Output::invert_servo_direction() {
+    if(out_type == SERVO) {
+        inverted = !inverted;
+    }
+}
+
+bool Output::is_inverted() {
+    return inverted;
 }
 
 void Output::shut_off() {
