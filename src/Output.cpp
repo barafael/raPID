@@ -1,12 +1,11 @@
 #include "../include/Output.h"
 
-/* TODO implement inverting output */
 /* TODO implement arming for ESC type? */
-/* TODO implement lower and upper limit everywhere */
 /* TODO implement flight mode offset? */
-/* TODO remove includes  when not using warning output in apply(x) */
+/* TODO remove includes when not using warning output */
 
 static const uint16_t THROTTLE_LOW_CUTOFF = 25;
+static const uint16_t BASE_PULSE_MS = 800;
 
 #define clamp(value, low, high) \
     ((value) = \
@@ -14,14 +13,20 @@ static const uint16_t THROTTLE_LOW_CUTOFF = 25;
     ((value) > (high) ? (high) : (value))))
 
 Output::Output(out_type_t type, uint8_t pin)
-    : out_type    { type }
-    , pin         { pin }
-    , mixer       { 0.0, 0.0, 0.0, 0.0 }
-    , inverted    { false }
-    , upper_limit { 1000 }
-    , lower_limit { 0 }
-{
+    : out_type       { type }
+    , pin            { pin }
+    , mixer          { 0.0, 0.0, 0.0, 0.0 }
+    , inverted       { false }
+    , upper_limit    { 1000 }
+    , lower_limit    { 0 }
+    , milli_throttle { 0 } {
     output.attach(pin);
+
+    if (upper_limit < lower_limit) {
+        uint16_t tmp = lower_limit;
+        lower_limit = upper_limit;
+        upper_limit = tmp;
+    }
 }
 
 void Output::invert_servo_direction() {
@@ -35,7 +40,19 @@ bool Output::is_inverted() {
 }
 
 void Output::shut_off() {
-    output.writeMicroseconds(1000 + lower_limit);
+    write(0);
+}
+
+void Output::write(uint16_t _milli_throttle) {
+    _milli_throttle = _milli_throttle > 1000 ? 1000 : _milli_throttle;
+    uint32_t range = upper_limit - lower_limit;
+    uint16_t thrust = (uint32_t) (range * _milli_throttle) / 1000;
+    if (inverted) {
+        output.writeMicroseconds(upper_limit - thrust);
+    } else {
+        output.writeMicroseconds(BASE_PULSE_MS + lower_limit + thrust);
+    }
+    milli_throttle = _milli_throttle;
 }
 
 void Output::apply(uint16_t throttle,
@@ -44,7 +61,7 @@ void Output::apply(uint16_t throttle,
 
     /* Throttle cutoff to avoid spinning props due to movement when throttle is low but state is armed */
     if (out_type == ESC && throttle < THROTTLE_LOW_CUTOFF) {
-        output.writeMicroseconds(1000 + lower_limit);
+        write(0);
         return;
     }
 
@@ -56,10 +73,10 @@ void Output::apply(uint16_t throttle,
 
         Serial.println("one of the volume parameters is out of range of [-1.0, 1.0]");
 
-        clamp(mixer.throttle_volume, - 1.0, 1.0);
-        clamp(mixer.roll_volume,     - 1.0, 1.0);
-        clamp(mixer.pitch_volume,    - 1.0, 1.0);
-        clamp(mixer.yaw_volume,      - 1.0, 1.0);
+        clamp(mixer.throttle_volume, -1.0, 1.0);
+        clamp(mixer.roll_volume,     -1.0, 1.0);
+        clamp(mixer.pitch_volume,    -1.0, 1.0);
+        clamp(mixer.yaw_volume,      -1.0, 1.0);
     }
 
     throttle =  (uint16_t) (throttle   * mixer.throttle_volume);
@@ -70,9 +87,20 @@ void Output::apply(uint16_t throttle,
 
     throttle += (uint16_t) (yaw_stbl   * mixer.yaw_volume);
 
-    clamp(throttle, lower_limit, upper_limit);
+    clamp(throttle, 0, 1000);
 
-    output.writeMicroseconds(1000 + throttle);
+    write(throttle);
+}
+
+Output *Output::set_limits(uint16_t lower, uint16_t upper) {
+    if (upper > 1300 || lower > upper) {
+        Serial.print("Ignoring dubious limits given to output on pin");
+        Serial.println(pin);
+        return this;
+    }
+    lower_limit = lower;
+    upper_limit = upper;
+    return this;
 }
 
 Output *Output::set_throttle_volume(float volume) {
