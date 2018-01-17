@@ -1,4 +1,4 @@
-#include "../include/state.h"
+#include "../include/arming_state.h"
 
 static uint64_t disarm_init_time;
 static uint64_t arm_init_time;

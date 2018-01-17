@@ -1,5 +1,5 @@
-#ifndef STATE_H
-#define STATE_H
+#ifndef ARMING_STATE_H
+#define ARMING_STATE_H
 
 #include "Arduino.h"
 
@@ -23,4 +23,4 @@ bool arming_input(channels_t channels);
 bool disarming_complete();
 bool arming_complete();
 
-#endif // STATE_H
+#endif // ARMING_STATE_H

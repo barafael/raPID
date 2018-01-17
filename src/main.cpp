@@ -12,7 +12,7 @@
 #include "../include/Output.h"
 #include "../include/PWMReceiver.h"
 #include "../include/settings.h"
-#include "../include/state.h"
+#include "../include/arming_state.h"
 #include "../include/watchdog.h"
 
 #define TIMING_ANALYSIS
