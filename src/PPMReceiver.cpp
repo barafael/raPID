@@ -1,10 +1,13 @@
 #include "../include/PPMReceiver.h"
 
+#define clamp(value, low, high) \
+    ((value) = \
+    ((value) < (low)  ? (low) : \
+    ((value) > (high) ? (high) : (value))))
+
 PPMReceiver::PPMReceiver(uint8_t _input_pin) {
-    
     input_pin = _input_pin;
     input_ppm.begin(input_pin);
-    
     delay(10);
 }
 
@@ -15,8 +18,7 @@ const void PPMReceiver::update(channels_t channels) {
         for (size_t index = 0; index < NUM_CHANNELS; index++) {
             float val = input_ppm.read(index + 1);
             channels[index] = (uint16_t) val;
-            if (channels[index] < 1000) channels[index] = 1000;
-            if (channels[index] > 2000) channels[index] = 2000;
+            clamp(channels[index], 1000, 2000);
             channels[index] -= 1000;
         }
     }

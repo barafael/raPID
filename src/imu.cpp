@@ -104,14 +104,14 @@ void update_angular_rates(axis_t *angular_rates) {
     Wire.write(0x43);
     Wire.endTransmission();
     Wire.requestFrom(mpu_address, 6);
-    while (Wire.available() < 6) { }
-    angular_rates->roll   = Wire.read() << 8 | Wire.read();
-    angular_rates->pitch  = Wire.read() << 8 | Wire.read();
-    angular_rates->yaw    = Wire.read() << 8 | Wire.read();
+    while (Wire.available() < 6) {}
+    angular_rates->roll  = Wire.read() << 8 | Wire.read();
+    angular_rates->pitch = Wire.read() << 8 | Wire.read();
+    angular_rates->yaw   = Wire.read() << 8 | Wire.read();
 
-    angular_rates->roll   -= gyro_offsets.roll;
-    angular_rates->pitch  -= gyro_offsets.pitch;
-    angular_rates->yaw    -= gyro_offsets.yaw;
+    angular_rates->roll  -= gyro_offsets.roll;
+    angular_rates->pitch -= gyro_offsets.pitch;
+    angular_rates->yaw   -= gyro_offsets.yaw;
 }
 
 
@@ -201,9 +201,9 @@ void update_abs_angles(axis_t *attitude) {
         // digitalWrite(DEBUG_PIN, HIGH);
         // TODO test if conversion from float to short is problem
         // TODO try using [0..2*M_PI] everywhere without scaling or use quaternions?
-        attitude->yaw   = ((float)yaw_pitch_roll[YAW_ANGLE] + M_PI) * (1000.0 / (2 * M_PI));
+        attitude->yaw   = ((float)yaw_pitch_roll[YAW_ANGLE]   + M_PI) * (1000.0 / (2 * M_PI));
         attitude->pitch = ((float)yaw_pitch_roll[PITCH_ANGLE] + M_PI) * (1000.0 / (2 * M_PI));
-        attitude->roll  = ((float)yaw_pitch_roll[ROLL_ANGLE] + M_PI) * (1000.0 / (2 * M_PI));
+        attitude->roll  = ((float)yaw_pitch_roll[ROLL_ANGLE]  + M_PI) * (1000.0 / (2 * M_PI));
         //Serial.println(attitude->roll);
         // digitalWrite(DEBUG_PIN, LOW);
     }
@@ -233,9 +233,9 @@ static bool calib_rates_ok(axis_t *angular_rates) {
         delay(5);
     }
 
-    accumulator.roll   /= iterations;
-    accumulator.pitch  /= iterations;
-    accumulator.yaw    /= iterations;
+    accumulator.roll  /= iterations;
+    accumulator.pitch /= iterations;
+    accumulator.yaw   /= iterations;
 
     Serial.print("Average rate over ");
     Serial.print(iterations);
@@ -277,9 +277,9 @@ static void calib_rates() {
             delay(5);
         }
 
-        gyro_offsets.roll   /= iterations;
-        gyro_offsets.pitch  /= iterations;
-        gyro_offsets.yaw    /= iterations;
+        gyro_offsets.roll  /= iterations;
+        gyro_offsets.pitch /= iterations;
+        gyro_offsets.yaw   /= iterations;
 
         iterations = iterations < 2000 ? iterations + 200 : iterations;
     }

@@ -30,11 +30,11 @@ class Output {
                 /* what params are needed? */
                 /* float roll_rate, float pitch_rate, float yaw_rate*/);
 
-        Output* set_throttle_volume(float volume);
+        Output *set_throttle_volume(float volume);
 
-        Output* set_roll_volume  (float volume);
-        Output* set_pitch_volume (float volume);
-        Output* set_yaw_volume   (float volume);
+        Output *set_roll_volume    (float volume);
+        Output *set_pitch_volume   (float volume);
+        Output *set_yaw_volume     (float volume);
 
     private:
         // mode_t mode;

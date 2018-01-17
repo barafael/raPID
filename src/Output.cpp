@@ -74,22 +74,22 @@ void Output::apply(uint16_t throttle,
     output.writeMicroseconds(1000 + throttle);
 }
 
-Output* Output::set_throttle_volume(float volume) {
+Output *Output::set_throttle_volume(float volume) {
     mixer.throttle_volume = volume;
     return this;
 }
 
-Output* Output::set_roll_volume(float volume) {
+Output *Output::set_roll_volume(float volume) {
     mixer.roll_volume = volume;
     return this;
 }
 
-Output* Output::set_pitch_volume(float volume) {
+Output *Output::set_pitch_volume(float volume) {
     mixer.pitch_volume = volume;
     return this;
 }
 
-Output* Output::set_yaw_volume(float volume) {
+Output *Output::set_yaw_volume(float volume) {
     mixer.yaw_volume = volume;
     return this;
 }

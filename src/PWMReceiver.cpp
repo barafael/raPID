@@ -66,8 +66,8 @@ void update_aux2() {
 }
 
 PWMReceiver::PWMReceiver(uint8_t _throttle_pin, uint8_t _roll_pin,
-                   uint8_t _pitch_pin,    uint8_t _yaw_pin,
-                   uint8_t _aux1_pin,     uint8_t _aux2_pin) {
+                         uint8_t _pitch_pin,    uint8_t _yaw_pin,
+                         uint8_t _aux1_pin,     uint8_t _aux2_pin) {
 
     instance = this;
 
