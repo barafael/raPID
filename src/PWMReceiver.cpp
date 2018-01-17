@@ -6,9 +6,9 @@
 PWMReceiver *instance = nullptr;
 
 /*
-   ————————————————————————————————————————————————————————————————
-   ———           PWMRECEIVER READ INTERRUPT ROUTINES            ———
-   ————————————————————————————————————————————————————————————————
+   ----------------------------------------------------------------
+   ---           PWMRECEIVER READ INTERRUPT ROUTINES            ---
+   ----------------------------------------------------------------
 */
 
 void update_throttle() {
@@ -100,9 +100,9 @@ PWMReceiver::PWMReceiver(uint8_t _throttle_pin, uint8_t _roll_pin,
 
 
 /*
-   —————————————————————————————————————————————————————————
-   ———             PWMRECEIVER UPDATE FUNCTION              ———
-   —————————————————————————————————————————————————————————
+   ---------------------------------------------------------
+   ---           PWMRECEIVER UPDATE FUNCTION             ---
+   ---------------------------------------------------------
 */
 
 const void PWMReceiver::update(channels_t channels) {
