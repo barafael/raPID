@@ -14,6 +14,8 @@ class PIDController {
         PIDController(const float _p_gain, const float _i_gain, const float _d_gain,
                       const float _integral_limit, const float _output_limit);
 
+        void set_enabled(bool enable);
+
         float compute(const uint64_t now, const float measured,
                 const float setpoint);
 
@@ -24,6 +26,8 @@ class PIDController {
         PIDController* integral_reset();
 
     private:
+        bool enabled = true;
+
         float integral;
         float integral_limit;
 

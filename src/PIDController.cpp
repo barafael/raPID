@@ -27,8 +27,15 @@ PIDController::PIDController(const float _p_gain, const float _i_gain, const flo
 
 }
 
+void PIDController::set_enabled(bool enable) {
+    enabled = enable;
+}
+
 /* TODO: handle overflows for 'now' using rollover or somesuch. */
 float PIDController::compute(const uint64_t now, const float measured, const float setpoint) {
+    if (!enabled) {
+        return setpoint;
+    }
 
     uint32_t elapsed_time = now - last_time;
 

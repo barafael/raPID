@@ -3,10 +3,11 @@
 
 #include "settings.h"
 
+using channels_t = int16_t[NUM_CHANNELS];
+
 class Receiver {
     public:
-        using channels_t = uint16_t[NUM_CHANNELS];
-        virtual const void update(uint16_t channels[NUM_CHANNELS]);
+        virtual const void update(channels_t channels);
         virtual const bool has_signal();
 };
 

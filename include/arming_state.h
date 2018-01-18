@@ -5,7 +5,7 @@
 
 #include "settings.h"
 
-using channels_t = uint16_t[NUM_CHANNELS];
+#include "Receiver.h"
 
 // TRANSITION
 // PASS_THROUGH

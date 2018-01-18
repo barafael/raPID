@@ -19,8 +19,9 @@ const void PPMReceiver::update(channels_t channels) {
             float val = input_ppm.read(index + 1);
             channels[index] = (uint16_t) val;
             clamp(channels[index], 1000, 2000);
-            channels[index] -= 1000;
+            channels[index] -= 1500;
         }
+        channels[THROTTLE_CHANNEL] += 500;
     }
 }
 
