@@ -40,7 +40,7 @@
    GND ------------------ GND
    SDA ------------------ A4/pin 18
    SCL ------------------ A5/pin 19
-   INT ------------------ Digital Pin 12 (see pins.h)
+   INT ------------------ Digital Pin 13 (see pins.h)
 
    PPM from RC RX go to pins 8, 9, 10, 11 (see pins.h)
    Output signal to ESCs/Servos: pins 20, 21, 22, 23 (see pins.h)
