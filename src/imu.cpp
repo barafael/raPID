@@ -90,6 +90,7 @@ static void update_raw_rates(axis_t& raw_rates) {
 */
 
 void update_angular_rates(axis_t& angular_rates) {
+    //digitalWrite(DEBUG_PIN, HIGH);
     Wire.beginTransmission(mpu_address);
     Wire.write(0x43);
     Wire.endTransmission();
@@ -102,6 +103,8 @@ void update_angular_rates(axis_t& angular_rates) {
     angular_rates[ROLL_AXIS]  -= gyro_offsets[ROLL_AXIS];
     angular_rates[PITCH_AXIS] -= gyro_offsets[PITCH_AXIS];
     angular_rates[YAW_AXIS]   -= gyro_offsets[YAW_AXIS];
+
+    //digitalWrite(DEBUG_PIN, LOW);
 }
 
 
@@ -140,6 +143,8 @@ void update_attitude(axis_t& attitude) {
 
         /* Otherwise, check for DMP data ready interrupt (this happens often) */
     } else if (mpu_int_status & 0x02) {
+        //100 Hz timing
+        //digitalWrite(DEBUG_PIN, HIGH);
         /* Wait for correct available data length, should be a VERY short wait */
         // digitalWrite(DEBUG_PIN, HIGH);
         while (fifo_count < packet_size) {
@@ -188,8 +193,10 @@ void update_attitude(axis_t& attitude) {
         attitude[ROLL_AXIS]  = (int16_t) (yaw_pitch_roll[2] * (500.0 / M_PI));
         attitude[PITCH_AXIS] = (int16_t) (yaw_pitch_roll[1] * (500.0 / M_PI));
         attitude[YAW_AXIS]   = (int16_t) (yaw_pitch_roll[0] * (500.0 / M_PI));
-        // digitalWrite(DEBUG_PIN, LOW);
+        //digitalWrite(DEBUG_PIN, LOW);
     }
+    //frequency 100Hz
+    //digitalWrite(DEBUG_PIN, LOW);
 }
 
 
