@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "Vector3.h"
+#include <array>
 
 using axis = enum {
     ROLL_AXIS  = 0,
