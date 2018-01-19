@@ -4,3 +4,6 @@
 [submodule "Pulse400"]
 	path = Pulse400
 	url = https://github.com/tinkerspy/Pulse400.git
+[submodule "lib/Pulse400"]
+	path = lib/Pulse400
+	url = https://github.com/tinkerspy/Pulse400.git
