@@ -1,14 +1,28 @@
 #ifndef VECTOR_3_H
 #define VECTOR_3_H
 
-template <class T> class Vector3 {
-    T values[3];
+template <typename T> struct Vector3 {
+    T x;
+    T y;
+    T z;
 
     public:
-    Vector3(T x, T y, T z) : values{ x, y, z } {}
+    Vector3(T x, T y, T z)
+        : x(x)
+        , y(y)
+        , z(z) {};
+
     T &operator[](size_t index) {
-        return values[index % 3];
+        switch(index % 3) {
+            case 0:
+                return x;
+            case 1:
+                return y;
+            case 2:
+                return z;
+        }
     }
 };
 
 #endif // VECTOR_3_H
+
