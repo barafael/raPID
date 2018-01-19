@@ -82,11 +82,11 @@ void Output::apply(uint16_t _milli_throttle,
 
     _milli_throttle =  (uint16_t) (_milli_throttle * mixer.throttle_volume);
 
-    _milli_throttle += (uint16_t) (roll_stbl       * mixer.roll_volume);
+    _milli_throttle += (int16_t) (roll_stbl        * mixer.roll_volume);
 
-    _milli_throttle += (uint16_t) (pitch_stbl      * mixer.pitch_volume);
+    _milli_throttle += (int16_t) (pitch_stbl       * mixer.pitch_volume);
 
-    _milli_throttle += (uint16_t) (yaw_stbl        * mixer.yaw_volume);
+    _milli_throttle += (int16_t) (yaw_stbl         * mixer.yaw_volume);
 
     clamp(_milli_throttle, 0, 1000);
 
