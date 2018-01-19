@@ -76,7 +76,7 @@ static void update_raw_rates(axis_t raw_rates) {
     Wire.write(0x43);
     Wire.endTransmission();
     Wire.requestFrom(mpu_address, 6);
-    while (Wire.available() < 6) {}
+
     raw_rates[ROLL_AXIS]  = Wire.read() << 8 | Wire.read();
     raw_rates[PITCH_AXIS] = Wire.read() << 8 | Wire.read();
     raw_rates[YAW_AXIS]   = Wire.read() << 8 | Wire.read();
@@ -94,7 +94,7 @@ void update_angular_rates(axis_t angular_rates) {
     Wire.write(0x43);
     Wire.endTransmission();
     Wire.requestFrom(mpu_address, 6);
-    while (Wire.available() < 6) {}
+
     angular_rates[ROLL_AXIS]  = Wire.read() << 8 | Wire.read();
     angular_rates[PITCH_AXIS] = Wire.read() << 8 | Wire.read();
     angular_rates[YAW_AXIS]   = Wire.read() << 8 | Wire.read();
