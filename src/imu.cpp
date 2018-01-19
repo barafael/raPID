@@ -71,7 +71,7 @@ static offset_axis_t gyro_offsets = { 0 };
    ----------------------------------------------------------------
 */
 
-static void update_raw_rates(axis_t raw_rates) {
+static void update_raw_rates(axis_t& raw_rates) {
     Wire.beginTransmission(mpu_address);
     Wire.write(0x43);
     Wire.endTransmission();
@@ -89,7 +89,7 @@ static void update_raw_rates(axis_t raw_rates) {
    ----------------------------------------------------------------
 */
 
-void update_angular_rates(axis_t angular_rates) {
+void update_angular_rates(axis_t& angular_rates) {
     Wire.beginTransmission(mpu_address);
     Wire.write(0x43);
     Wire.endTransmission();
@@ -111,7 +111,7 @@ void update_angular_rates(axis_t angular_rates) {
    -------------------------------------------------------------
 */
 
-void update_attitude(axis_t attitude) {
+void update_attitude(axis_t& attitude) {
     /* skip if no MPU interrupt or no extra packet(s) available */
     if (!mpu_interrupt && (fifo_count < packet_size)) {
         return;
@@ -199,7 +199,7 @@ void update_attitude(axis_t attitude) {
    ---------------------------------------------------
 */
 
-static bool calib_rates_ok(axis_t angular_rates) {
+static bool calib_rates_ok(axis_t& angular_rates) {
     static bool rate_calibrated = false;
 
     const int iterations = 50;
