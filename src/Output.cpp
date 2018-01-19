@@ -27,6 +27,7 @@ Output::Output(out_type_t type, uint8_t pin)
         lower_limit = upper_limit;
         upper_limit = tmp;
     }
+    range = upper_limit - lower_limit;
 }
 
 void Output::invert_servo_direction() {
@@ -45,8 +46,7 @@ void Output::shut_off() {
 
 void Output::write(uint16_t _milli_throttle) {
     _milli_throttle = _milli_throttle > 1000 ? 1000 : _milli_throttle;
-    uint32_t range = upper_limit - lower_limit;
-    uint16_t thrust = (uint32_t) (range * _milli_throttle) / 1000;
+    uint16_t thrust = (uint32_t) (this->range * _milli_throttle) / 1000;
     if (inverted) {
         output.writeMicroseconds(upper_limit - thrust);
     } else {
@@ -60,6 +60,8 @@ void Output::apply(uint16_t _milli_throttle,
         float roll_stbl, float pitch_stbl, float yaw_stbl
         /*,float roll_rate, float pitch_rate, float yaw_rate*/) {
 
+    /* intermediary int16_t to prevent overflow */
+    int16_t throttle_tmp = _milli_throttle;
     /* Throttle cutoff to avoid spinning props due to movement when throttle is low but state is armed */
     if (out_type == ESC && _milli_throttle < THROTTLE_LOW_CUTOFF) {
         write(0);
@@ -80,17 +82,17 @@ void Output::apply(uint16_t _milli_throttle,
         clamp(mixer.yaw_volume,      -1.0, 1.0);
     }
 
-    _milli_throttle =  (uint16_t) (_milli_throttle * mixer.throttle_volume);
+    throttle_tmp =  (int16_t) (_milli_throttle * mixer.throttle_volume);
 
-    _milli_throttle += (int16_t) (roll_stbl        * mixer.roll_volume);
+    throttle_tmp += (int16_t) (roll_stbl       * mixer.roll_volume);
 
-    _milli_throttle += (int16_t) (pitch_stbl       * mixer.pitch_volume);
+    throttle_tmp += (int16_t) (pitch_stbl      * mixer.pitch_volume);
 
-    _milli_throttle += (int16_t) (yaw_stbl         * mixer.yaw_volume);
+    throttle_tmp += (int16_t) (yaw_stbl        * mixer.yaw_volume);
 
-    clamp(_milli_throttle, 0, 1000);
+    clamp(throttle_tmp, 0, 1000);
 
-    write(_milli_throttle);
+    write(throttle_tmp);
 }
 
 Output *Output::set_limits(uint16_t lower, uint16_t upper) {

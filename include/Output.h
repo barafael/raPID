@@ -29,6 +29,7 @@ class Output {
         uint16_t lower_limit = 0;
         Servo output;
         uint16_t milli_throttle = 0;
+        uint16_t range = upper_limit - lower_limit;
 
         void write(uint16_t _milli_throttle);
 
