@@ -50,17 +50,18 @@ void Output::write(uint16_t _milli_throttle) {
     if (inverted) {
         output.writeMicroseconds(upper_limit - thrust);
     } else {
+        //Serial.println(BASE_PULSE_MS + lower_limit + thrust);
         output.writeMicroseconds(BASE_PULSE_MS + lower_limit + thrust);
     }
     milli_throttle = _milli_throttle;
 }
 
-void Output::apply(uint16_t throttle,
+void Output::apply(uint16_t _milli_throttle,
         float roll_stbl, float pitch_stbl, float yaw_stbl
         /*,float roll_rate, float pitch_rate, float yaw_rate*/) {
 
     /* Throttle cutoff to avoid spinning props due to movement when throttle is low but state is armed */
-    if (out_type == ESC && throttle < THROTTLE_LOW_CUTOFF) {
+    if (out_type == ESC && _milli_throttle < THROTTLE_LOW_CUTOFF) {
         write(0);
         return;
     }
@@ -79,17 +80,17 @@ void Output::apply(uint16_t throttle,
         clamp(mixer.yaw_volume,      -1.0, 1.0);
     }
 
-    throttle =  (uint16_t) (throttle   * mixer.throttle_volume);
+    _milli_throttle =  (uint16_t) (_milli_throttle * mixer.throttle_volume);
 
-    throttle += (uint16_t) (roll_stbl  * mixer.roll_volume);
+    _milli_throttle += (uint16_t) (roll_stbl       * mixer.roll_volume);
 
-    throttle += (uint16_t) (pitch_stbl * mixer.pitch_volume);
+    _milli_throttle += (uint16_t) (pitch_stbl      * mixer.pitch_volume);
 
-    throttle += (uint16_t) (yaw_stbl   * mixer.yaw_volume);
+    _milli_throttle += (uint16_t) (yaw_stbl        * mixer.yaw_volume);
 
-    clamp(throttle, 0, 1000);
+    clamp(_milli_throttle, 0, 1000);
 
-    write(throttle);
+    write(_milli_throttle);
 }
 
 Output *Output::set_limits(uint16_t lower, uint16_t upper) {

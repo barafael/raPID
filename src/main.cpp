@@ -46,7 +46,7 @@
    Output signal to ESCs/Servos: pins 20, 21, 22, 23 (see pins.h)
    */
 
-state_t state = DISARMED;
+state_t state = /*DIS*/ARMED;
 
 /* Scaled yaw_pitch_roll to [0, 1000] */
 axis_t attitude = { 0, 0, 0 };
@@ -71,6 +71,14 @@ PWMReceiver receiver(THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
 
 /* TODO: enumify? */
 size_t flight_mode_index = 0;
+
+static void print_attitude(axis_t attitude) {
+    for (size_t index = 0; index < 3; index++) {
+        Serial.print(attitude[index]);
+        Serial.print("\t");
+    }
+    Serial.println();
+}
 
 static void print_channels(channels_t receiver_in) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
@@ -103,13 +111,13 @@ extern "C" int main(void) {
 
     init_watchdog();
 
-    PIDController roll_controller_rate = PIDController (1.0, 0.0, 0.0, 12.0, 200.0);
-    PIDController roll_controller_stbl = PIDController (1.0, 0.0, 0.0, 12.0, 200.0);
+    PIDController roll_controller_stbl = PIDController (0.5, 0.0, 0.0, 12.0, 200.0);
+    PIDController roll_controller_rate = PIDController (0.2, 0.0, 0.0, 12.0, 200.0);
 
-    PIDController pitch_controller_rate = PIDController(1.0, 0.0, 0.0, 12.0, 200.0);
-    PIDController pitch_controller_stbl = PIDController(1.0, 0.0, 0.0, 12.0, 200.0);
+    PIDController pitch_controller_stbl = PIDController(0.2, 0.0, 0.0, 12.0, 200.0);
+    PIDController pitch_controller_rate = PIDController(0.2, 0.0, 0.0, 12.0, 200.0);
 
-    PIDController yaw_controller_rate = PIDController  (1.0, 0.0, 0.0, 12.0, 200.0);
+    PIDController yaw_controller_rate = PIDController  (0.2, 0.0, 0.0, 12.0, 200.0);
 
     Output out_mixer_left(SERVO, LEFT_SERVO_PIN);
     out_mixer_left
@@ -140,15 +148,20 @@ extern "C" int main(void) {
     out_mixer_front.shut_off();
     out_mixer_back.shut_off();
 
+    //roll_controller_stbl.set_enabled(false);
+    //roll_controller_rate.set_enabled(false);
+
     /* Flight loop */
     while (true) {
         receiver.update(receiver_in);
 
-        // print_channels(receiver_in);
+        //print_channels(receiver_in);
 
-        notime(update_abs_angles(&attitude));
+        notime(update_attitude(attitude));
 
-        notime(update_angular_rates(&angular_rate));
+        //print_attitude(attitude);
+
+        notime(update_angular_rates(angular_rate));
 
         switch (state) {
             case DISARMING:
@@ -168,8 +181,8 @@ extern "C" int main(void) {
                             out_mixer_back.shut_off();
 
                             receiver.update(receiver_in);
-                            update_abs_angles(&attitude);
-                            update_angular_rates(&angular_rate);
+                            update_attitude(attitude);
+                            update_angular_rates(angular_rate);
                             feed_the_dog();
                             delay(10);
                         }
@@ -182,37 +195,40 @@ extern "C" int main(void) {
                 /* Keep disarming, but stay armed (no break) */
 
             case ARMED:
-                pid_output_roll_stbl = roll_controller_stbl.  compute(micros(), attitude.roll, receiver_in[ROLL_CHANNEL]);
+                //Serial.print(attitude[ROLL_AXIS]);
+                //Serial.print("\t");
+                //Serial.println(receiver_in[ROLL_CHANNEL]);
+                pid_output_roll_stbl = roll_controller_stbl.  compute(micros(), attitude[ROLL_AXIS], receiver_in[ROLL_CHANNEL]);
+                //Serial.println(-15 * pid_output_roll_stbl);
 
-                pid_output_roll_rate = roll_controller_rate.  compute(micros(), angular_rate.roll, -15 * pid_output_roll_stbl);
+                pid_output_roll_rate = roll_controller_rate.  compute(micros(), angular_rate[ROLL_AXIS], -15 * pid_output_roll_stbl);
+                //Serial.println(pid_output_roll_rate);
 
+                pid_output_pitch_stbl = pitch_controller_stbl.compute(micros(), attitude[PITCH_AXIS], receiver_in[PITCH_CHANNEL]);
 
-                pid_output_pitch_stbl = pitch_controller_stbl.compute(micros(), attitude.pitch, receiver_in[PITCH_CHANNEL]);
-
-                pid_output_pitch_rate = pitch_controller_rate.compute(micros(), angular_rate.pitch, -15 * pid_output_pitch_stbl);
+                pid_output_pitch_rate = pitch_controller_rate.compute(micros(), angular_rate[PITCH_AXIS], -15 * pid_output_pitch_stbl);
 
                 /* Yaw needs rate only - yaw stick controls rate of rotation, there is no fixed reference */
-                pid_output_yaw_rate = yaw_controller_rate.    compute(micros(), angular_rate.yaw, receiver_in[YAW_CHANNEL]);
+                pid_output_yaw_rate = yaw_controller_rate.    compute(micros(), angular_rate[YAW_AXIS], receiver_in[YAW_CHANNEL]);
 
                 out_mixer_left. apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
                 out_mixer_right.apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
                 out_mixer_front.apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
                 out_mixer_back. apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
 
-#define DEBUG_COL
+//#define DEBUG_COL
 #ifdef DEBUG_COL
-                Serial.print("thr:");
-                Serial.print(receiver_in[THROTTLE_CHANNEL]);
-                Serial.print("\tsetp:");
+                Serial.print("setp:");
+                Serial.print(receiver_in[ROLL_CHANNEL]);
+                Serial.print("\troll-angl:");
+                Serial.print(attitude[ROLL_AXIS]);
+                Serial.print("\tpid_output_roll_stbl:");
                 Serial.print(pid_output_roll_stbl);
-                Serial.print("\tr-angl:");
-                Serial.print(attitude.roll);
-                Serial.print("\tr-p-out:");
-                Serial.print(pid_output_roll_stbl);
-                Serial.print("\tr-p_rate-out:");
+                Serial.print("\tpid_output_roll_rate:");
                 Serial.println(pid_output_roll_rate);
 #endif
 
+                /* State can be DISARMING because in that state everything from ARMED state must happen anyway */
                 if (state != DISARMING && disarming_input(receiver_in)) {
                     Serial.println("Initializing Disarm!");
                     state = DISARMING;
@@ -238,8 +254,8 @@ extern "C" int main(void) {
                             out_mixer_back.shut_off();
 
                             receiver.update(receiver_in);
-                            update_abs_angles(&attitude);
-                            update_angular_rates(&angular_rate);
+                            update_attitude(attitude);
+                            update_angular_rates(angular_rate);
                             feed_the_dog();
                             delay(10);
                         }
@@ -251,10 +267,10 @@ extern "C" int main(void) {
                 /* Keep arming, but stay disarmed (no break) */
 
             case DISARMED:
-                out_mixer_left.shut_off();
+                out_mixer_left .shut_off();
                 out_mixer_right.shut_off();
                 out_mixer_front.shut_off();
-                out_mixer_back.shut_off();
+                out_mixer_back .shut_off();
 
                 if (state != ARMING && arming_input(receiver_in)) {
                     state = ARMING;

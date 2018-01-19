@@ -3,6 +3,7 @@
 
 #include "PulsePosition.h"
 
+#include "settings.h"
 #include "Receiver.h"
 
 class PPMReceiver : Receiver {

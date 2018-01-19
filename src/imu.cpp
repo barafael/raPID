@@ -62,17 +62,7 @@ static VectorInt16 aaWorld;  // [x, y, z]       world-frame accel sensor measure
 static VectorFloat gravity;  // [x, y, z]       gravity vector
 
 
-/* internal Angular Rate calibration offsets
- */
-
-class offset_axis_t {
-    public:
-        int64_t roll;
-        int64_t pitch;
-        int64_t yaw;
-};
-
-static offset_axis_t gyro_offsets = { 0, 0, 0 };
+static offset_axis_t gyro_offsets = { 0 };
 
 
 /*
@@ -81,15 +71,15 @@ static offset_axis_t gyro_offsets = { 0, 0, 0 };
    ----------------------------------------------------------------
 */
 
-static void update_raw_rates(axis_t *raw_rates) {
+static void update_raw_rates(axis_t raw_rates) {
     Wire.beginTransmission(mpu_address);
     Wire.write(0x43);
     Wire.endTransmission();
     Wire.requestFrom(mpu_address, 6);
     while (Wire.available() < 6) {}
-    raw_rates->roll  = Wire.read() << 8 | Wire.read();
-    raw_rates->pitch = Wire.read() << 8 | Wire.read();
-    raw_rates->yaw   = Wire.read() << 8 | Wire.read();
+    raw_rates[ROLL_AXIS]  = Wire.read() << 8 | Wire.read();
+    raw_rates[PITCH_AXIS] = Wire.read() << 8 | Wire.read();
+    raw_rates[YAW_AXIS]   = Wire.read() << 8 | Wire.read();
 }
 
 
@@ -99,19 +89,19 @@ static void update_raw_rates(axis_t *raw_rates) {
    ----------------------------------------------------------------
 */
 
-void update_angular_rates(axis_t *angular_rates) {
+void update_angular_rates(axis_t angular_rates) {
     Wire.beginTransmission(mpu_address);
     Wire.write(0x43);
     Wire.endTransmission();
     Wire.requestFrom(mpu_address, 6);
     while (Wire.available() < 6) {}
-    angular_rates->roll  = Wire.read() << 8 | Wire.read();
-    angular_rates->pitch = Wire.read() << 8 | Wire.read();
-    angular_rates->yaw   = Wire.read() << 8 | Wire.read();
+    angular_rates[ROLL_AXIS]  = Wire.read() << 8 | Wire.read();
+    angular_rates[PITCH_AXIS] = Wire.read() << 8 | Wire.read();
+    angular_rates[YAW_AXIS]   = Wire.read() << 8 | Wire.read();
 
-    angular_rates->roll  -= gyro_offsets.roll;
-    angular_rates->pitch -= gyro_offsets.pitch;
-    angular_rates->yaw   -= gyro_offsets.yaw;
+    angular_rates[ROLL_AXIS]  -= gyro_offsets[ROLL_AXIS];
+    angular_rates[PITCH_AXIS] -= gyro_offsets[PITCH_AXIS];
+    angular_rates[YAW_AXIS]   -= gyro_offsets[YAW_AXIS];
 }
 
 
@@ -120,13 +110,8 @@ void update_angular_rates(axis_t *angular_rates) {
    ---             FETCH ABS ANGLES FROM IMU                 ---
    -------------------------------------------------------------
 */
-typedef enum {
-    YAW_ANGLE   = 0,
-    PITCH_ANGLE = 1,
-    ROLL_ANGLE  = 2
-} angle;
 
-void update_abs_angles(axis_t *attitude) {
+void update_attitude(axis_t attitude) {
     /* skip if no MPU interrupt or no extra packet(s) available */
     if (!mpu_interrupt && (fifo_count < packet_size)) {
         return;
@@ -199,12 +184,10 @@ void update_abs_angles(axis_t *attitude) {
 
         // 12.5us
         // digitalWrite(DEBUG_PIN, HIGH);
-        // TODO test if conversion from float to short is problem
-        // TODO try using [0..2*M_PI] everywhere without scaling or use quaternions?
-        attitude->yaw   = ((float)yaw_pitch_roll[YAW_ANGLE]   + M_PI) * (1000.0 / (2 * M_PI));
-        attitude->pitch = ((float)yaw_pitch_roll[PITCH_ANGLE] + M_PI) * (1000.0 / (2 * M_PI));
-        attitude->roll  = ((float)yaw_pitch_roll[ROLL_ANGLE]  + M_PI) * (1000.0 / (2 * M_PI));
-        //Serial.println(attitude->roll);
+        // TODO try using [0..2 * M_PI] everywhere without scaling or use quaternions?
+        attitude[ROLL_AXIS]  = (int16_t) (yaw_pitch_roll[2] * (500.0 / M_PI));
+        attitude[PITCH_AXIS] = (int16_t) (yaw_pitch_roll[1] * (500.0 / M_PI));
+        attitude[YAW_AXIS]   = (int16_t) (yaw_pitch_roll[0] * (500.0 / M_PI));
         // digitalWrite(DEBUG_PIN, LOW);
     }
 }
@@ -216,40 +199,40 @@ void update_abs_angles(axis_t *attitude) {
    ---------------------------------------------------
 */
 
-static bool calib_rates_ok(axis_t *angular_rates) {
+static bool calib_rates_ok(axis_t angular_rates) {
     static bool rate_calibrated = false;
 
     const int iterations = 50;
     const int tolerance  = 10;
 
-    offset_axis_t accumulator = { 0, 0, 0 };
+    offset_axis_t accumulator = { 0 };
 
     for (uint16_t count = 0; count < iterations; count++) {
         update_angular_rates(angular_rates);
-        accumulator.roll  += angular_rates->roll;
-        accumulator.pitch += angular_rates->pitch;
-        accumulator.yaw   += angular_rates->yaw;
+        accumulator[ROLL_AXIS]  += angular_rates[ROLL_AXIS];
+        accumulator[PITCH_AXIS] += angular_rates[PITCH_AXIS];
+        accumulator[YAW_AXIS]   += angular_rates[YAW_AXIS];
 
         delay(5);
     }
 
-    accumulator.roll  /= iterations;
-    accumulator.pitch /= iterations;
-    accumulator.yaw   /= iterations;
+    accumulator[ROLL_AXIS]  /= iterations;
+    accumulator[PITCH_AXIS] /= iterations;
+    accumulator[YAW_AXIS]   /= iterations;
 
     Serial.print("Average rate over ");
     Serial.print(iterations);
     Serial.println(" iterations: ");
-    Serial.print((uint32_t) accumulator.roll);
+    Serial.print((uint32_t) accumulator[ROLL_AXIS]);
     Serial.print("\t");
-    Serial.print((uint32_t) accumulator.pitch);
+    Serial.print((uint32_t) accumulator[PITCH_AXIS]);
     Serial.print("\t");
-    Serial.println((uint32_t) accumulator.yaw);
+    Serial.println((uint32_t) accumulator[YAW_AXIS]);
 
     rate_calibrated =
-        (abs(accumulator.roll)  < tolerance) &&
-        (abs(accumulator.pitch) < tolerance) &&
-        (abs(accumulator.yaw)   < tolerance);
+        (abs(accumulator[ROLL_AXIS])  < tolerance) &&
+        (abs(accumulator[PITCH_AXIS]) < tolerance) &&
+        (abs(accumulator[YAW_AXIS])   < tolerance);
 
     return rate_calibrated;
 }
@@ -260,26 +243,26 @@ static void calib_rates() {
     uint16_t iterations = 300;
 
     axis_t angular_rates = { 0, 0, 0 };
-    update_angular_rates(&angular_rates);
+    update_angular_rates(angular_rates);
 
     /* Attempt calibration and check if it (probably) succeeded */
-    while (!calib_rates_ok(&angular_rates)) {
-        gyro_offsets.roll  = 0;
-        gyro_offsets.pitch = 0;
-        gyro_offsets.yaw   = 0;
+    while (!calib_rates_ok(angular_rates)) {
+        gyro_offsets[ROLL_AXIS]  = 0;
+        gyro_offsets[PITCH_AXIS] = 0;
+        gyro_offsets[YAW_AXIS]   = 0;
 
         for (uint16_t count = 0; count < iterations; count++) {
-            update_raw_rates(&angular_rates);
-            gyro_offsets.roll  += angular_rates.roll;
-            gyro_offsets.pitch += angular_rates.pitch;
-            gyro_offsets.yaw   += angular_rates.yaw;
+            update_raw_rates(angular_rates);
+            gyro_offsets[ROLL_AXIS]  += angular_rates[ROLL_AXIS];
+            gyro_offsets[PITCH_AXIS] += angular_rates[PITCH_AXIS];
+            gyro_offsets[YAW_AXIS]   += angular_rates[YAW_AXIS];
 
             delay(5);
         }
 
-        gyro_offsets.roll  /= iterations;
-        gyro_offsets.pitch /= iterations;
-        gyro_offsets.yaw   /= iterations;
+        gyro_offsets[ROLL_AXIS]  /= iterations;
+        gyro_offsets[PITCH_AXIS] /= iterations;
+        gyro_offsets[YAW_AXIS]   /= iterations;
 
         iterations = iterations < 2000 ? iterations + 200 : iterations;
     }
