@@ -91,18 +91,11 @@ static void print_channels(channels_t receiver_in) {
 extern "C" int main(void) {
     Serial.begin(9600);
 
-    delay(3000);
-
     pinMode(LED_PIN, OUTPUT);
     pinMode(DEBUG_PIN, OUTPUT);
 
-    uint64_t interval = 500;
-    uint64_t previous = millis();
     while (!receiver.has_signal()) {
-        uint64_t current = millis();
-        while (current - previous < interval) {
-            current = millis();
-        }
+        delay(500);
         Serial.println("No receiver signal! Waiting.");
     }
     Serial.println("Receiver signal detected, continuing.");
