@@ -1,6 +1,5 @@
 #include "Arduino.h"
 
-// TODO check out setRate from MPU6050.h
 #include "MPU6050_6Axis_MotionApps20.h"
 // #include "MPU6050_9Axis_MotionApps41.h"
 
@@ -298,7 +297,6 @@ void init_mpu6050() {
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
     Wire.begin();
     /* 400kHz I2C clock (200kHz if CPU is 8MHz) */
-    /* TODO try TWBR = 10 */
     TWBR = 12;
 #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
     Fastwire::setup(400, true);
@@ -328,8 +326,8 @@ void init_mpu6050() {
     /* TODO Find suitable value */
     mpu.setZAccelOffset(1788);
 
-    // TODO investigate if rate 2 has negative effect. Default is 4.
-    mpu.setRate(4);
+    /* 100 Hz interrupt rate at 4, 166 Hz at rate 2 */
+    mpu.setRate(2);
     /* Make sure initialisation worked (returns 0 if so) */
     if (dev_status == 0) {
         /* Turn on the DMP, now that it's ready */
