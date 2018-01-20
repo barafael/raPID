@@ -104,33 +104,42 @@ extern "C" int main(void) {
 
     init_watchdog();
 
-    PIDController roll_controller_stbl = PIDController (0.5, 0.0, 0.0, 12.0, 200.0);
-    PIDController roll_controller_rate = PIDController (0.2, 0.0, 0.0, 12.0, 200.0);
+    PIDParams roll_param_stbl  (0.6,  0.0, 0.2,  12.0, 200.0);
+    PIDParams roll_param_rate  (0.05, 0.0, 0.02, 12.0, 200.0);
 
-    PIDController pitch_controller_stbl = PIDController(0.2, 0.0, 0.0, 12.0, 200.0);
-    PIDController pitch_controller_rate = PIDController(0.2, 0.0, 0.0, 12.0, 200.0);
+    PIDParams pitch_param_stbl (0.2,  0.0, 0.0,  12.0, 200.0);
+    PIDParams pitch_param_rate (0.2,  0.0, 0.0,  12.0, 200.0);
 
-    PIDController yaw_controller_rate = PIDController  (0.2, 0.0, 0.0, 12.0, 200.0);
+    PIDParams yaw_param_rate   (0.2,  0.0, 0.0,  12.0, 200.0);
 
-    Output out_mixer_left(SERVO, LEFT_SERVO_PIN);
+    PIDController roll_controller_stbl(roll_param_stbl);
+    PIDController roll_controller_rate(roll_param_rate);
+    // roll_controller_stbl.set_enabled(false);
+
+    PIDController pitch_controller_stbl(pitch_param_stbl);
+    PIDController pitch_controller_rate(pitch_param_rate);
+
+    PIDController yaw_controller_rate(yaw_param_rate);
+
+    Output out_mixer_left(ESC, LEFT_SERVO_PIN);
     out_mixer_left
          .set_throttle_volume(1.0)
         ->set_roll_volume(1.0)
         ->set_yaw_volume(-0.1);
 
-    Output out_mixer_right(SERVO, RIGHT_SERVO_PIN);
+    Output out_mixer_right(ESC, RIGHT_SERVO_PIN);
     out_mixer_right
          .set_throttle_volume(1.0)
         ->set_roll_volume(-1.0)
         ->set_yaw_volume(0.1);
 
-    Output out_mixer_front(SERVO, FRONT_SERVO_PIN);
+    Output out_mixer_front(ESC, FRONT_SERVO_PIN);
     out_mixer_front
          .set_throttle_volume(1.0)
         ->set_pitch_volume(1.0)
         ->set_yaw_volume(-0.1);
 
-    Output out_mixer_back(SERVO, BACK_SERVO_PIN);
+    Output out_mixer_back(ESC, BACK_SERVO_PIN);
     out_mixer_back
          .set_throttle_volume(1.0)
         ->set_pitch_volume(-1.0)

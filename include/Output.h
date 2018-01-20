@@ -7,15 +7,7 @@
 
 #include "Servo.h"
 
-class Mixer {
-    private:
-    public:
-        float throttle_volume;
-
-        float roll_volume;
-        float pitch_volume;
-        float yaw_volume;
-};
+#include "Mixer.h"
 
 typedef enum { SERVO, ESC, STEPPER } out_type_t;
 

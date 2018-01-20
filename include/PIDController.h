@@ -5,19 +5,20 @@
 
 #include <stdint.h>
 
+#include "PIDParams.h"
+
 class PIDController {
     public:
         float p_gain;
         float i_gain;
         float d_gain;
 
-        PIDController(const float _p_gain, const float _i_gain, const float _d_gain,
-                      const float _integral_limit, const float _output_limit);
+        PIDController(PIDParams params);
 
+        /* En/Disable Passthrough of setpoint */
         void set_enabled(bool enable);
 
-        float compute(const uint64_t now, const float measured,
-                const float setpoint);
+        float compute(const uint64_t now, const float measured, const float setpoint);
 
         PIDController* set_p(const float _p_gain);
         PIDController* set_i(const float _i_gain);

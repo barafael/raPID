@@ -5,27 +5,23 @@
     ((value) < (low)  ? (low) : \
     ((value) > (high) ? (high) : (value))))
 
-PIDController::PIDController(const float _p_gain, const float _i_gain, const float _d_gain,
-                             const float _integral_limit, const float _output_limit)
-    : p_gain { _p_gain }
-    , i_gain { _i_gain }
-    , d_gain { _d_gain }
+PIDController::PIDController(PIDParams params)
+    : enabled (true)
+    , p_gain { params.p_gain }
+    , i_gain { params.i_gain }
+    , d_gain { params.d_gain }
 
-    /* TODO test if there are problems in the first couple loops after init
-     * (because of 0 init for derivtive and integral) */
     , integral       { 0 }
-    , integral_limit { _integral_limit }
+    , integral_limit { params.integral_limit }
 
     , derivative     { 0 }
     , last_error     { 0 }
     , last_setpoint  { 0 }
 
-    , output_limit   { _output_limit }
+    , output_limit   { params.output_limit }
 
-    , last_time      { 0 }
-{
+    , last_time      { 0 } {}
 
-}
 
 void PIDController::set_enabled(bool enable) {
     enabled = enable;
