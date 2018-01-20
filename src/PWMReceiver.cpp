@@ -93,9 +93,6 @@ PWMReceiver::PWMReceiver(uint8_t _throttle_pin, uint8_t _roll_pin,
     attachInterrupt(yaw_pin,      update_yaw,      CHANGE);
     attachInterrupt(aux1_pin,     update_aux1,     CHANGE);
     attachInterrupt(aux2_pin,     update_aux2,     CHANGE);
-
-    /* TODO Check if delay necessary for has_signal */
-    delay(10);
 }
 
 

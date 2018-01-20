@@ -8,7 +8,6 @@
 PPMReceiver::PPMReceiver(uint8_t _input_pin) {
     input_pin = _input_pin;
     input_ppm.begin(input_pin);
-    delay(10);
 }
 
 const void PPMReceiver::update(channels_t channels) {
