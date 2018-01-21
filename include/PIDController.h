@@ -8,26 +8,12 @@
 #include "PIDParams.h"
 
 class PIDController {
-    public:
+    private:
+        bool enabled = true;
+
         float p_gain;
         float i_gain;
         float d_gain;
-
-        PIDController(PIDParams params);
-
-        /* En/Disable Passthrough of setpoint */
-        void set_enabled(bool enable);
-
-        float compute(const uint64_t now, const float measured, const float setpoint);
-
-        PIDController* set_p(const float _p_gain);
-        PIDController* set_i(const float _i_gain);
-        PIDController* set_d(const float _d_gain);
-
-        PIDController* integral_reset();
-
-    private:
-        bool enabled = true;
 
         float integral;
         float integral_limit;
@@ -43,6 +29,20 @@ class PIDController {
         float output_limit;
 
         uint64_t last_time;
+
+    public:
+        PIDController(PIDParams params);
+
+        /* En/Disable Passthrough of setpoint */
+        void set_enabled(bool enable);
+
+        float compute(const uint64_t now, const float measured, const float setpoint);
+
+        PIDController* set_p(const float _p_gain);
+        PIDController* set_i(const float _i_gain);
+        PIDController* set_d(const float _d_gain);
+
+        PIDController* integral_reset();
 };
 
 #endif // PID_CONTROLLER_H

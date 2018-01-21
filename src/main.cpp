@@ -5,23 +5,23 @@
 #include "I2Cdev.h"
 #include "Servo.h"
 
+#include "../include/Output.h"
+#include "../include/PIDController.h"
+#include "../include/PWMReceiver.h"
+#include "../include/arming_state.h"
 #include "../include/error_blink.h"
 #include "../include/imu.h"
-#include "../include/PIDController.h"
 #include "../include/pins.h"
-#include "../include/Output.h"
-#include "../include/PWMReceiver.h"
 #include "../include/settings.h"
-#include "../include/arming_state.h"
 #include "../include/watchdog.h"
 
 #define TIMING_ANALYSIS
 #ifdef TIMING_ANALYSIS
-#define time(f)                           \
-    {                                     \
-        digitalWrite(DEBUG_PIN, HIGH);    \
-        f;                                \
-        digitalWrite(DEBUG_PIN, LOW);     \
+#define time(f)                                                                                                        \
+    {                                                                                                                  \
+        digitalWrite(DEBUG_PIN, HIGH);                                                                                 \
+        f;                                                                                                             \
+        digitalWrite(DEBUG_PIN, LOW);                                                                                  \
     }
 #else
 #define time(f) f
@@ -104,13 +104,13 @@ extern "C" int main(void) {
 
     init_watchdog();
 
-    PIDParams roll_param_stbl (0.6,  0.0, 0.2,  12.0, 200.0);
-    PIDParams roll_param_rate (0.05, 0.0, 0.02, 12.0, 200.0);
+    PIDParams roll_param_stbl ( 0.6  , 0.0 , 0.2  , 12.0 , 200.0);
+    PIDParams roll_param_rate ( 0.05 , 0.0 , 0.02 , 12.0 , 200.0);
 
-    PIDParams pitch_param_stbl(0.2,  0.0, 0.0,  12.0, 200.0);
-    PIDParams pitch_param_rate(0.2,  0.0, 0.0,  12.0, 200.0);
+    PIDParams pitch_param_stbl( 0.2  , 0.0 , 0.0  , 12.0 , 200.0);
+    PIDParams pitch_param_rate( 0.2  , 0.0 , 0.0  , 12.0 , 200.0);
 
-    PIDParams yaw_param_rate  (0.2,  0.0, 0.0,  12.0, 200.0);
+    PIDParams yaw_param_rate  ( 0.2  , 0.0 , 0.0  , 12.0 , 200.0);
 
     PIDController roll_controller_stbl(roll_param_stbl);
     PIDController roll_controller_rate(roll_param_rate);

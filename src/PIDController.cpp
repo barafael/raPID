@@ -7,6 +7,7 @@
 
 PIDController::PIDController(PIDParams params)
     : enabled (true)
+
     , p_gain { params.p_gain }
     , i_gain { params.i_gain }
     , d_gain { params.d_gain }
