@@ -15,12 +15,12 @@ of angular rate as process value. This setup results in stabilization mode
 (which will then just pass through the setpoint to the next controller), acro
 mode can be achieved.
 
-[x] Arming/disarming
-[x] PWM/PPM support
-[x] Rate/stabilize mode
-[x] Mixers for each output, applying differently weighted inputs and IMU data to the outputs
-[]  Arbitrary flight modes (different PID settings and offsets)
-[]  Flight mode interpolation (otherwise called transitional mixers) to smoothly switch between any two flight modes.
+- [x] Arming/disarming
+- [x] PWM/PPM support
+- [x] Rate/stabilize mode
+- [x] Mixers for each output, applying differently weighted inputs and IMU data to the outputs
+- [ ]  Arbitrary flight modes (different PID settings and offsets)
+- [ ]  Flight mode interpolation (otherwise called transitional mixers) to smoothly switch between any two flight modes.
 
 Adjusting the settings should be done via bluetooth and a desktop application/website (have not thought about that part yet... far off)
 
