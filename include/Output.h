@@ -9,11 +9,13 @@
 
 #include "Mixer.h"
 
-typedef enum { SERVO, ESC, STEPPER } out_type_t;
+typedef enum { SERVO, ESC, STEPPER } output_type;
+
+typedef enum { PWM_STANDARD, PWM_FAST } pwm_freq;
 
 class Output {
     private:
-        out_type_t out_type;
+        output_type out_type;
         uint8_t pin;
         Mixer mixer;
         bool inverted = false;
@@ -26,7 +28,7 @@ class Output {
         void write(uint16_t _milli_throttle);
 
     public:
-        Output(const out_type_t type, const uint8_t pin);
+        Output(const output_type type, const uint8_t pin);
         void shut_off();
         void apply(uint16_t throttle,
                 float roll_stbl, float pitch_stbl, float yaw_stbl//,

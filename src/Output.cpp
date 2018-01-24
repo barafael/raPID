@@ -12,7 +12,7 @@ static const uint16_t BASE_PULSE_MS = 800;
     ((value) < (low)  ? (low) : \
     ((value) > (high) ? (high) : (value))))
 
-Output::Output(out_type_t type, uint8_t pin)
+Output::Output(output_type type, uint8_t pin)
     : out_type       { type }
     , pin            { pin }
     , mixer          { 0.0, 0.0, 0.0, 0.0 }
