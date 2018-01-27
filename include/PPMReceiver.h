@@ -9,7 +9,7 @@
 class PPMReceiver : Receiver {
     private:
         uint8_t input_pin;
-        PulsePositionInput input_ppm;
+        PulsePositionInput ppm_rx;
         int count = 0;
 
     public:

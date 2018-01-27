@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include "PIDParams.h"
+#include "util.h"
 
 class PIDController {
     private:

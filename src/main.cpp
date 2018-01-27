@@ -40,10 +40,9 @@
    GND ------------------ GND
    SDA ------------------ A4/pin 18
    SCL ------------------ A5/pin 19
-   INT ------------------ Digital Pin 13 (see pins.h)
+   INT ------------------ Digital Pin 12 (see pins.h)
 
-   PPM from RC RX go to pins 8, 9, 10, 11 (see pins.h)
-   Output signal to ESCs/Servos: pins 20, 21, 22, 23 (see pins.h)
+   See ../include/pins.h for more pin definitions.
    */
 
 state_t state = /*DIS*/ARMED;
@@ -116,7 +115,6 @@ extern "C" int main(void) {
 
     PIDController roll_controller_stbl(roll_param_stbl);
     PIDController roll_controller_rate(roll_param_rate);
-    // roll_controller_stbl.set_enabled(false);
 
     PIDController pitch_controller_stbl(pitch_param_stbl);
     PIDController pitch_controller_rate(pitch_param_rate);
@@ -199,11 +197,7 @@ extern "C" int main(void) {
                 /* Keep disarming, but stay armed (no break) */
 
             case ARMED:
-                //Serial.print(attitude[ROLL_AXIS]);
-                //Serial.print("\t");
-                //Serial.println(receiver_in[ROLL_CHANNEL]);
                 pid_output_roll_stbl = roll_controller_stbl.  compute(micros(), attitude[ROLL_AXIS], receiver_in[ROLL_CHANNEL]);
-                //Serial.println(-15 * pid_output_roll_stbl);
 
                 pid_output_roll_rate = roll_controller_rate.  compute(micros(), angular_rate[ROLL_AXIS], -15 * pid_output_roll_stbl);
                 //Serial.println(pid_output_roll_rate);

@@ -2,15 +2,12 @@
 
 /* TODO implement arming for ESC type? */
 /* TODO implement flight mode offset? */
+/* TODO implement servo/ESC subclasses? */
+/* TODO better model for position/thrust/endpoints */
 /* TODO remove includes when not using warning output */
 
 static const uint16_t THROTTLE_LOW_CUTOFF = 25;
 static const uint16_t BASE_PULSE_MS = 800;
-
-#define clamp(value, low, high) \
-    ((value) = \
-    ((value) < (low)  ? (low) : \
-    ((value) > (high) ? (high) : (value))))
 
 Output::Output(output_type type, uint8_t pin)
     : out_type       { type }

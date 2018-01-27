@@ -6,12 +6,12 @@
 #include <stdint.h>
 
 #include "Servo.h"
-
+#include "util.h"
 #include "Mixer.h"
 
-typedef enum { SERVO, ESC, STEPPER } output_type;
+typedef enum { SERVO, ESC } output_type;
 
-typedef enum { PWM_STANDARD, PWM_FAST } pwm_freq;
+typedef enum { PWM_STANDARD, PWM_FAST } pwm_frequency;
 
 class Output {
     private:

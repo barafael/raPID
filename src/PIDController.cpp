@@ -1,10 +1,5 @@
 #include "../include/PIDController.h"
 
-#define clamp(value, low, high) \
-    ((value) = \
-    ((value) < (low)  ? (low) : \
-    ((value) > (high) ? (high) : (value))))
-
 PIDController::PIDController(PIDParams params)
     : enabled (true)
 

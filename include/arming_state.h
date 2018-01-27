@@ -11,7 +11,11 @@
 // PASS_THROUGH
 // FAILSAFE
 typedef enum {
-    ARMED, DISARMING, DISARMED, ARMING, CONFIG
+    DISARMED,
+    ARMING,
+    ARMED,
+    DISARMING,
+    CONFIG
 } state_t;
 
 void disarm_init();
