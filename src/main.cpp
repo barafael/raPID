@@ -94,6 +94,8 @@ extern "C" int main(void) {
     pinMode(LED_PIN, OUTPUT);
     pinMode(DEBUG_PIN, OUTPUT);
 
+    delay(500);
+
     while (!receiver.has_signal()) {
         delay(500);
         Serial.println("No receiver signal! Waiting.");
@@ -218,7 +220,7 @@ extern "C" int main(void) {
                 out_mixer_front.apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
                 out_mixer_back. apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
 
-//#define DEBUG_COL
+#define DEBUG_COL
 #ifdef DEBUG_COL
                 Serial.print("setp:");
                 Serial.print(receiver_in[ROLL_CHANNEL]);
