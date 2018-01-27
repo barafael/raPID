@@ -19,8 +19,11 @@ mode can be achieved.
 - [x] PWM/PPM support
 - [x] Rate/stabilize mode
 - [x] Mixers for each output, applying differently weighted inputs and IMU data to the outputs
-- [ ]  Arbitrary flight modes (different PID settings and offsets)
-- [ ]  Flight mode interpolation (otherwise called transitional mixers) to smoothly switch between any two flight modes.
+- [ ] 400Hz update rate using analogWrite timers
+- [ ] Flight mode data structure
+- [ ] Matrix multiplication for I/O coefficients
+- [ ] Arbitrary flight modes (different PID settings and offsets)
+- [ ] Flight mode interpolation (otherwise called transitional mixers) to smoothly switch between any two flight modes.
 
 Adjusting the settings should be done via bluetooth and a desktop application/website (have not thought about that part yet... far off)
 
