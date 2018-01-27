@@ -26,6 +26,8 @@ Output::Output(output_type type, uint8_t pin)
         uint16_t tmp = lower_limit;
         lower_limit = upper_limit;
         upper_limit = tmp;
+        Serial.print("Ignoring dubious limits given to output on pin ");
+        Serial.println(pin);
     }
     range = upper_limit - lower_limit;
 }
@@ -97,7 +99,7 @@ void Output::apply(uint16_t _milli_throttle,
 
 Output *Output::set_limits(uint16_t lower, uint16_t upper) {
     if (upper > 1300 || lower > upper) {
-        Serial.print("Ignoring dubious limits given to output on pin");
+        Serial.print("Ignoring dubious limits given to output on pin ");
         Serial.println(pin);
         return this;
     }
