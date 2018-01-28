@@ -21,6 +21,7 @@ mode can be achieved.
 - [x] Mixers for each output, applying differently weighted inputs and IMU data to the outputs
 - [ ] 400Hz update rate for ESCs using analogWrite timers
 - [ ] Live coefficient tweaking
+- [ ] simplify IMU data ranges
 - [ ] Flight mode data structure
 - [ ] Matrix multiplication for I/O coefficients
 - [ ] Arbitrary flight modes (different PID settings and offsets)
