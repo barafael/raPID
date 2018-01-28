@@ -8,12 +8,12 @@
 #include "../include/settings.h"
 #include "../include/imu.h"
 
-static const uint16_t MPU6050_ACCEL_OFFSET_X = -1524;
-static const uint16_t MPU6050_ACCEL_OFFSET_Y = -444;
-static const uint16_t MPU6050_ACCEL_OFFSET_Z = 1108;
-static const uint16_t MPU6050_GYRO_OFFSET_X  = 105;
-static const uint16_t MPU6050_GYRO_OFFSET_Y  = 95;
-static const uint16_t MPU6050_GYRO_OFFSET_Z  = -21;
+static const uint16_t MPU6050_ACCEL_OFFSET_X = -3690;
+static const uint16_t MPU6050_ACCEL_OFFSET_Y = -2625;
+static const uint16_t MPU6050_ACCEL_OFFSET_Z = 940;
+static const uint16_t MPU6050_GYRO_OFFSET_X  = 33;
+static const uint16_t MPU6050_GYRO_OFFSET_Y  = 25;
+static const uint16_t MPU6050_GYRO_OFFSET_Z  = 134;
 
 /*
    -------------------------------------------------
