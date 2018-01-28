@@ -205,7 +205,20 @@ extern "C" int main(void) {
                 /* Keep disarming, but stay armed (no break) */
 
             case ARMED:
+                new_stbl_p = (receiver_in[AUX1_CHANNEL] + 500) / 1000.0 / 8.0;
+                new_rate_p = (receiver_in[AUX2_CHANNEL] + 500) / 1000.0 / 8.0;
+
+                //Serial.print(new_stbl_p);
+                //Serial.print("\t");
+                //Serial.println(new_rate_p);
+
+
+                //roll_controller_stbl.set_p(new_stbl_p);
+                //roll_controller_rate.set_p(new_rate_p);
+
+                //Serial.println(attitude[ROLL_AXIS] - receiver_in[ROLL_CHANNEL]);
                 pid_output_roll_stbl = roll_controller_stbl.  compute(micros(), attitude[ROLL_AXIS], receiver_in[ROLL_CHANNEL]);
+                //Serial.println(pid_output_roll_stbl);
 
                 pid_output_roll_rate = roll_controller_rate.  compute(micros(), angular_rate[ROLL_AXIS], -15 * pid_output_roll_stbl);
                 //Serial.println(pid_output_roll_rate);
