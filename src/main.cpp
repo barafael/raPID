@@ -106,13 +106,13 @@ extern "C" int main(void) {
 
     init_watchdog();
 
-    PIDParams roll_param_stbl ( 0.6  , 0.0 , 0.2  , 12.0 , 200.0);
-    PIDParams roll_param_rate ( 0.05 , 0.0 , 0.02 , 12.0 , 200.0);
+    PIDParams roll_param_stbl ( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
+    PIDParams roll_param_rate ( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
 
-    PIDParams pitch_param_stbl( 0.2  , 0.0 , 0.0  , 12.0 , 200.0);
-    PIDParams pitch_param_rate( 0.2  , 0.0 , 0.0  , 12.0 , 200.0);
+    PIDParams pitch_param_stbl( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
+    PIDParams pitch_param_rate( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
 
-    PIDParams yaw_param_rate  ( 0.2  , 0.0 , 0.0  , 12.0 , 200.0);
+    PIDParams yaw_param_rate  ( 1.0 , 0.0 , 0.0 , 12.0 , 200.0);
 
     PIDController roll_controller_stbl(roll_param_stbl);
     PIDController roll_controller_rate(roll_param_rate);
