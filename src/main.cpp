@@ -45,7 +45,8 @@
    See ../include/pins.h for more pin definitions.
    */
 
-state_t state = /*DIS*/ARMED;
+//state_t state = /*DIS*/ARMED;
+state_t state = DISARMED;
 
 /* Scaled yaw_pitch_roll to [0, 1000] */
 axis_t attitude = { 0, 0, 0 };
