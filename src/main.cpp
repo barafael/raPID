@@ -151,6 +151,9 @@ extern "C" int main(void) {
     out_mixer_front.shut_off();
     out_mixer_back.shut_off();
 
+    float new_stbl_p = 0.0;
+    float new_rate_p = 0.0;
+
     //roll_controller_stbl.set_enabled(false);
     //roll_controller_rate.set_enabled(false);
 
@@ -198,6 +201,17 @@ extern "C" int main(void) {
                 /* Keep disarming, but stay armed (no break) */
 
             case ARMED:
+                new_stbl_p = (receiver_in[AUX1_CHANNEL] + 500) / 1000.0 / 3.0;
+                new_rate_p = (receiver_in[AUX2_CHANNEL] + 500) / 1000.0 / 3.0;
+
+                //Serial.print(new_stbl_p);
+                //Serial.print("\t");
+                //Serial.println(new_rate_p);
+
+
+                roll_controller_stbl.set_p(new_stbl_p);
+                roll_controller_rate.set_p(new_rate_p);
+
                 pid_output_roll_stbl = roll_controller_stbl.  compute(micros(), attitude[ROLL_AXIS], receiver_in[ROLL_CHANNEL]);
 
                 pid_output_roll_rate = roll_controller_rate.  compute(micros(), angular_rate[ROLL_AXIS], -15 * pid_output_roll_stbl);
