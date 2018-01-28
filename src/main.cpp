@@ -122,34 +122,41 @@ extern "C" int main(void) {
 
     PIDController yaw_controller_rate(yaw_param_rate);
 
-    Output out_mixer_left(ESC, LEFT_SERVO_PIN);
-    out_mixer_left
+    Output back_left_out_mixer(ESC, LEFT_SERVO_PIN);
+    back_left_out_mixer
          .set_throttle_volume(1.0)
-        ->set_roll_volume(1.0)
-        ->set_yaw_volume(-0.1);
+        ->set_roll_volume(-0.4)
+        ->set_pitch_volume(0.4)
+        ->set_yaw_volume(0.0);
 
-    Output out_mixer_right(ESC, RIGHT_SERVO_PIN);
-    out_mixer_right
+    Output back_right_out_mixer(ESC, RIGHT_SERVO_PIN);
+    back_right_out_mixer
          .set_throttle_volume(1.0)
-        ->set_roll_volume(-1.0)
-        ->set_yaw_volume(0.1);
+        ->set_roll_volume(0.4)
+        ->set_pitch_volume(0.4)
+        ->set_yaw_volume(0.0);
 
-    Output out_mixer_front(ESC, FRONT_SERVO_PIN);
-    out_mixer_front
+    Output front_left_out_mixer(ESC, FRONT_SERVO_PIN);
+    front_left_out_mixer
          .set_throttle_volume(1.0)
-        ->set_pitch_volume(1.0)
-        ->set_yaw_volume(-0.1);
+        ->set_roll_volume(-0.4)
+        ->set_pitch_volume(-0.4)
+        ->set_yaw_volume(0.0);
 
-    Output out_mixer_back(ESC, BACK_SERVO_PIN);
-    out_mixer_back
+    Output front_right_out_mixer(ESC, BACK_SERVO_PIN);
+    front_right_out_mixer
          .set_throttle_volume(1.0)
-        ->set_pitch_volume(-1.0)
-        ->set_yaw_volume(0.1);
+        ->set_roll_volume(0.4)
+        ->set_pitch_volume(-0.4)
+        ->set_yaw_volume(0.0);
 
-    out_mixer_left.shut_off();
-    out_mixer_right.shut_off();
-    out_mixer_front.shut_off();
-    out_mixer_back.shut_off();
+    back_left_out_mixer.  shut_off();
+    back_right_out_mixer. shut_off();
+    front_left_out_mixer. shut_off();
+    front_right_out_mixer.shut_off();
+
+    float new_stbl_p = 0.0;
+    float new_rate_p = 0.0;
 
     //roll_controller_stbl.set_enabled(false);
     //roll_controller_rate.set_enabled(false);
@@ -178,10 +185,10 @@ extern "C" int main(void) {
                     if (state == DISARMED) {
                         Serial.println("Release the hold!");
                         while (disarming_input(receiver_in)) {
-                            out_mixer_left.shut_off();
-                            out_mixer_right.shut_off();
-                            out_mixer_front.shut_off();
-                            out_mixer_back.shut_off();
+                            back_left_out_mixer  .shut_off();
+                            back_right_out_mixer .shut_off();
+                            front_left_out_mixer .shut_off();
+                            front_right_out_mixer.shut_off();
 
                             receiver.update(receiver_in);
                             update_attitude(attitude);
@@ -210,12 +217,12 @@ extern "C" int main(void) {
                 /* Yaw needs rate only - yaw stick controls rate of rotation, there is no fixed reference */
                 pid_output_yaw_rate = yaw_controller_rate.    compute(micros(), angular_rate[YAW_AXIS], receiver_in[YAW_CHANNEL]);
 
-                out_mixer_left. apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
-                out_mixer_right.apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
-                out_mixer_front.apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
-                out_mixer_back. apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
+                back_left_out_mixer  .apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
+                back_right_out_mixer .apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
+                front_left_out_mixer .apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
+                front_right_out_mixer.apply(receiver_in[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
 
-#define DEBUG_COL
+//#define DEBUG_COL
 #ifdef DEBUG_COL
                 Serial.print("setp:");
                 Serial.print(receiver_in[ROLL_CHANNEL]);
@@ -247,10 +254,10 @@ extern "C" int main(void) {
                         Serial.println("Release the hold!");
                         while (arming_input(receiver_in)) {
                             /* Still don't fire the motors up */
-                            out_mixer_left.shut_off();
-                            out_mixer_right.shut_off();
-                            out_mixer_front.shut_off();
-                            out_mixer_back.shut_off();
+                            back_left_out_mixer  .shut_off();
+                            back_right_out_mixer .shut_off();
+                            front_left_out_mixer .shut_off();
+                            front_right_out_mixer.shut_off();
 
                             receiver.update(receiver_in);
                             update_attitude(attitude);
@@ -266,10 +273,10 @@ extern "C" int main(void) {
                 /* Keep arming, but stay disarmed (no break) */
 
             case DISARMED:
-                out_mixer_left .shut_off();
-                out_mixer_right.shut_off();
-                out_mixer_front.shut_off();
-                out_mixer_back .shut_off();
+                back_left_out_mixer  .shut_off();
+                back_right_out_mixer .shut_off();
+                front_left_out_mixer .shut_off();
+                front_right_out_mixer.shut_off();
 
                 if (state != ARMING && arming_input(receiver_in)) {
                     state = ARMING;

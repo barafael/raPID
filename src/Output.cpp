@@ -59,8 +59,6 @@ void Output::apply(uint16_t _milli_throttle,
         float roll_stbl, float pitch_stbl, float yaw_stbl
         /*,float roll_rate, float pitch_rate, float yaw_rate*/) {
 
-    /* intermediary int16_t to prevent overflow */
-    int16_t throttle_tmp = _milli_throttle;
     /* Throttle cutoff to avoid spinning props due to movement when throttle is low but state is armed */
     if (out_type == ESC && _milli_throttle < THROTTLE_LOW_CUTOFF) {
         write(0);
@@ -80,6 +78,9 @@ void Output::apply(uint16_t _milli_throttle,
         clamp(mixer.pitch_volume,    -1.0, 1.0);
         clamp(mixer.yaw_volume,      -1.0, 1.0);
     }
+
+    /* intermediary int16_t to prevent overflow */
+    int16_t throttle_tmp = _milli_throttle;
 
     throttle_tmp =  (int16_t) (_milli_throttle * mixer.throttle_volume);
 
