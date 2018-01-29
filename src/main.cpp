@@ -69,9 +69,6 @@ PWMReceiver receiver(THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
                      PITCH_INPUT_PIN,    YAW_INPUT_PIN,
                      AUX1_INPUT_PIN,     AUX2_INPUT_PIN);
 
-/* TODO: enumify? */
-size_t flight_mode_index = 0;
-
 static void print_attitude(axis_t attitude) {
     for (size_t index = 0; index < 3; index++) {
         Serial.print(attitude[index]);
@@ -94,17 +91,16 @@ extern "C" int main(void) {
     pinMode(LED_PIN, OUTPUT);
     pinMode(DEBUG_PIN, OUTPUT);
 
-    delay(500);
+    delay(1000);
 
     while (!receiver.has_signal()) {
         delay(500);
         Serial.println("No receiver signal! Waiting.");
     }
+
     Serial.println("Receiver signal detected, continuing.");
 
     init_mpu6050();
-
-    init_watchdog();
 
     PIDParams roll_param_stbl ( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
     PIDParams roll_param_rate ( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
@@ -161,6 +157,8 @@ extern "C" int main(void) {
     //roll_controller_stbl.set_enabled(false);
     //roll_controller_rate.set_enabled(false);
 
+    init_watchdog();
+
     /* Flight loop */
     while (true) {
         receiver.update(receiver_in);
@@ -211,7 +209,6 @@ extern "C" int main(void) {
                 //Serial.print(new_stbl_p);
                 //Serial.print("\t");
                 //Serial.println(new_rate_p);
-
 
                 //roll_controller_stbl.set_p(new_stbl_p);
                 //roll_controller_rate.set_p(new_rate_p);

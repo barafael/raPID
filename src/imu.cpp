@@ -88,6 +88,7 @@ static void update_raw_rates(axis_t& raw_rates) {
    ----------------------------------------------------------------
 */
 
+/* TODO: check out max/min and scale to perhaps [-500, 500] */
 void update_angular_rates(axis_t& angular_rates) {
     //digitalWrite(DEBUG_PIN, HIGH);
     Wire.beginTransmission(mpu_address);
@@ -243,6 +244,7 @@ static bool calib_rates_ok(axis_t& angular_rates) {
     return rate_calibrated;
 }
 
+/* TODO overhaul calibration system */
 static void calib_rates() {
     Serial.println(F("Calibrating gyro rates, hold still!"));
 
@@ -348,7 +350,9 @@ void init_mpu6050() {
     } else {
         /* Error while init */
         switch (dev_status) {
-            case 1: error_blink(DMP_INIT_MEM_LOAD_FAILED, "DMP init error code 1: Initial Memory Load failed!"); break;
+            case 1:
+                error_blink(DMP_INIT_MEM_LOAD_FAILED, "DMP init error code 1: Initial Memory Load failed!");
+                break;
             case 2:
                 error_blink(DMP_CONF_UPDATES_FAILED, "DMP init error code 2: DMP configuration updates failed!");
                 break;
