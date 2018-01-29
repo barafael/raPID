@@ -19,13 +19,18 @@ mode can be achieved.
 - [x] PWM/PPM support
 - [x] Rate/stabilize mode
 - [x] Mixers for each output, applying differently weighted inputs and IMU data to the outputs
-- [ ] 400Hz update rate for ESCs using analogWrite timers
-- [ ] Live coefficient tweaking
-- [ ] simplify IMU data ranges
+- [ ] 400Hz update rate for ESCs using analogWrite timers (fastpwm branch)
+- [ ] Allow arbitrary waveform generation for PWM to drive even LEDs (fastpwm branch)
+- [ ] Live coefficient tweaking (standard tx or telemetry hardware)
+- [ ] Fix gyro vs. fused and rate vs. stbl issues (-15 factor)
+- [ ] Fix serial monitor ritual (current: remove tx, reboot, wait for sermon, connect tx)
+- [ ] IMU solution overhaul: Ultimate SENtral or other
+- [ ] Migrate to 3.5 teensy
 - [ ] Flight mode data structure
+- [ ] Arbitrary flight modes (different PID settings, offsets, and I/O matrix)
 - [ ] Matrix multiplication for I/O coefficients
-- [ ] Arbitrary flight modes (different PID settings and offsets)
-- [ ] Flight mode interpolation (otherwise called transitional mixers) to smoothly switch between any two flight modes.
+- [ ] Flight mode interpolation (otherwise called transitional mixers) to smoothly switch between any two flight modes
+- [ ] Telemetry hardware + data logging
 
 Adjusting the settings should be done via bluetooth and a desktop application/website (have not thought about that part yet... far off)
 
