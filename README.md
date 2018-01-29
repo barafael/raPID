@@ -19,6 +19,7 @@ mode can be achieved.
 - [x] PWM/PPM support
 - [x] Rate/stabilize mode
 - [x] Mixers for each output, applying differently weighted inputs and IMU data to the outputs
+- [x] Various output classes (Servo, ESC done, remaining: fastPWM, (maybe LED), anyWave)
 - [ ] 400Hz update rate for ESCs using analogWrite timers (fastpwm branch)
 - [ ] Allow arbitrary waveform generation for PWM to drive even LEDs (fastpwm branch)
 - [ ] Live coefficient tweaking (standard tx or telemetry hardware)
