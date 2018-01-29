@@ -5,47 +5,33 @@
 
 #include <stdint.h>
 
-#include "Servo.h"
-#include "util.h"
 #include "Mixer.h"
 
-typedef enum { SERVO, ESC } output_type;
-
-typedef enum { PWM_STANDARD, PWM_FAST } pwm_frequency;
-
 class Output {
-    private:
-        output_type out_type;
+    protected:
         uint8_t pin;
         Mixer mixer;
-        bool inverted = false;
-        uint16_t upper_limit = 1000;
-        uint16_t lower_limit = 0;
-        Servo output;
-        uint16_t milli_throttle = 0;
-        uint16_t range = upper_limit - lower_limit;
-
-        void write(uint16_t _milli_throttle);
 
     public:
-        Output(const output_type type, const uint8_t pin);
-        void shut_off();
-        void apply(uint16_t throttle,
-                float roll_stbl, float pitch_stbl, float yaw_stbl//,
-                /* what params are needed? */
-                /* float roll_rate, float pitch_rate, float yaw_rate*/);
+        explicit Output(const uint8_t pin);
+        Output(const uint8_t pin,
+                float throttle_volume,
+                float roll_volume, float pitch_volume, float yaw_volume);
 
-        bool is_inverted();
-        void invert_servo_direction();
-
-        Output *set_limits(uint16_t lower, uint16_t upper);
-
-        Output *set_throttle_volume(float volume);
-
-        Output *set_roll_volume    (float volume);
-        Output *set_pitch_volume   (float volume);
-        Output *set_yaw_volume     (float volume);
+        /* Pure virtual method meant to be overridden in servo, esc, and anyPWM */
+        virtual void apply(uint16_t value,
+                const float roll_stbl, const float pitch_stbl, const float yaw_stbl) = 0;
 };
+
+Output::Output(const uint8_t pin)
+    : pin   { pin }
+    , mixer { 0.0, 0.0, 0.0, 0.0 } {}
+
+Output::Output(const uint8_t pin,
+        float throttle_volume,
+        float roll_volume, float pitch_volume, float yaw_volume)
+    : pin   { pin }
+    , mixer { throttle_volume, roll_volume, pitch_volume, yaw_volume } {}
 
 #endif // OUTPUT_H
 

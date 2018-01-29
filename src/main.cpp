@@ -5,7 +5,7 @@
 #include "I2Cdev.h"
 #include "Servo.h"
 
-#include "../include/Output.h"
+#include "../include/ESCOutput.h"
 #include "../include/PIDController.h"
 #include "../include/PWMReceiver.h"
 #include "../include/arming_state.h"
@@ -118,37 +118,37 @@ extern "C" int main(void) {
 
     PIDController yaw_controller_rate(yaw_param_rate);
 
-    Output back_left_out_mixer(ESC, LEFT_SERVO_PIN);
+    ESCOutput back_left_out_mixer(ESC, LEFT_SERVO_PIN);
     back_left_out_mixer
          .set_throttle_volume(1.0)
         ->set_roll_volume(-0.4)
         ->set_pitch_volume(0.4)
         ->set_yaw_volume(0.0);
 
-    Output back_right_out_mixer(ESC, RIGHT_SERVO_PIN);
+    ESCOutput back_right_out_mixer(ESC, RIGHT_SERVO_PIN);
     back_right_out_mixer
          .set_throttle_volume(1.0)
         ->set_roll_volume(0.4)
         ->set_pitch_volume(0.4)
         ->set_yaw_volume(0.0);
 
-    Output front_left_out_mixer(ESC, FRONT_SERVO_PIN);
+    ESCOutput front_left_out_mixer(ESC, FRONT_SERVO_PIN);
     front_left_out_mixer
          .set_throttle_volume(1.0)
         ->set_roll_volume(-0.4)
         ->set_pitch_volume(-0.4)
         ->set_yaw_volume(0.0);
 
-    Output front_right_out_mixer(ESC, BACK_SERVO_PIN);
+    ESCOutput front_right_out_mixer(ESC, BACK_SERVO_PIN);
     front_right_out_mixer
          .set_throttle_volume(1.0)
         ->set_roll_volume(0.4)
         ->set_pitch_volume(-0.4)
         ->set_yaw_volume(0.0);
 
-    back_left_out_mixer.  shut_off();
-    back_right_out_mixer. shut_off();
-    front_left_out_mixer. shut_off();
+    back_left_out_mixer  .shut_off();
+    back_right_out_mixer .shut_off();
+    front_left_out_mixer .shut_off();
     front_right_out_mixer.shut_off();
 
     float new_stbl_p = 0.0;
