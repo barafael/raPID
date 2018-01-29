@@ -1,14 +1,13 @@
 #include "../include/ServoOutput.h"
 
 void ServoOutput::write(uint16_t _value) {
-    _value = _value > 1000 ? 1000 : _value;
-    uint16_t angle = (uint32_t) (this->range * _value) / 1000;
+    this->value = _value > 1000 ? 1000 : _value;
+    uint16_t angle = (uint32_t) (this->range * value) / 1000;
     if (inverted) {
         output.writeMicroseconds(upper_limit - angle);
     } else {
         output.writeMicroseconds(BASE_PULSE_MS + lower_limit + angle);
     }
-    value = _value;
 }
 
 void ServoOutput::apply(uint16_t _value,

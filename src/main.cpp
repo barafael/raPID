@@ -17,11 +17,11 @@
 
 #define TIMING_ANALYSIS
 #ifdef TIMING_ANALYSIS
-#define time(f)                                                                                                        \
-    {                                                                                                                  \
-        digitalWrite(DEBUG_PIN, HIGH);                                                                                 \
-        f;                                                                                                             \
-        digitalWrite(DEBUG_PIN, LOW);                                                                                  \
+#define time(f)                          \
+    {                                    \
+        digitalWrite(DEBUG_PIN, HIGH);   \
+        f;                               \
+        digitalWrite(DEBUG_PIN, LOW);    \
     }
 #else
 #define time(f) f
@@ -118,33 +118,10 @@ extern "C" int main(void) {
 
     PIDController yaw_controller_rate(yaw_param_rate);
 
-    ESCOutput back_left_out_mixer(ESC, LEFT_SERVO_PIN);
-    back_left_out_mixer
-         .set_throttle_volume(1.0)
-        ->set_roll_volume(-0.4)
-        ->set_pitch_volume(0.4)
-        ->set_yaw_volume(0.0);
-
-    ESCOutput back_right_out_mixer(ESC, RIGHT_SERVO_PIN);
-    back_right_out_mixer
-         .set_throttle_volume(1.0)
-        ->set_roll_volume(0.4)
-        ->set_pitch_volume(0.4)
-        ->set_yaw_volume(0.0);
-
-    ESCOutput front_left_out_mixer(ESC, FRONT_SERVO_PIN);
-    front_left_out_mixer
-         .set_throttle_volume(1.0)
-        ->set_roll_volume(-0.4)
-        ->set_pitch_volume(-0.4)
-        ->set_yaw_volume(0.0);
-
-    ESCOutput front_right_out_mixer(ESC, BACK_SERVO_PIN);
-    front_right_out_mixer
-         .set_throttle_volume(1.0)
-        ->set_roll_volume(0.4)
-        ->set_pitch_volume(-0.4)
-        ->set_yaw_volume(0.0);
+    ESCOutput back_left_out_mixer  (LEFT_SERVO_PIN,  1.0, -0.4, 0.4, 0.0);
+    ESCOutput back_right_out_mixer (RIGHT_SERVO_PIN, 1.0, 0.4, 0.4, 0.0);
+    ESCOutput front_left_out_mixer (FRONT_SERVO_PIN, 1.0, -0.4, -0.4, 0.0);
+    ESCOutput front_right_out_mixer(BACK_SERVO_PIN,  1.0, 0.4, -0.4, 0.0);
 
     back_left_out_mixer  .shut_off();
     back_right_out_mixer .shut_off();
