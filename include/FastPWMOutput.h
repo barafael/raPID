@@ -5,8 +5,9 @@
 
 #include "Output.h"
 
-#include "./util.h"
- 
+#include "util.h"
+#include "settings.h"
+
 class FastPWMOutput : Output {
     private:
         uint16_t milli_throttle = 0;
@@ -25,9 +26,9 @@ class FastPWMOutput : Output {
         uint16_t upper_limit = (1 << resolution_bits) / 100 * max_dutycycle_percent;
 
         uint16_t throttle_low_cutoff = 25;
-        uint16_t base_pulse_ms = 800;
-
         uint16_t range = upper_limit - lower_limit;
+
+        bool low_throttle_cutoff_enabled = true;
 
         void write(uint16_t _milli_throttle);
 
@@ -46,6 +47,8 @@ class FastPWMOutput : Output {
         void set_frequency(uint32_t freq);
 
         void shut_off();
+
+        void set_throttle_cutoff_enabled(bool enabled);
 
         void set_limits(uint16_t lower, uint16_t upper);
 

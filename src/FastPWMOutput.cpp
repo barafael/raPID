@@ -23,7 +23,7 @@ void FastPWMOutput::apply(uint16_t _milli_throttle,
     /* Throttle cutoff to avoid spinning props due to movement when throttle is low but state is armed
      * Do it here, before the control values are added up
      */
-    if (_milli_throttle < throttle_low_cutoff) {
+    if (low_throttle_cutoff_enabled && (_milli_throttle < THROTTLE_LOW_CUTOFF)) {
         shut_off();
         return;
     }
@@ -64,6 +64,10 @@ void FastPWMOutput::set_limits(uint16_t lower, uint16_t upper) {
     lower_limit = lower;
 
     range = upper_limit - lower_limit;
+}
+
+void FastPWMOutput::set_throttle_cutoff_enabled(bool enable) {
+    low_throttle_cutoff_enabled = enable;
 }
 
 void FastPWMOutput::set_throttle_volume(float volume) {

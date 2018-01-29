@@ -11,6 +11,8 @@ static const uint16_t CONFIG_TIMEOUT = 2500;
 
 static const size_t NUM_CHANNELS = 6;
 
+static const uint16_t THROTTLE_LOW_CUTOFF = 25;
+
 typedef enum {
     THROTTLE_CHANNEL = 0,
     ROLL_CHANNEL     = 1,

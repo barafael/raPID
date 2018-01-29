@@ -19,10 +19,11 @@ void ESCOutput::write(uint16_t _milli_throttle) {
 
 void ESCOutput::apply(uint16_t _milli_throttle,
         float roll_stbl, float pitch_stbl, float yaw_stbl) {
-    /* Throttle cutoff to avoid spinning props due to movement when throttle is low but state is armed
+    /* Throttle cutoff to avoid spinning props due to movement when throttle is
+     * low but state is armed
      * Do it here, before the control values are added up
      */
-    if (_milli_throttle < THROTTLE_LOW_CUTOFF) {
+    if (low_throttle_cutoff_enabled && (_milli_throttle < THROTTLE_LOW_CUTOFF)) {
         shut_off();
         return;
     }
@@ -32,9 +33,9 @@ void ESCOutput::apply(uint16_t _milli_throttle,
 
     throttle_tmp =  (int16_t) (_milli_throttle * mixer.throttle_volume);
 
-    throttle_tmp += (int16_t) (roll_stbl       * mixer.roll_volume);
-    throttle_tmp += (int16_t) (pitch_stbl      * mixer.pitch_volume);
-    throttle_tmp += (int16_t) (yaw_stbl        * mixer.yaw_volume);
+    throttle_tmp += (int16_t) (roll_stbl  * mixer.roll_volume);
+    throttle_tmp += (int16_t) (pitch_stbl * mixer.pitch_volume);
+    throttle_tmp += (int16_t) (yaw_stbl   * mixer.yaw_volume);
 
     clamp(throttle_tmp, 0, 1000);
 
@@ -53,6 +54,10 @@ void ESCOutput::set_limits(uint16_t lower, uint16_t upper) {
     lower_limit = lower;
 
     range = upper_limit - lower_limit;
+}
+
+void ESCOutput::set_throttle_cutoff_enabled(bool enable) {
+    low_throttle_cutoff_enabled = enable;
 }
 
 void ESCOutput::set_throttle_volume(float volume) {
