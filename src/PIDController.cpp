@@ -47,6 +47,7 @@ float PIDController::compute(const uint64_t now, const float measured, const flo
     /* Give me some D! */
     /* Derivative term on error */
     float d_term = ((error - last_error) / elapsed_time) * this->d_gain;
+    d_term = d_filter.next(d_term);
 
     /* Derivative term on input */
     // float d_term = (setpoint - last_setpoint) / elapsed_time;

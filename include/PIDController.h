@@ -7,6 +7,7 @@
 
 #include "PIDParams.h"
 #include "util.h"
+#include "Filter.h"
 
 class PIDController {
     private:
@@ -33,6 +34,8 @@ class PIDController {
         float output_limit;
 
         uint64_t last_time;
+
+        Filter<float, 5> d_filter;
 
     public:
         explicit PIDController(PIDParams params);
