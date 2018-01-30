@@ -3,20 +3,21 @@
 PIDController::PIDController(PIDParams params)
     : enabled (true)
 
-    , p_gain { params.p_gain }
-    , i_gain { params.i_gain }
-    , d_gain { params.d_gain }
+    , p_gain ( params.p_gain )
+    , i_gain ( params.i_gain )
+    , d_gain ( params.d_gain )
 
-    , integral       { 0 }
-    , integral_limit { params.integral_limit }
+    , integral       ( 0 )
+    , integral_limit ( params.integral_limit )
 
-    , derivative     { 0 }
-    , last_error     { 0 }
-    , last_setpoint  { 0 }
+    , derivative     ( 0 )
+    , last_error     ( 0 )
+    , last_setpoint  ( 0 )
+    , last_measured  ( 0 )
 
-    , output_limit   { params.output_limit }
+    , output_limit   ( params.output_limit )
 
-    , last_time      { 0 } {}
+    , last_time      ( 0 ) {}
 
 
 void PIDController::set_enabled(bool enable) {
@@ -33,11 +34,9 @@ float PIDController::compute(const uint64_t now, const float measured, const flo
 
     float error = measured - setpoint;
 
-    float result = 0.0;
-
     /* Give me some P! */
     /* Proportional term */
-    result += this->p_gain * error;
+    float p_term = this->p_gain * error;
 
     /* Give me some I! */
     /* Integral term */
@@ -45,41 +44,42 @@ float PIDController::compute(const uint64_t now, const float measured, const flo
     /* Integral windup limit */
     clamp(integral, -integral_limit, integral_limit);
 
-    result += this->integral;
-
     /* Give me some D! */
     /* Derivative term on error */
-    result += ((error - last_error) / elapsed_time) * this->d_gain;
+    float d_term = ((error - last_error) / elapsed_time) * this->d_gain;
 
     /* Derivative term on input */
-    // result += (setpoint - last_setpoint) / elapsed_time;
+    // float d_term = (setpoint - last_setpoint) / elapsed_time;
+
+    /* Derivative term on measurement */
+    // float d_term = (measured - last_measured) / elapsed_time;
+
+    this->last_time     = now;
+
+    this->last_error    = error;
+    this->last_setpoint = setpoint;
+    this->last_measured = measured;
+
+    float result = p_term + integral + d_term;
 
     /* Output limit */
     clamp(result, -output_limit, output_limit);
 
-    this->last_error    = error;
-    this->last_time     = now;
-    this->last_setpoint = setpoint;
-
     return result;
 }
 
-PIDController *PIDController::set_p(const float _p_gain) {
+void PIDController::set_p(const float _p_gain) {
     this->p_gain = _p_gain;
-    return this;
 }
 
-PIDController *PIDController::set_i(const float _i_gain) {
+void PIDController::set_i(const float _i_gain) {
     this->i_gain = _i_gain;
-    return this;
 }
 
-PIDController *PIDController::set_d(const float _d_gain) {
+void PIDController::set_d(const float _d_gain) {
     this->d_gain = _d_gain;
-    return this;
 }
 
-PIDController *PIDController::integral_reset() {
+void PIDController::integral_reset() {
     integral = 0;
-    return this;
 }
