@@ -26,6 +26,8 @@ mode can be achieved.
 - [ ] Fix gyro vs. fused and rate vs. stbl issues (-15 factor)
 - [ ] Fix serial monitor ritual (current: remove tx, reboot, wait for sermon, connect tx)
 - [ ] IMU solution overhaul: Ultimate SENtral or other
+      - constant sampling rate simplifies PID and makes theory on time-discrete systems applicable
+- [ ] PID improvements: D noise filter, derivative-on-{error, feedback, setpoint}, calculating error external from algorithm (more general), fixed point math?
 - [ ] Migrate to 3.5 teensy
 - [ ] Flight mode data structure
 - [ ] Arbitrary flight modes (different PID settings, offsets, and I/O matrix)
