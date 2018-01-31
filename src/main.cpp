@@ -65,9 +65,9 @@ float pid_output_yaw_rate = 0.0;
 
 channels_t channels = { 0 };
 
-PWMReceiver receiver(THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
-                     PITCH_INPUT_PIN,    YAW_INPUT_PIN,
-                     AUX1_INPUT_PIN,     AUX2_INPUT_PIN);
+PWMReceiver receiver({THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
+                      PITCH_INPUT_PIN,    YAW_INPUT_PIN,
+                      AUX1_INPUT_PIN,     AUX2_INPUT_PIN});
 
 static void print_attitude(axis_t attitude) {
     for (size_t index = 0; index < 3; index++) {

@@ -12,7 +12,7 @@ PWMReceiver *pwm_rx_instance = nullptr;
 */
 
 void update_throttle() {
-    if (digitalRead(pwm_rx_instance->throttle_pin) == HIGH) {
+    if (digitalRead(pwm_rx_instance->pins[0]) == HIGH) {
         pwm_rx_instance->pwm_pulse_start_time[THROTTLE_CHANNEL] = micros();
     } else {
         pwm_rx_instance->channels_shared[THROTTLE_CHANNEL] =
@@ -21,7 +21,7 @@ void update_throttle() {
 }
 
 void update_roll() {
-    if (digitalRead(pwm_rx_instance->roll_pin) == HIGH) {
+    if (digitalRead(pwm_rx_instance->pins[1]) == HIGH) {
         pwm_rx_instance->pwm_pulse_start_time[ROLL_CHANNEL] = micros();
     } else {
         pwm_rx_instance->channels_shared[ROLL_CHANNEL] =
@@ -30,7 +30,7 @@ void update_roll() {
 }
 
 void update_pitch() {
-    if (digitalRead(pwm_rx_instance->pitch_pin) == HIGH) {
+    if (digitalRead(pwm_rx_instance->pins[2]) == HIGH) {
         pwm_rx_instance->pwm_pulse_start_time[PITCH_CHANNEL] = micros();
     } else {
         pwm_rx_instance->channels_shared[PITCH_CHANNEL] =
@@ -39,7 +39,7 @@ void update_pitch() {
 }
 
 void update_yaw() {
-    if (digitalRead(pwm_rx_instance->yaw_pin) == HIGH) {
+    if (digitalRead(pwm_rx_instance->pins[3]) == HIGH) {
         pwm_rx_instance->pwm_pulse_start_time[YAW_CHANNEL] = micros();
     } else {
         pwm_rx_instance->channels_shared[YAW_CHANNEL] =
@@ -48,7 +48,7 @@ void update_yaw() {
 }
 
 void update_aux1() {
-    if (digitalRead(pwm_rx_instance->aux1_pin) == HIGH) {
+    if (digitalRead(pwm_rx_instance->pins[4]) == HIGH) {
         pwm_rx_instance->pwm_pulse_start_time[AUX1_CHANNEL] = micros();
     } else {
         pwm_rx_instance->channels_shared[AUX1_CHANNEL] =
@@ -57,7 +57,7 @@ void update_aux1() {
 }
 
 void update_aux2() {
-    if (digitalRead(pwm_rx_instance->aux2_pin) == HIGH) {
+    if (digitalRead(pwm_rx_instance->pins[5]) == HIGH) {
         pwm_rx_instance->pwm_pulse_start_time[AUX2_CHANNEL] = micros();
     } else {
         pwm_rx_instance->channels_shared[AUX2_CHANNEL] =
@@ -65,35 +65,23 @@ void update_aux2() {
     }
 }
 
-/* TODO only initialize 'NUM_CHANNELS' channels! */
-PWMReceiver::PWMReceiver(uint8_t _throttle_pin, uint8_t _roll_pin,
-                         uint8_t _pitch_pin,    uint8_t _yaw_pin,
-                         uint8_t _aux1_pin,     uint8_t _aux2_pin) {
+void (*interrupts[6]) ();
 
-    pwm_rx_instance = this;
+PWMReceiver::PWMReceiver(std::initializer_list<uint8_t> pins)
+    : pins{pins} {
+        interrupts[0] = update_throttle;
+        interrupts[1] = update_roll;
+        interrupts[2] = update_pitch;
+        interrupts[3] = update_yaw;
+        interrupts[4] = update_aux1;
+        interrupts[5] = update_aux2;
 
-    throttle_pin = _throttle_pin;
-    roll_pin     = _roll_pin;
-    pitch_pin    = _pitch_pin;
-    yaw_pin      = _yaw_pin;
-    aux1_pin     = _aux1_pin;
-    aux2_pin     = _aux2_pin;
+        instance = this;
 
-    /* The pinMode should be set to input by default, set it anyway */
-    pinMode(throttle_pin, INPUT);
-    pinMode(roll_pin,     INPUT);
-    pinMode(pitch_pin,    INPUT);
-    pinMode(yaw_pin,      INPUT);
-    pinMode(aux1_pin,     INPUT);
-    pinMode(aux2_pin,     INPUT);
-
-    /* On each CHANGE on an input pin, an interrupt handler is called */
-    attachInterrupt(throttle_pin, update_throttle, CHANGE);
-    attachInterrupt(roll_pin,     update_roll,     CHANGE);
-    attachInterrupt(pitch_pin,    update_pitch,    CHANGE);
-    attachInterrupt(yaw_pin,      update_yaw,      CHANGE);
-    attachInterrupt(aux1_pin,     update_aux1,     CHANGE);
-    attachInterrupt(aux2_pin,     update_aux2,     CHANGE);
+        for (auto pin: pins) {
+            pinMode(pin, INPUT);
+            attachInterrupt(pin, interrupts[pin], CHANGE);
+        }
 }
 
 
