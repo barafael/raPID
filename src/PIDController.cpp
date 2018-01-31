@@ -64,7 +64,7 @@ float PIDController::compute(const uint64_t now, const float measured, const flo
     }
 
     if (derivative_filter_enabled) {
-        d_term = d_filter.next(d_term);
+        d_term = deriv_filter.next(d_term);
     }
 
     this->last_time     = now;

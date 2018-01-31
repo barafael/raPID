@@ -1,11 +1,11 @@
-#ifndef FILTER_H
-#define FILTER_H
+#ifndef AVG_FILTER_H
+#define AVG_FILTER_H
 
 #include <stdint.h>
 #include <cstddef>
 
 template <typename T, std::size_t n>
-struct Filter {
+struct AVG_Filter {
         T values[n] = {};
         size_t marker = 0;
 
@@ -13,7 +13,7 @@ struct Filter {
 };
 
 template <typename T, std::size_t n>
-T Filter<T, n>::next(T value) {
+T AVG_Filter<T, n>::next(T value) {
     marker = (marker + 1) % n;
     values[marker] = value;
     T sum = 0;
@@ -23,5 +23,5 @@ T Filter<T, n>::next(T value) {
     return sum / n;
 }
 
-#endif //FILTER_H
+#endif //AVG_FILTER_H
 
