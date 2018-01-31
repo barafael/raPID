@@ -1,21 +1,21 @@
 #include "../include/PIDController.h"
 
-PIDController::PIDController(PIDParams params)
+PIDController::PIDController(PIDParams *params)
     : enabled (true)
 
-    , p_gain ( params.p_gain )
-    , i_gain ( params.i_gain )
-    , d_gain ( params.d_gain )
+    , p_gain ( params->p_gain )
+    , i_gain ( params->i_gain )
+    , d_gain ( params->d_gain )
 
     , integral       ( 0 )
-    , integral_limit ( params.integral_limit )
+    , integral_limit ( params->integral_limit )
 
     , derivative     ( 0 )
     , last_error     ( 0 )
     , last_setpoint  ( 0 )
     , last_measured  ( 0 )
 
-    , output_limit   ( params.output_limit )
+    , output_limit   ( params->output_limit )
 
     , last_time      ( 0 ) {}
 

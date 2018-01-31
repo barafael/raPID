@@ -110,13 +110,13 @@ extern "C" int main(void) {
 
     PIDParams yaw_param_rate  ( 1.0 , 0.0 , 0.0 , 12.0 , 200.0);
 
-    PIDController roll_controller_stbl(roll_param_stbl);
-    PIDController roll_controller_rate(roll_param_rate);
+    PIDController roll_controller_stbl(&roll_param_stbl);
+    PIDController roll_controller_rate(&roll_param_rate);
 
-    PIDController pitch_controller_stbl(pitch_param_stbl);
-    PIDController pitch_controller_rate(pitch_param_rate);
+    PIDController pitch_controller_stbl(&pitch_param_stbl);
+    PIDController pitch_controller_rate(&pitch_param_rate);
 
-    PIDController yaw_controller_rate(yaw_param_rate);
+    PIDController yaw_controller_rate(&yaw_param_rate);
 
     ESCOutput back_left_out_mixer  (LEFT_SERVO_PIN,  1.0, -0.4, 0.4, 0.0);
     ESCOutput back_right_out_mixer (RIGHT_SERVO_PIN, 1.0, 0.4, 0.4, 0.0);
@@ -151,7 +151,7 @@ extern "C" int main(void) {
         switch (state) {
             case DISARMING:
                 Serial.println("Disarming!");
-                if (!disarming_input(receiver_in)) {
+                if (!disarming_input(&receiver_in)) {
                     Serial.println("Disarming interrupted! Arming again.");
                     state = ARMED;
                     break;
@@ -159,7 +159,7 @@ extern "C" int main(void) {
                     state = disarming_complete() ? DISARMED : DISARMING;
                     if (state == DISARMED) {
                         Serial.println("Release the hold!");
-                        while (disarming_input(receiver_in)) {
+                        while (disarming_input(&receiver_in)) {
                             back_left_out_mixer  .shut_off();
                             back_right_out_mixer .shut_off();
                             front_left_out_mixer .shut_off();
@@ -222,7 +222,7 @@ extern "C" int main(void) {
 #endif
 
                 /* State can be DISARMING because in that state everything from ARMED state must happen anyway */
-                if (state != DISARMING && disarming_input(receiver_in)) {
+                if (state != DISARMING && disarming_input(&receiver_in)) {
                     Serial.println("Initializing Disarm!");
                     state = DISARMING;
                     disarm_init();
@@ -231,7 +231,7 @@ extern "C" int main(void) {
 
             case ARMING:
                 Serial.println("Arming!");
-                if (!arming_input(receiver_in)) {
+                if (!arming_input(&receiver_in)) {
                     Serial.println("Arming interrupted! Disarming again.");
                     state = DISARMED;
                     break;
@@ -239,7 +239,7 @@ extern "C" int main(void) {
                     state = arming_complete() ? ARMED : ARMING;
                     if (state == ARMED) {
                         Serial.println("Release the hold!");
-                        while (arming_input(receiver_in)) {
+                        while (arming_input(&receiver_in)) {
                             /* Still don't fire the motors up */
                             back_left_out_mixer  .shut_off();
                             back_right_out_mixer .shut_off();
@@ -265,7 +265,7 @@ extern "C" int main(void) {
                 front_left_out_mixer .shut_off();
                 front_right_out_mixer.shut_off();
 
-                if (state != ARMING && arming_input(receiver_in)) {
+                if (state != ARMING && arming_input(&receiver_in)) {
                     state = ARMING;
                     arm_init();
                 }

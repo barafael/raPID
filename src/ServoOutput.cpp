@@ -26,7 +26,7 @@ void ServoOutput::apply(uint16_t _value,
     write(value);
 }
 
-bool ServoOutput::is_inverted() {
+const bool ServoOutput::is_inverted() {
     return inverted;
 }
 

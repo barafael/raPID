@@ -13,7 +13,7 @@ class PPMReceiver : Receiver {
         int count = 0;
 
     public:
-        PPMReceiver(uint8_t _input_pin);
+        explicit PPMReceiver(uint8_t _input_pin);
         
         const void update(channels_t channels);
         const bool has_signal();

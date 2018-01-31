@@ -24,7 +24,7 @@ class ServoOutput : Output {
 
         bool inverted = false;
 
-        void write(uint16_t value);
+        void write(uint16_t _value);
 
     public:
         ServoOutput(const uint8_t pin,
@@ -34,10 +34,10 @@ class ServoOutput : Output {
                 output.attach(pin);
             }
 
-        void apply(uint16_t value,
+        void apply(uint16_t _value,
                 const float roll_stbl, const float pitch_stbl, const float yaw_stbl);
 
-        bool is_inverted();
+        const bool is_inverted();
         void invert();
 
         void set_limits(uint16_t lower, uint16_t upper);

@@ -3,28 +3,28 @@
 #include "../include/PIDParams.h"
 #include "../include/Mixer.h"
 
-void FlightMode::set_roll_stbl(PIDParams stbl) {
-    this->roll_stbl = stbl;
+void FlightMode::set_roll_stbl(PIDParams *stbl) {
+    this->roll_stbl = *stbl;
 }
 
-void FlightMode::set_roll_rate(PIDParams rate) {
-    this->roll_rate = rate;
+void FlightMode::set_roll_rate(PIDParams *rate) {
+    this->roll_rate = *rate;
 }
 
-void FlightMode::set_pitch_stbl(PIDParams stbl) {
-    this->pitch_stbl = stbl;
+void FlightMode::set_pitch_stbl(PIDParams *stbl) {
+    this->pitch_stbl = *stbl;
 }
 
-void FlightMode::set_pitch_rate(PIDParams rate) {
-    this->pitch_rate = rate;
+void FlightMode::set_pitch_rate(PIDParams *rate) {
+    this->pitch_rate = *rate;
 }
 
-void FlightMode::set_yaw_stbl(PIDParams stbl) {
-    this->yaw_stbl = stbl;
+void FlightMode::set_yaw_stbl(PIDParams *stbl) {
+    this->yaw_stbl = *stbl;
 }
 
-void FlightMode::set_yaw_rate(PIDParams rate) {
-    this->yaw_rate = rate;
+void FlightMode::set_yaw_rate(PIDParams *rate) {
+    this->yaw_rate = *rate;
 }
 
 void FlightMode::set_left_mixer(float throttle_volume,

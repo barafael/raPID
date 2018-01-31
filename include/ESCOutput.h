@@ -42,7 +42,7 @@ class ESCOutput : Output {
                 output.attach(pin);
             }
 
-        void apply(uint16_t throttle,
+        void apply(uint16_t _milli_throttle,
                 float roll_stbl, float pitch_stbl, float yaw_stbl);
 
         void shut_off();

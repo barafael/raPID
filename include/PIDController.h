@@ -38,7 +38,7 @@ class PIDController {
         Filter<float, 5> d_filter;
 
     public:
-        explicit PIDController(PIDParams params);
+        explicit PIDController(PIDParams *params);
 
         /* En/Disable Passthrough of setpoint */
         void set_enabled(bool enable);

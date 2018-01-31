@@ -21,8 +21,8 @@ typedef enum {
 void disarm_init();
 void arm_init();
 
-bool disarming_input(channels_t channels);
-bool arming_input(channels_t channels);
+bool disarming_input(channels_t *channels);
+bool arming_input(channels_t *channels);
 
 bool disarming_complete();
 bool arming_complete();

@@ -40,7 +40,7 @@ class FastPWMOutput : Output {
                 pinMode(pin, OUTPUT);
             }
 
-        void apply(uint16_t throttle,
+        void apply(uint16_t _milli_throttle,
                 float roll_stbl, float pitch_stbl, float yaw_stbl);
 
         void set_resolution(uint8_t res);
@@ -48,7 +48,7 @@ class FastPWMOutput : Output {
 
         void shut_off();
 
-        void set_throttle_cutoff_enabled(bool enabled);
+        void set_throttle_cutoff_enabled(bool enable);
 
         void set_limits(uint16_t lower, uint16_t upper);
 
