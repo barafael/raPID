@@ -34,7 +34,8 @@ void ServoOutput::invert() {
     inverted = !inverted;
 }
 
-/* TODO: possibly move to superclass */
+/* TODO: move to superclass */
+/* TODO: improve output limit/scaling model */
 void ServoOutput::set_limits(uint16_t lower, uint16_t upper) {
     if (upper < lower) {
         Serial.print("Dubious limits given to output on pin ");

@@ -10,11 +10,6 @@
 #include "settings.h"
 #include "util.h"
 
-/* TODO: use this and generate pwm from analog pins
- * (Depends on new board, 3.5 port)
- */
-typedef enum { PWM_STANDARD, PWM_FAST } pwm_frequency;
-
 static const uint16_t BASE_PULSE_MS = 800;
 
 /* TODO: eventually, this class should refrain from using Servo.h

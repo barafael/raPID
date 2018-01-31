@@ -3,6 +3,8 @@
 #include "../include/PIDParams.h"
 #include "../include/Mixer.h"
 
+/* TODO implement flight mode offset? */
+
 void FlightMode::set_roll_stbl(PIDParams *stbl) {
     this->roll_stbl = *stbl;
 }

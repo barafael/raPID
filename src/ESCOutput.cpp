@@ -1,8 +1,6 @@
 #include "../include/ESCOutput.h"
 
 /* TODO implement arming for ESC type? */
-/* TODO implement flight mode offset? */
-/* TODO implement servo/ESC subclasses? */
 /* TODO better model for position/thrust/endpoints */
 /* TODO remove includes when not using warning output */
 
