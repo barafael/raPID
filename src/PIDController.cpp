@@ -45,15 +45,27 @@ float PIDController::compute(const uint64_t now, const float measured, const flo
     clamp(integral, -integral_limit, integral_limit);
 
     /* Give me some D! */
-    /* Derivative term on error */
-    float d_term = ((error - last_error) / elapsed_time) * this->d_gain;
-    d_term = d_filter.next(d_term);
+    float d_term = 0.0;
+    switch (d_type) {
+        case ERROR:
+            /* Derivative term on error */
+            d_term = ((error - last_error) / elapsed_time) * d_gain;
+            break;
 
-    /* Derivative term on input */
-    // float d_term = (setpoint - last_setpoint) / elapsed_time;
+        case SETPOINT:
+            /* Derivative term on setpoint */
+            d_term = ((setpoint - last_setpoint) / elapsed_time) * d_gain;
+            break;
 
-    /* Derivative term on measurement */
-    // float d_term = (measured - last_measured) / elapsed_time;
+        case MEASURED:
+            /* Derivative term on measurement */
+            d_term = ((measured - last_measured) / elapsed_time) * d_gain;
+            break;
+    }
+
+    if (derivative_filter_enabled) {
+        d_term = d_filter.next(d_term);
+    }
 
     this->last_time     = now;
 
@@ -83,4 +95,12 @@ void PIDController::set_d(const float _d_gain) {
 
 void PIDController::integral_reset() {
     integral = 0;
+}
+
+void PIDController::set_derivative_type(derivative_type type) {
+    this->d_type = type;
+}
+
+void PIDController::enable_derivative_filter(bool enable) {
+    this->derivative_filter_enabled = enable;
 }

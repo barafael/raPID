@@ -9,6 +9,8 @@
 #include "util.h"
 #include "Filter.h"
 
+typedef enum { ERROR, SETPOINT, MEASURED } derivative_type;
+
 class PIDController {
     private:
         bool enabled = true;
@@ -22,20 +24,26 @@ class PIDController {
 
         float derivative;
 
+        derivative_type d_type = ERROR;
+
         /* For derivative-on-error */
         float last_error;
 
         /* For derivative-on-setpoint */
         float last_setpoint;
 
-        /* For derivative-on-setpoint */
+        /* For derivative-on-measured */
         float last_measured;
 
         float output_limit;
 
         uint64_t last_time;
 
-        Filter<float, 5> d_filter;
+        bool derivative_filter_enabled = false;
+
+        static const size_t MAF_SIZE = 5;
+
+        Filter<float, MAF_SIZE> d_filter;
 
     public:
         explicit PIDController(PIDParams *params);
@@ -50,6 +58,9 @@ class PIDController {
         void set_d(const float _d_gain);
 
         void integral_reset();
+
+        void set_derivative_type(derivative_type type);
+        void enable_derivative_filter(bool enable);
 };
 
 #endif // PID_CONTROLLER_H
