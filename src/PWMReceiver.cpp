@@ -66,7 +66,7 @@ void update_aux2() {
 }
 
 void (*interrupts[6]) ();
-
+/* TODO only initialize 'NUM_CHANNELS' channels! */
 PWMReceiver::PWMReceiver(std::initializer_list<uint8_t> pins)
     : pins{pins} {
         interrupts[0] = update_throttle;
