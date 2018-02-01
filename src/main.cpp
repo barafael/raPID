@@ -191,18 +191,18 @@ extern "C" int main(void) {
                 //roll_controller_rate.set_p(new_rate_p);
 
                 //Serial.println(attitude[ROLL_AXIS] - channels[ROLL_CHANNEL]);
-                pid_output_roll_stbl = roll_controller_stbl.  compute(micros(), attitude[ROLL_AXIS], channels[ROLL_CHANNEL]);
+                pid_output_roll_stbl = roll_controller_stbl.  compute(attitude[ROLL_AXIS], channels[ROLL_CHANNEL]);
                 //Serial.println(pid_output_roll_stbl);
 
-                pid_output_roll_rate = roll_controller_rate.  compute(micros(), angular_rate[ROLL_AXIS], -15 * pid_output_roll_stbl);
+                pid_output_roll_rate = roll_controller_rate.  compute(angular_rate[ROLL_AXIS], -15 * pid_output_roll_stbl);
                 //Serial.println(pid_output_roll_rate);
 
-                pid_output_pitch_stbl = pitch_controller_stbl.compute(micros(), attitude[PITCH_AXIS], channels[PITCH_CHANNEL]);
+                pid_output_pitch_stbl = pitch_controller_stbl.compute(attitude[PITCH_AXIS], channels[PITCH_CHANNEL]);
 
-                pid_output_pitch_rate = pitch_controller_rate.compute(micros(), angular_rate[PITCH_AXIS], -15 * pid_output_pitch_stbl);
+                pid_output_pitch_rate = pitch_controller_rate.compute(angular_rate[PITCH_AXIS], -15 * pid_output_pitch_stbl);
 
                 /* Yaw needs rate only - yaw stick controls rate of rotation, there is no fixed reference */
-                pid_output_yaw_rate = yaw_controller_rate.    compute(micros(), angular_rate[YAW_AXIS], channels[YAW_CHANNEL]);
+                pid_output_yaw_rate = yaw_controller_rate.    compute(angular_rate[YAW_AXIS], channels[YAW_CHANNEL]);
 
                 back_left_out_mixer  .apply(channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
                 back_right_out_mixer .apply(channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);

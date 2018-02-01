@@ -24,11 +24,13 @@ void PIDController::set_enabled(bool enable) {
     enabled = enable;
 }
 
-/* TODO: handle overflows for 'now' using rollover or somesuch. */
-float PIDController::compute(const uint64_t now, const float measured, const float setpoint) {
+float PIDController::compute(const float measured, const float setpoint) {
     if (!enabled) {
         return setpoint;
     }
+
+    /* TODO: handle overflows for 'now' using rollover or somesuch. */
+    uint64_t now = millis();
 
     uint32_t elapsed_time = now - last_time;
 

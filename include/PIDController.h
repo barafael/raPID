@@ -5,6 +5,8 @@
 
 #include <stdint.h>
 
+#include "Arduino.h"
+
 #include "PIDParams.h"
 #include "util.h"
 #include "AVG_Filter.h"
@@ -51,7 +53,7 @@ class PIDController {
         /* En/Disable Passthrough of setpoint */
         void set_enabled(bool enable);
 
-        float compute(const uint64_t now, const float measured, const float setpoint);
+        float compute(const float measured, const float setpoint);
 
         void set_p(const float _p_gain);
         void set_i(const float _i_gain);
