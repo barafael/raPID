@@ -134,6 +134,8 @@ extern "C" int main(void) {
     //roll_controller_stbl.set_enabled(false);
     //roll_controller_rate.set_enabled(false);
 
+    ArmingState arming_state(&receiver_in);
+
     init_watchdog();
 
     /* Flight loop */
@@ -148,37 +150,7 @@ extern "C" int main(void) {
 
         notime(update_angular_rates(angular_rate));
 
-        switch (state) {
-            case DISARMING:
-                Serial.println("Disarming!");
-                if (!disarming_input(&receiver_in)) {
-                    Serial.println("Disarming interrupted! Arming again.");
-                    state = ARMED;
-                    break;
-                } else {
-                    state = disarming_complete() ? DISARMED : DISARMING;
-                    if (state == DISARMED) {
-                        Serial.println("Release the hold!");
-                        while (disarming_input(&receiver_in)) {
-                            back_left_out_mixer  .shut_off();
-                            back_right_out_mixer .shut_off();
-                            front_left_out_mixer .shut_off();
-                            front_right_out_mixer.shut_off();
-
-                            receiver.update(receiver_in);
-                            update_attitude(attitude);
-                            update_angular_rates(angular_rate);
-                            feed_the_dog();
-                            delay(10);
-                        }
-                        Serial.println("DISARMING COMPLETE!");
-                        break;
-                    }
-                }
-
-                Serial.println("Proceeding to 'ARMED' state actions from 'DISARMING'");
-                /* Keep disarming, but stay armed (no break) */
-
+        switch (arming_state.get_state()) {
             case ARMED:
                 new_stbl_p = (receiver_in[AUX1_CHANNEL] + 500) / 1000.0 / 8.0;
                 new_rate_p = (receiver_in[AUX2_CHANNEL] + 500) / 1000.0 / 8.0;
@@ -221,43 +193,7 @@ extern "C" int main(void) {
                 Serial.println(pid_output_roll_rate);
 #endif
 
-                /* State can be DISARMING because in that state everything from ARMED state must happen anyway */
-                if (state != DISARMING && disarming_input(&receiver_in)) {
-                    Serial.println("Initializing Disarm!");
-                    state = DISARMING;
-                    disarm_init();
-                }
                 break;
-
-            case ARMING:
-                Serial.println("Arming!");
-                if (!arming_input(&receiver_in)) {
-                    Serial.println("Arming interrupted! Disarming again.");
-                    state = DISARMED;
-                    break;
-                } else {
-                    state = arming_complete() ? ARMED : ARMING;
-                    if (state == ARMED) {
-                        Serial.println("Release the hold!");
-                        while (arming_input(&receiver_in)) {
-                            /* Still don't fire the motors up */
-                            back_left_out_mixer  .shut_off();
-                            back_right_out_mixer .shut_off();
-                            front_left_out_mixer .shut_off();
-                            front_right_out_mixer.shut_off();
-
-                            receiver.update(receiver_in);
-                            update_attitude(attitude);
-                            update_angular_rates(angular_rate);
-                            feed_the_dog();
-                            delay(10);
-                        }
-                        Serial.println("ARMING COMPLETE!");
-                        break;
-                    }
-                }
-                Serial.println("Proceeding to 'DISARMED' state actions from 'ARMING'");
-                /* Keep arming, but stay disarmed (no break) */
 
             case DISARMED:
                 back_left_out_mixer  .shut_off();
@@ -265,16 +201,8 @@ extern "C" int main(void) {
                 front_left_out_mixer .shut_off();
                 front_right_out_mixer.shut_off();
 
-                if (state != ARMING && arming_input(&receiver_in)) {
-                    state = ARMING;
-                    arm_init();
-                }
                 break;
 
-            case CONFIG:
-                Serial.println("CONFIG!");
-                state = DISARMED;
-                break;
             default:
                 Serial.println("Unimplemented state! Will disarm.");
                 state = DISARMED;

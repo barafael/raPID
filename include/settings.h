@@ -3,12 +3,6 @@
 
 #include <stdint.h>
 
-static const uint16_t DISARM_TIMEOUT = 2500;
-
-static const uint16_t ARM_TIMEOUT = 1000;
-
-static const uint16_t CONFIG_TIMEOUT = 2500;
-
 static const size_t NUM_CHANNELS = 6;
 
 static const uint16_t THROTTLE_LOW_CUTOFF = 25;
