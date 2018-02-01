@@ -95,6 +95,12 @@ void PIDController::set_d(const float _d_gain) {
     this->d_gain = _d_gain;
 }
 
+void PIDController::set_params(const PIDParams *params) {
+    p_gain = params->p_gain;
+    i_gain = params->i_gain;
+    d_gain = params->d_gain;
+}
+
 void PIDController::integral_reset() {
     integral = 0;
 }

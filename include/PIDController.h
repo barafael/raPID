@@ -48,6 +48,7 @@ class PIDController {
         AVG_Filter<float, MAF_SIZE> deriv_filter;
 
     public:
+        PIDController() = default;
         explicit PIDController(PIDParams *params);
 
         /* En/Disable Passthrough of setpoint */
@@ -58,6 +59,8 @@ class PIDController {
         void set_p(const float _p_gain);
         void set_i(const float _i_gain);
         void set_d(const float _d_gain);
+
+        void set_params(const PIDParams *params);
 
         void integral_reset();
 
