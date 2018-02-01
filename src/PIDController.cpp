@@ -1,7 +1,7 @@
 #include "../include/PIDController.h"
 
 PIDController::PIDController(PIDParams *params)
-    : enabled (true)
+    : enabled ( true )
 
     , p_gain ( params->p_gain )
     , i_gain ( params->i_gain )

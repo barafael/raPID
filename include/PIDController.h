@@ -9,7 +9,7 @@
 
 #include "PIDParams.h"
 #include "util.h"
-#include "AVG_Filter.h"
+#include "MovingAverage.h"
 
 typedef enum { ERROR, SETPOINT, MEASURED } derivative_type;
 
@@ -45,7 +45,7 @@ class PIDController {
 
         static const size_t MAF_SIZE = 5;
 
-        AVG_Filter<float, MAF_SIZE> deriv_filter;
+        MovingAverage<float, MAF_SIZE> deriv_filter;
 
     public:
         PIDController() = default;

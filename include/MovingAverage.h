@@ -1,19 +1,22 @@
-#ifndef AVG_FILTER_H
-#define AVG_FILTER_H
+#ifndef MOVING_AVERAGE_H
+#define MOVING_AVERAGE_H
 
 #include <stdint.h>
-#include <cstddef>
+
+#include "Filter.h"
 
 template <typename T, std::size_t n>
-struct AVG_Filter {
+class MovingAverage : Filter<T, n> {
+    private:
         T values[n] = {};
         size_t marker = 0;
 
+    public:
         T next(T value);
 };
 
 template <typename T, std::size_t n>
-T AVG_Filter<T, n>::next(T value) {
+T MovingAverage<T, n>::next(T value) {
     marker = (marker + 1) % n;
     values[marker] = value;
     T sum = 0;
@@ -23,5 +26,5 @@ T AVG_Filter<T, n>::next(T value) {
     return sum / n;
 }
 
-#endif //AVG_FILTER_H
+#endif // MOVING_AVERAGE_H
 
