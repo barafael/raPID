@@ -1,5 +1,7 @@
 # raPID: Rafaels PID flight controller
 
+[![Build Status](https://travis-ci.org/barafael/raPID.svg?branch=master)](https://travis-ci.org/barafael/raPID)
+
 This flight controller consists mostly of a teensy 3.2 and an MPU-6050. The
 teensy can read up to 8 PWM or PPM channels from your standard RC receiver (see
 include/pins.h for input/output pin numbers). Each of the outputs can be driven
@@ -43,5 +45,3 @@ Blog-in-progress @ [https://barafael.github.io/Simple-PID-flight-controller/](ht
 
 * Jeff Rowberg's MPU6050 library and example code.
 * OpenAeroVTOL from the RCGroups forums, by HappySundays - awesome project.
-
-[![Build Status](https://travis-ci.org/barafael/raPID.svg?branch=master)](https://travis-ci.org/barafael/raPID)
