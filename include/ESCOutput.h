@@ -1,8 +1,6 @@
 #ifndef ESC_OUTPUT_H
 #define ESC_OUTPUT_H
 
-#include "Arduino.h"
-
 #include "Output.h"
 
 #include "Servo.h"

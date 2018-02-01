@@ -13,55 +13,55 @@ PWMReceiver *instance = nullptr;
 
 void update_throttle() {
     if (digitalRead(instance->throttle_pin) == HIGH) {
-        instance->receiver_pulse_start_time[THROTTLE_CHANNEL] = micros();
+        instance->pwm_pulse_start_time[THROTTLE_CHANNEL] = micros();
     } else {
-        instance->receiver_in_shared[THROTTLE_CHANNEL] =
-            (uint16_t)(micros() - instance->receiver_pulse_start_time[THROTTLE_CHANNEL]);
+        instance->channels_shared[THROTTLE_CHANNEL] =
+            (uint16_t)(micros() - instance->pwm_pulse_start_time[THROTTLE_CHANNEL]);
     }
 }
 
 void update_roll() {
     if (digitalRead(instance->roll_pin) == HIGH) {
-        instance->receiver_pulse_start_time[ROLL_CHANNEL] = micros();
+        instance->pwm_pulse_start_time[ROLL_CHANNEL] = micros();
     } else {
-        instance->receiver_in_shared[ROLL_CHANNEL] =
-            (uint16_t)(micros() - instance->receiver_pulse_start_time[ROLL_CHANNEL]);
+        instance->channels_shared[ROLL_CHANNEL] =
+            (uint16_t)(micros() - instance->pwm_pulse_start_time[ROLL_CHANNEL]);
     }
 }
 
 void update_pitch() {
     if (digitalRead(instance->pitch_pin) == HIGH) {
-        instance->receiver_pulse_start_time[PITCH_CHANNEL] = micros();
+        instance->pwm_pulse_start_time[PITCH_CHANNEL] = micros();
     } else {
-        instance->receiver_in_shared[PITCH_CHANNEL] =
-            (uint16_t)(micros() - instance->receiver_pulse_start_time[PITCH_CHANNEL]);
+        instance->channels_shared[PITCH_CHANNEL] =
+            (uint16_t)(micros() - instance->pwm_pulse_start_time[PITCH_CHANNEL]);
     }
 }
 
 void update_yaw() {
     if (digitalRead(instance->yaw_pin) == HIGH) {
-        instance->receiver_pulse_start_time[YAW_CHANNEL] = micros();
+        instance->pwm_pulse_start_time[YAW_CHANNEL] = micros();
     } else {
-        instance->receiver_in_shared[YAW_CHANNEL] =
-            (uint16_t)(micros() - instance->receiver_pulse_start_time[YAW_CHANNEL]);
+        instance->channels_shared[YAW_CHANNEL] =
+            (uint16_t)(micros() - instance->pwm_pulse_start_time[YAW_CHANNEL]);
     }
 }
 
 void update_aux1() {
     if (digitalRead(instance->aux1_pin) == HIGH) {
-        instance->receiver_pulse_start_time[AUX1_CHANNEL] = micros();
+        instance->pwm_pulse_start_time[AUX1_CHANNEL] = micros();
     } else {
-        instance->receiver_in_shared[AUX1_CHANNEL] =
-            (uint16_t)(micros() - instance->receiver_pulse_start_time[AUX1_CHANNEL]);
+        instance->channels_shared[AUX1_CHANNEL] =
+            (uint16_t)(micros() - instance->pwm_pulse_start_time[AUX1_CHANNEL]);
     }
 }
 
 void update_aux2() {
     if (digitalRead(instance->aux2_pin) == HIGH) {
-        instance->receiver_pulse_start_time[AUX2_CHANNEL] = micros();
+        instance->pwm_pulse_start_time[AUX2_CHANNEL] = micros();
     } else {
-        instance->receiver_in_shared[AUX2_CHANNEL] =
-            (uint16_t)(micros() - instance->receiver_pulse_start_time[AUX2_CHANNEL]);
+        instance->channels_shared[AUX2_CHANNEL] =
+            (uint16_t)(micros() - instance->pwm_pulse_start_time[AUX2_CHANNEL]);
     }
 }
 
@@ -106,7 +106,7 @@ PWMReceiver::PWMReceiver(uint8_t _throttle_pin, uint8_t _roll_pin,
 const void PWMReceiver::update(channels_t channels) {
     noInterrupts();
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
-        channels[index] = receiver_in_shared[index];
+        channels[index] = channels_shared[index];
     }
     interrupts();
 
@@ -121,7 +121,7 @@ const void PWMReceiver::update(channels_t channels) {
 const bool PWMReceiver::has_signal() {
     noInterrupts();
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
-        if (receiver_in_shared[index] == 0) {
+        if (channels_shared[index] == 0) {
             interrupts();
             return false;
         }

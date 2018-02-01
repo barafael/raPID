@@ -13,10 +13,10 @@ class PWMReceiver : Receiver {
         uint8_t aux2_pin;
 
         /* The servo interrupt writes to this variable and the receiver function reads */
-        volatile channels_t receiver_in_shared = { 0 };
+        volatile channels_t channels_shared = { 0 };
 
         /* Written by interrupt on rising edge */
-        volatile channels_t receiver_pulse_start_time = { 0 };
+        volatile channels_t pwm_pulse_start_time = { 0 };
 
     public:
         PWMReceiver(uint8_t _throttle_pin, uint8_t _roll_pin,

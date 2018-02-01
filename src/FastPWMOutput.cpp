@@ -3,7 +3,7 @@
 /* TODO implement arming for ESC type? */
 /* TODO better model for position/thrust/endpoints */
 /* TODO remove includes when not using warning output */
- 
+
 void FastPWMOutput::shut_off() {
     write(0);
 }

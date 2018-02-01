@@ -1,13 +1,11 @@
 #ifndef SERVO_OUTPUT_H
 #define SERVO_OUTPUT_H
 
-#include "Arduino.h"
-
 #include "Output.h"
 
 #include "Servo.h"
 
-#include "./util.h"
+#include "util.h"
 
 static const uint16_t BASE_PULSE_MS = 800;
 
