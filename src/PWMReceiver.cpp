@@ -76,7 +76,7 @@ PWMReceiver::PWMReceiver(std::initializer_list<uint8_t> pins)
         interrupts[4] = update_aux1;
         interrupts[5] = update_aux2;
 
-        instance = this;
+        pwm_rx_instance = this;
 
         for (auto pin: pins) {
             pinMode(pin, INPUT);
