@@ -86,11 +86,11 @@ void update_state() {
 
 ArmingState::ArmingState(channels_t *channels)
     : channels(channels) {
+        arming_state_instance = this;
         if (!state_change_timer.begin(update_state, INTERVAL_US)) {
             error_blink(STATE_TIMER_HARDWARE_BUSY,
                     "Could not set up interval timer for arming state update!");
         }
-        arming_state_instance = this;
 }
 
 state_t ArmingState::get_state() {
