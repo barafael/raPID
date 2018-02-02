@@ -3,7 +3,7 @@
 #include "../include/PWMReceiver.h"
 
 /* Access variable for ISRs */
-PWMReceiver *instance = nullptr;
+PWMReceiver *pwm_rx_instance = nullptr;
 
 /*
    ----------------------------------------------------------------
@@ -12,56 +12,56 @@ PWMReceiver *instance = nullptr;
 */
 
 void update_throttle() {
-    if (digitalRead(instance->throttle_pin) == HIGH) {
-        instance->pwm_pulse_start_time[THROTTLE_CHANNEL] = micros();
+    if (digitalRead(pwm_rx_instance->throttle_pin) == HIGH) {
+        pwm_rx_instance->pwm_pulse_start_time[THROTTLE_CHANNEL] = micros();
     } else {
-        instance->channels_shared[THROTTLE_CHANNEL] =
-            (uint16_t)(micros() - instance->pwm_pulse_start_time[THROTTLE_CHANNEL]);
+        pwm_rx_instance->channels_shared[THROTTLE_CHANNEL] =
+            (uint16_t)(micros() - pwm_rx_instance->pwm_pulse_start_time[THROTTLE_CHANNEL]);
     }
 }
 
 void update_roll() {
-    if (digitalRead(instance->roll_pin) == HIGH) {
-        instance->pwm_pulse_start_time[ROLL_CHANNEL] = micros();
+    if (digitalRead(pwm_rx_instance->roll_pin) == HIGH) {
+        pwm_rx_instance->pwm_pulse_start_time[ROLL_CHANNEL] = micros();
     } else {
-        instance->channels_shared[ROLL_CHANNEL] =
-            (uint16_t)(micros() - instance->pwm_pulse_start_time[ROLL_CHANNEL]);
+        pwm_rx_instance->channels_shared[ROLL_CHANNEL] =
+            (uint16_t)(micros() - pwm_rx_instance->pwm_pulse_start_time[ROLL_CHANNEL]);
     }
 }
 
 void update_pitch() {
-    if (digitalRead(instance->pitch_pin) == HIGH) {
-        instance->pwm_pulse_start_time[PITCH_CHANNEL] = micros();
+    if (digitalRead(pwm_rx_instance->pitch_pin) == HIGH) {
+        pwm_rx_instance->pwm_pulse_start_time[PITCH_CHANNEL] = micros();
     } else {
-        instance->channels_shared[PITCH_CHANNEL] =
-            (uint16_t)(micros() - instance->pwm_pulse_start_time[PITCH_CHANNEL]);
+        pwm_rx_instance->channels_shared[PITCH_CHANNEL] =
+            (uint16_t)(micros() - pwm_rx_instance->pwm_pulse_start_time[PITCH_CHANNEL]);
     }
 }
 
 void update_yaw() {
-    if (digitalRead(instance->yaw_pin) == HIGH) {
-        instance->pwm_pulse_start_time[YAW_CHANNEL] = micros();
+    if (digitalRead(pwm_rx_instance->yaw_pin) == HIGH) {
+        pwm_rx_instance->pwm_pulse_start_time[YAW_CHANNEL] = micros();
     } else {
-        instance->channels_shared[YAW_CHANNEL] =
-            (uint16_t)(micros() - instance->pwm_pulse_start_time[YAW_CHANNEL]);
+        pwm_rx_instance->channels_shared[YAW_CHANNEL] =
+            (uint16_t)(micros() - pwm_rx_instance->pwm_pulse_start_time[YAW_CHANNEL]);
     }
 }
 
 void update_aux1() {
-    if (digitalRead(instance->aux1_pin) == HIGH) {
-        instance->pwm_pulse_start_time[AUX1_CHANNEL] = micros();
+    if (digitalRead(pwm_rx_instance->aux1_pin) == HIGH) {
+        pwm_rx_instance->pwm_pulse_start_time[AUX1_CHANNEL] = micros();
     } else {
-        instance->channels_shared[AUX1_CHANNEL] =
-            (uint16_t)(micros() - instance->pwm_pulse_start_time[AUX1_CHANNEL]);
+        pwm_rx_instance->channels_shared[AUX1_CHANNEL] =
+            (uint16_t)(micros() - pwm_rx_instance->pwm_pulse_start_time[AUX1_CHANNEL]);
     }
 }
 
 void update_aux2() {
-    if (digitalRead(instance->aux2_pin) == HIGH) {
-        instance->pwm_pulse_start_time[AUX2_CHANNEL] = micros();
+    if (digitalRead(pwm_rx_instance->aux2_pin) == HIGH) {
+        pwm_rx_instance->pwm_pulse_start_time[AUX2_CHANNEL] = micros();
     } else {
-        instance->channels_shared[AUX2_CHANNEL] =
-            (uint16_t)(micros() - instance->pwm_pulse_start_time[AUX2_CHANNEL]);
+        pwm_rx_instance->channels_shared[AUX2_CHANNEL] =
+            (uint16_t)(micros() - pwm_rx_instance->pwm_pulse_start_time[AUX2_CHANNEL]);
     }
 }
 
@@ -70,7 +70,7 @@ PWMReceiver::PWMReceiver(uint8_t _throttle_pin, uint8_t _roll_pin,
                          uint8_t _pitch_pin,    uint8_t _yaw_pin,
                          uint8_t _aux1_pin,     uint8_t _aux2_pin) {
 
-    instance = this;
+    pwm_rx_instance = this;
 
     throttle_pin = _throttle_pin;
     roll_pin     = _roll_pin;
