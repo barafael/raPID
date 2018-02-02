@@ -7,22 +7,25 @@
 
 typedef enum { STABILIZE, RATE } controller_mode;
 
+template<typename T>
 class CascadedPIDController {
     private:
         controller_mode mode = STABILIZE;
 
-        PIDController primary;
-        PIDController secondary;
+        PIDController<T> primary;
+        PIDController<T> secondary;
 
     public:
-        CascadedPIDController(PIDParams *primary_params, PIDParams *secondary_params);
+        CascadedPIDController(PIDParams<T> *primary_params, PIDParams<T> *secondary_params);
 
         void set_mode(controller_mode mode);
 
-        float compute(const float measured_angle,
-                      const float measured_velocity,
-                      const float setpoint);
+        T compute(const T measured_angle,
+                  const T measured_velocity,
+                  const T setpoint);
 };
+
+#include "../src/CascadedPIDController.tpp"
 
 #endif // CASCADED_PID_CONTROLLER_H
 

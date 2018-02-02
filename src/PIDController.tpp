@@ -1,6 +1,5 @@
-#include "../include/PIDController.h"
-
-PIDController::PIDController(PIDParams *params)
+template<typename T>
+PIDController<T>::PIDController(PIDParams<T> *params)
     : enabled ( true )
 
     , p_gain ( params->p_gain )
@@ -19,12 +18,13 @@ PIDController::PIDController(PIDParams *params)
 
     , last_time      ( 0 ) {}
 
-
-void PIDController::set_enabled(bool enable) {
+template<typename T>
+void PIDController<T>::set_enabled(bool enable) {
     enabled = enable;
 }
 
-float PIDController::compute(const float measured, const float setpoint) {
+template<typename T>
+T PIDController<T>::compute(const T measured, const T setpoint) {
     if (!enabled) {
         return setpoint;
     }
@@ -34,11 +34,11 @@ float PIDController::compute(const float measured, const float setpoint) {
 
     uint32_t elapsed_time = now - last_time;
 
-    float error = measured - setpoint;
+    T error = measured - setpoint;
 
     /* Give me some P! */
     /* Proportional term */
-    float p_term = this->p_gain * error;
+    T p_term = this->p_gain * error;
 
     /* Give me some I! */
     /* Integral term */
@@ -47,7 +47,7 @@ float PIDController::compute(const float measured, const float setpoint) {
     clamp(integral, -integral_limit, integral_limit);
 
     /* Give me some D! */
-    float d_term = 0.0;
+    T d_term = 0;
     switch (d_type) {
         case ERROR:
             /* Derivative term on error */
@@ -75,7 +75,7 @@ float PIDController::compute(const float measured, const float setpoint) {
     this->last_setpoint = setpoint;
     this->last_measured = measured;
 
-    float result = p_term + integral + d_term;
+    T result = p_term + integral + d_term;
 
     /* Output limit */
     clamp(result, -output_limit, output_limit);
@@ -83,32 +83,39 @@ float PIDController::compute(const float measured, const float setpoint) {
     return result;
 }
 
-void PIDController::set_p(const float _p_gain) {
+template<typename T>
+void PIDController<T>::set_p(const T _p_gain) {
     this->p_gain = _p_gain;
 }
 
-void PIDController::set_i(const float _i_gain) {
+template<typename T>
+void PIDController<T>::set_i(const T _i_gain) {
     this->i_gain = _i_gain;
 }
 
-void PIDController::set_d(const float _d_gain) {
+template<typename T>
+void PIDController<T>::set_d(const T _d_gain) {
     this->d_gain = _d_gain;
 }
 
-void PIDController::set_params(const PIDParams *params) {
+template<typename T>
+void PIDController<T>::set_params(const PIDParams<T> *params) {
     p_gain = params->p_gain;
     i_gain = params->i_gain;
     d_gain = params->d_gain;
 }
 
-void PIDController::integral_reset() {
+template<typename T>
+void PIDController<T>::integral_reset() {
     integral = 0;
 }
 
-void PIDController::set_derivative_type(derivative_type type) {
+template<typename T>
+void PIDController<T>::set_derivative_type(derivative_type type) {
     this->d_type = type;
 }
 
-void PIDController::enable_derivative_filter(bool enable) {
+template<typename T>
+void PIDController<T>::enable_derivative_filter(bool enable) {
     this->derivative_filter_enabled = enable;
 }
