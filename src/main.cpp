@@ -13,7 +13,7 @@
 #include "../include/imu.h"
 #include "../include/pins.h"
 #include "../include/settings.h"
-#include "../include/watchdog.h"
+#include "../include/Watchdog.h"
 
 #define TIMING_ANALYSIS
 #ifdef TIMING_ANALYSIS
@@ -134,7 +134,7 @@ extern "C" int main(void) {
     //roll_controller_stbl.set_enabled(false);
     //roll_controller_rate.set_enabled(false);
 
-    init_watchdog();
+    Watchdog dog;
 
     /* Flight loop */
     while (true) {
@@ -168,7 +168,7 @@ extern "C" int main(void) {
                             receiver.update(channels);
                             update_attitude(attitude);
                             update_angular_rates(angular_rate);
-                            feed_the_dog();
+                            dog.feed();
                             delay(10);
                         }
                         Serial.println("DISARMING COMPLETE!");
@@ -249,7 +249,7 @@ extern "C" int main(void) {
                             receiver.update(channels);
                             update_attitude(attitude);
                             update_angular_rates(angular_rate);
-                            feed_the_dog();
+                            dog.feed();
                             delay(10);
                         }
                         Serial.println("ARMING COMPLETE!");
@@ -286,6 +286,6 @@ extern "C" int main(void) {
         /* Blink LED to indicate activity */
         blink_state = !blink_state;
         digitalWrite(LED_PIN, blink_state);
-        feed_the_dog();
+        dog.feed();
     }
 }

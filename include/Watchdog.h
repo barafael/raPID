@@ -3,8 +3,10 @@
 
 #include "Arduino.h"
 
-
-void init_watchdog();
-void feed_the_dog();
+class Watchdog {
+    public:
+        Watchdog();
+        void feed();
+};
 
 #endif // WATCHDOG_H
