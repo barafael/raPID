@@ -4,6 +4,7 @@
 static const uint8_t DEBUG_PIN = 15;
 
 static const uint8_t LED_PIN = 13;
+static const uint8_t ARMING_STATE_PIN = 14;
 
 static const uint8_t MPU_INTERRUPT_PIN = 12;
 
