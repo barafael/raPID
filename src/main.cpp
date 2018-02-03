@@ -10,8 +10,8 @@
 #include "../include/PWMReceiver.h"
 #include "../include/arming_state.h"
 #include "../include/error_blink.h"
-#include "../include/imu.h"
 #include "../include/pins.h"
+#include "../include/MPU6050IMU.h"
 #include "../include/settings.h"
 #include "../include/Watchdog.h"
 
@@ -100,7 +100,7 @@ extern "C" int main(void) {
 
     Serial.println("Receiver signal detected, continuing.");
 
-    init_mpu6050();
+    MPU6050IMU mpu6050;
 
     PIDParams<float> roll_param_stbl ( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
     PIDParams<float> roll_param_rate ( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
@@ -142,11 +142,11 @@ extern "C" int main(void) {
 
         //print_channels(channels);
 
-        notime(update_attitude(attitude));
+        mpu6050.update_attitude(attitude);
 
         //print_attitude(attitude);
 
-        notime(update_angular_rates(angular_rate));
+        mpu6050.update_angular_rates(angular_rate);
 
         switch (state) {
             case DISARMING:
@@ -166,8 +166,8 @@ extern "C" int main(void) {
                             front_right_out_mixer.shut_off();
 
                             receiver.update(channels);
-                            update_attitude(attitude);
-                            update_angular_rates(angular_rate);
+                            mpu6050.update_attitude(attitude);
+                            mpu6050.update_angular_rates(angular_rate);
                             dog.feed();
                             delay(10);
                         }
@@ -247,8 +247,8 @@ extern "C" int main(void) {
                             front_right_out_mixer.shut_off();
 
                             receiver.update(channels);
-                            update_attitude(attitude);
-                            update_angular_rates(angular_rate);
+                            mpu6050.update_attitude(attitude);
+                            mpu6050.update_angular_rates(angular_rate);
                             dog.feed();
                             delay(10);
                         }

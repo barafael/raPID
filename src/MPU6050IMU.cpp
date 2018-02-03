@@ -1,32 +1,20 @@
-#include "Arduino.h"
+#include "../include/MPU6050IMU.h"
 
 #include "MPU6050_6Axis_MotionApps20.h"
 // #include "MPU6050_9Axis_MotionApps41.h"
-
-#include "../include/error_blink.h"
-#include "../include/pins.h"
-#include "../include/settings.h"
-#include "../include/imu.h"
-
-static const uint16_t MPU6050_ACCEL_OFFSET_X = -3690;
-static const uint16_t MPU6050_ACCEL_OFFSET_Y = -2625;
-static const uint16_t MPU6050_ACCEL_OFFSET_Z = 940;
-static const uint16_t MPU6050_GYRO_OFFSET_X  = 33;
-static const uint16_t MPU6050_GYRO_OFFSET_Y  = 25;
-static const uint16_t MPU6050_GYRO_OFFSET_Z  = 134;
 
 /*
    -------------------------------------------------
    ---              MPU6050 VARIABLES            ---
    -------------------------------------------------
-*/
+   */
 
 /* Class default I2C address is 0x68
    specific I2C addresses may be passed as a parameter here
    AD0 low = 0x68
    (default for SparkFun breakout and InvenSense evaluation board)
    AD0 high = 0x69
-*/
+   */
 
 static MPU6050 mpu;
 
@@ -45,20 +33,21 @@ static uint16_t packet_size;
 static uint16_t fifo_count;
 static uint8_t  fifo_buffer[64];
 
-/* Indicates whether MPU interrupt pin has gone high */
-static volatile bool mpu_interrupt = false;
-
 /*
    -------------------------------------------------
    ---          ORIENTATION/MOTION VARS          ---
    -------------------------------------------------
-*/
+   */
 
 static Quaternion q;         // [w, x, y, z]    quaternion container
 static VectorInt16 aa;       // [x, y, z]       accel sensor measurements
 static VectorInt16 aaReal;   // [x, y, z]       gravity-free accel sensor measurements
 static VectorInt16 aaWorld;  // [x, y, z]       world-frame accel sensor measurements
 static VectorFloat gravity;  // [x, y, z]       gravity vector
+
+/* Indicates whether MPU interrupt pin has gone high */
+static volatile bool data_interrupt = false;
+
 
 /*
    ----------------------------------------------------------------
@@ -67,7 +56,7 @@ static VectorFloat gravity;  // [x, y, z]       gravity vector
 */
 
 /* TODO: check out max/min and scale to perhaps [-500, 500] */
-void update_angular_rates(axis_t& angular_rates) {
+void MPU6050IMU::update_angular_rates(axis_t& angular_rates) {
     //digitalWrite(DEBUG_PIN, HIGH);
     Wire.beginTransmission(mpu_address);
     Wire.write(0x43);
@@ -88,14 +77,14 @@ void update_angular_rates(axis_t& angular_rates) {
    -------------------------------------------------------------
 */
 
-void update_attitude(axis_t& attitude) {
+void MPU6050IMU::update_attitude(axis_t& attitude) {
     /* skip if no MPU interrupt or no extra packet(s) available */
-    if (!mpu_interrupt && (fifo_count < packet_size)) {
+    if (!data_interrupt && (fifo_count < packet_size)) {
         return;
     }
 
     /* Reset interrupt flag and get INT_STATUS byte */
-    mpu_interrupt = false;
+    data_interrupt = false;
 
 
     // 508us at TWBR = 24, 140 us at TWBR = 12
@@ -147,20 +136,6 @@ void update_attitude(axis_t& attitude) {
         mpu.dmpGetYawPitchRoll(yaw_pitch_roll, &q, &gravity);
         // digitalWrite(DEBUG_PIN, LOW);
 
-        /* Yaw degrees */
-        // Add M_PI to get positive values (yaw_pitch_roll[0] element of (-M_PI, M_PI)).
-        // Angle in degree is ratio of reading to max reading * 180
-        // where max reading: 2 * M_PI
-        // int yaw_value = (int)180 - (yaw_pitch_roll[0] + M_PI) * 180 / (M_PI * 2);
-        // yaw_value = yaw_value > 180.0 ? 180.0 : yaw_value;
-        // yaw_value = yaw_value < 0.0 ? 0.0 : yaw_value;
-
-        /* Pitch degrees */
-        // Add 90 to start at horizontal, flat position
-        // Angle in degree is ratio of reading to max reading * 180
-        // where max reading: 2 * M_PI
-        // int pitch_value = (int)(90 + yaw_pitch_roll[1] * 180 / M_PI);
-
         /* Formula: FACTOR ~=~ scalar * (INT16_MAX / M_PI)
          * where scalar: [-M_PI..M_PI]
          * TODO: make absolutely sure that scalar is never out of interval
@@ -184,8 +159,8 @@ void update_attitude(axis_t& attitude) {
    ----------------------------------------------------------------
 */
 
-/*static*/ void dmp_data_ready() {
-    mpu_interrupt = true;
+static void data_ready() {
+    data_interrupt = true;
 }
 
 
@@ -195,7 +170,7 @@ void update_attitude(axis_t& attitude) {
    ---------------------------------------------------
 */
 
-void init_mpu6050() {
+MPU6050IMU::MPU6050IMU() {
 /* Join I2C bus (I2Cdev library doesn't do this automatically) */
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
     Wire.begin();
@@ -222,9 +197,9 @@ void init_mpu6050() {
     mpu.setXAccelOffset(MPU6050_ACCEL_OFFSET_X);
     mpu.setYAccelOffset(MPU6050_ACCEL_OFFSET_Y);
     mpu.setZAccelOffset(MPU6050_ACCEL_OFFSET_Z);
-    mpu.setXGyroOffset(MPU6050_GYRO_OFFSET_X);
-    mpu.setYGyroOffset(MPU6050_GYRO_OFFSET_Y);
-    mpu.setZGyroOffset(MPU6050_GYRO_OFFSET_Z);
+    mpu.setXGyroOffset (MPU6050_GYRO_OFFSET_X);
+    mpu.setYGyroOffset (MPU6050_GYRO_OFFSET_Y);
+    mpu.setZGyroOffset (MPU6050_GYRO_OFFSET_Z);
 
     /* TODO Find suitable value */
     mpu.setZAccelOffset(1788);
@@ -241,7 +216,7 @@ void init_mpu6050() {
         Serial.println(F("Enabling interrupt detection (Arduino external interrupt 0)..."));
 
         pinMode(MPU_INTERRUPT_PIN, INPUT);
-        attachInterrupt(MPU_INTERRUPT_PIN, dmp_data_ready, RISING);
+        attachInterrupt(MPU_INTERRUPT_PIN, data_ready, RISING);
         mpu_int_status = mpu.getIntStatus();
 
         Serial.println(F("DMP ready! Waiting for first interrupt..."));
