@@ -12,6 +12,7 @@ class MovingAverage : Filter<T, n> {
         size_t marker = 0;
 
     public:
+        MovingAverage() = default;
         T next(T value);
 };
 

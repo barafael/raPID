@@ -10,8 +10,8 @@ class PIDParams {
         float integral_limit;
         float output_limit;
 
-        PIDParams(const float _p_gain, const float _i_gain, const float _d_gain,
-                  const float _integral_limit, const float _output_limit);
+        PIDParams(const float p_gain, const float i_gain, const float d_gain,
+                  const float integral_limit, const float output_limit);
 };
 
 #endif //PID_PARAMS_H
