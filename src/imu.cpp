@@ -187,12 +187,17 @@ void update_attitude(axis_t& attitude) {
         // where max reading: 2 * M_PI
         // int pitch_value = (int)(90 + yaw_pitch_roll[1] * 180 / M_PI);
 
-        // 12.5us
+        /* Formula: FACTOR ~=~ scalar * (INT16_MAX / M_PI)
+         * where scalar: [-M_PI..M_PI]
+         * TODO: make absolutely sure that scalar is never out of interval
+         */
+        static const int16_t FACTOR = 10425;
+        // old:12.5us
         // digitalWrite(DEBUG_PIN, HIGH);
         // TODO try using [0..2 * M_PI] everywhere without scaling or use quaternions?
-        attitude[ROLL_AXIS]  = (int16_t) (yaw_pitch_roll[2] * (500.0 / M_PI));
-        attitude[PITCH_AXIS] = (int16_t) (yaw_pitch_roll[1] * (500.0 / M_PI));
-        attitude[YAW_AXIS]   = (int16_t) (yaw_pitch_roll[0] * (500.0 / M_PI));
+        attitude[ROLL_AXIS]  = (int16_t) (yaw_pitch_roll[2] * FACTOR);
+        attitude[PITCH_AXIS] = (int16_t) (yaw_pitch_roll[1] * FACTOR);
+        attitude[YAW_AXIS]   = (int16_t) (yaw_pitch_roll[0] * FACTOR);
         //digitalWrite(DEBUG_PIN, LOW);
     }
     //frequency 100Hz
