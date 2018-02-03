@@ -73,6 +73,16 @@ static void print_attitude(axis_t attitude) {
     Serial.println();
 }
 
+static void print_velocity(axis_t velocity) {
+    static int64_t max_velocity = 0;
+    for (size_t index = 0; index < 3; index++) {
+        if (velocity[index] > max_velocity || velocity[index] < -max_velocity) {
+            max_velocity = velocity[index];
+            Serial.println((long)max_velocity);
+        }
+    }
+}
+
 static void print_channels(channels_t channels) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         Serial.print(channels[index]);
@@ -139,14 +149,13 @@ extern "C" int main(void) {
     /* Flight loop */
     while (true) {
         receiver.update(channels);
-
         //print_channels(channels);
 
-        notime(update_attitude(attitude));
-
+        update_attitude(attitude);
         //print_attitude(attitude);
 
-        notime(update_angular_rates(angular_rate));
+        update_angular_rates(angular_rate);
+        print_velocity(angular_rate);
 
         switch (state) {
             case DISARMING:
