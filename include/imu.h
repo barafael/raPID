@@ -12,7 +12,6 @@ using axis = enum {
 };
 
 using axis_t = std::array<int16_t, 3>;
-using offset_axis_t = std::array<int64_t, 3>;
 
 void init_mpu6050();
 void update_angular_rates(axis_t& angular_rates);

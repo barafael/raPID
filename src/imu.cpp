@@ -60,31 +60,9 @@ static VectorInt16 aaReal;   // [x, y, z]       gravity-free accel sensor measur
 static VectorInt16 aaWorld;  // [x, y, z]       world-frame accel sensor measurements
 static VectorFloat gravity;  // [x, y, z]       gravity vector
 
-
-static offset_axis_t gyro_offsets = { 0 };
-
-
 /*
    ----------------------------------------------------------------
-   ---      FETCH UNCALIBRATED RAW ANGULAR RATES FROM IMU       ---
-   ----------------------------------------------------------------
-*/
-
-static void update_raw_rates(axis_t& raw_rates) {
-    Wire.beginTransmission(mpu_address);
-    Wire.write(0x43);
-    Wire.endTransmission();
-    Wire.requestFrom(mpu_address, 6);
-
-    raw_rates[ROLL_AXIS]  = Wire.read() << 8 | Wire.read();
-    raw_rates[PITCH_AXIS] = Wire.read() << 8 | Wire.read();
-    raw_rates[YAW_AXIS]   = Wire.read() << 8 | Wire.read();
-}
-
-
-/*
-   ----------------------------------------------------------------
-   ---       FETCH ANGULAR RATES FROM IMU, CALIBRATED           ---
+   ---       FETCH ANGULAR RATES FROM IMU                      ----
    ----------------------------------------------------------------
 */
 
@@ -99,10 +77,6 @@ void update_angular_rates(axis_t& angular_rates) {
     angular_rates[ROLL_AXIS]  = Wire.read() << 8 | Wire.read();
     angular_rates[PITCH_AXIS] = Wire.read() << 8 | Wire.read();
     angular_rates[YAW_AXIS]   = Wire.read() << 8 | Wire.read();
-
-    angular_rates[ROLL_AXIS]  -= gyro_offsets[ROLL_AXIS];
-    angular_rates[PITCH_AXIS] -= gyro_offsets[PITCH_AXIS];
-    angular_rates[YAW_AXIS]   -= gyro_offsets[YAW_AXIS];
 
     //digitalWrite(DEBUG_PIN, LOW);
 }
@@ -204,84 +178,6 @@ void update_attitude(axis_t& attitude) {
     //digitalWrite(DEBUG_PIN, LOW);
 }
 
-
-/*
-   ---------------------------------------------------
-   ---             CALIBRATE RATES                 ---
-   ---------------------------------------------------
-*/
-
-static bool calib_rates_ok(axis_t& angular_rates) {
-    static bool rate_calibrated = false;
-
-    const int iterations = 50;
-    const int tolerance  = 10;
-
-    offset_axis_t accumulator = { 0 };
-
-    for (uint16_t count = 0; count < iterations; count++) {
-        update_angular_rates(angular_rates);
-        accumulator[ROLL_AXIS]  += angular_rates[ROLL_AXIS];
-        accumulator[PITCH_AXIS] += angular_rates[PITCH_AXIS];
-        accumulator[YAW_AXIS]   += angular_rates[YAW_AXIS];
-
-        delay(5);
-    }
-
-    accumulator[ROLL_AXIS]  /= iterations;
-    accumulator[PITCH_AXIS] /= iterations;
-    accumulator[YAW_AXIS]   /= iterations;
-
-    Serial.print("Average rate over ");
-    Serial.print(iterations);
-    Serial.println(" iterations: ");
-    Serial.print((uint32_t) accumulator[ROLL_AXIS]);
-    Serial.print("\t");
-    Serial.print((uint32_t) accumulator[PITCH_AXIS]);
-    Serial.print("\t");
-    Serial.println((uint32_t) accumulator[YAW_AXIS]);
-
-    rate_calibrated =
-        (abs(accumulator[ROLL_AXIS])  < tolerance) &&
-        (abs(accumulator[PITCH_AXIS]) < tolerance) &&
-        (abs(accumulator[YAW_AXIS])   < tolerance);
-
-    return rate_calibrated;
-}
-
-/* TODO overhaul calibration system */
-static void calib_rates() {
-    Serial.println(F("Calibrating gyro rates, hold still!"));
-
-    uint16_t iterations = 300;
-
-    axis_t angular_rates = { 0, 0, 0 };
-    update_angular_rates(angular_rates);
-
-    /* Attempt calibration and check if it (probably) succeeded */
-    while (!calib_rates_ok(angular_rates)) {
-        gyro_offsets[ROLL_AXIS]  = 0;
-        gyro_offsets[PITCH_AXIS] = 0;
-        gyro_offsets[YAW_AXIS]   = 0;
-
-        for (uint16_t count = 0; count < iterations; count++) {
-            update_raw_rates(angular_rates);
-            gyro_offsets[ROLL_AXIS]  += angular_rates[ROLL_AXIS];
-            gyro_offsets[PITCH_AXIS] += angular_rates[PITCH_AXIS];
-            gyro_offsets[YAW_AXIS]   += angular_rates[YAW_AXIS];
-
-            delay(5);
-        }
-
-        gyro_offsets[ROLL_AXIS]  /= iterations;
-        gyro_offsets[PITCH_AXIS] /= iterations;
-        gyro_offsets[YAW_AXIS]   /= iterations;
-
-        iterations = iterations < 2000 ? iterations + 200 : iterations;
-    }
-}
-
-
 /*
    ----------------------------------------------------------------
    ---             MPU INTERRUPT DETECTION ROUTINE              ---
@@ -369,5 +265,4 @@ void init_mpu6050() {
             }
         }
     }
-    calib_rates();
 }
