@@ -23,30 +23,33 @@ controller), acro mode can be achieved.
 - [x] Arming/disarming
 - [x] Mixers for each output, applying differently weighted inputs and IMU data to the outputs
 - [x] Rate/stabilize mode
-- [x] PWM/PPM support
-- [x] Various output classes (Servo, ESC, anyPWM)
-- [ ] 400Hz update rate for ESCs using analogWrite timers
-- [ ] Arbitrary waveform generation for PWM to drive even LEDs
-      PID improvements:
-- [x] D noise filter, derivative-on-{error, feedback, setpoint}
-- [ ] Implement cascaded PID in a more explicit way
-- [ ] Fixed point PID implementation
-- [ ] Calculating error external from algorithm or pass an errorfunc(number, number) -> number function pointer (more general)
-- [ ] Telemetry hardware + data logging
+- [x] Support several output waveforms
+  - [x] Various output classes (Servo, ESC, anyPWM)
+  - [x] 400Hz update rate for ESCs using analogWrite timers (to do: test it)
+  - [x] Arbitrary waveform generation for PWM to drive even LEDs (to do: test it)
+- [x] PID Improvements
+  - [x] D noise filter, derivative-on-{error, feedback, setpoint}
+  - [x] Implement cascaded PID in a more explicit way
+  - [x] Fixed point PID implementation (to do: test it)
+  - [ ] [unnecessary] Calculating error external from algorithm or pass an ```errorfunc(number, number) -> number``` function pointer (more general)
+
 ## Fixes
 - [ ] Fix serial monitor ritual (current: remove tx, reboot, wait for sermon, connect tx)
 - [ ] Fix gyro vs. fused and rate vs. stbl issues (-15 factor)
+- [ ] Safety Enhancements
+  - [ ] Make sure arming functionality works and is reliable
+  - [ ] Add safety mechanisms for receiver signal loss
+
 ## Ideas
 - [ ] Live coefficient tweaking (standard tx or telemetry hardware)
-- [ ] IMU solution overhaul: Ultimate SENtral or other
-      - constant sampling rate simplifies PID and makes theory on time-discrete systems applicable
+- [ ] IMU solution overhaul: Ultimate SENtral or other; constant sampling rate simplifies PID and makes theory on time-discrete systems applicable
+  - [x] General IMU interface class to test different IMU implementations
+- [ ] Matrix multiplication for output coefficients (every output is some weighted sum of the inputs + pid response) Possibly use DMP instructions and SIMD - one microsecond for multiplying 8x12 and a 12 column vec is achievable
 - [ ] Arbitrary flight modes (different PID settings, offsets, and I/O matrix)
-- [ ] Matrix multiplication for output coefficients (every output is some weighted sum of the inputs + pid response)
 - [ ] Flight mode interpolation (otherwise called transitional mixers) to smoothly switch between any two flight modes
+- [ ] Adjust settings wirelessly, ideally using a desktop application/website (have not thought about that part yet... far off)
+- [ ] Telemetry hardware + data logging
 - [ ] Use an RTOS?
-
-Adjusting the settings should be done wirelessly, ideally using a desktop
-application/website (have not thought about that part yet... far off)
 
 Blog-in-progress @ [https://barafael.github.io/Simple-PID-flight-controller/](https://barafael.github.io/Simple-PID-flight-controller/)
 
