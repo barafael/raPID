@@ -51,7 +51,7 @@ controller), acro mode can be achieved.
 - [ ] Telemetry hardware + data logging
 - [ ] Use an RTOS?
 
-Blog-in-progress @ [https://barafael.github.io/Simple-PID-flight-controller/](https://barafael.github.io/Simple-PID-flight-controller/)
+Blog-in-progress @ [https://barafael.github.io/Remote-Control-Vehicle-Balance-controller/](https://barafael.github.io/Remote-Control-Vehicle-Balance-controller/)
 
 ## Inspiration and Acknowledgments
 
