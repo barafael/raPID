@@ -1,4 +1,4 @@
-#include "Arduino.h"
+#include "../include/MPU6050IMU.h"
 
 #include "MPU6050_6Axis_MotionApps20.h"
 // #include "MPU6050_9Axis_MotionApps41.h"
@@ -6,14 +6,6 @@
 #include "../include/error_blink.h"
 #include "../include/pins.h"
 #include "../include/settings.h"
-#include "../include/imu.h"
-
-static const uint16_t MPU6050_ACCEL_OFFSET_X = -3690;
-static const uint16_t MPU6050_ACCEL_OFFSET_Y = -2625;
-static const uint16_t MPU6050_ACCEL_OFFSET_Z = 940;
-static const uint16_t MPU6050_GYRO_OFFSET_X  = 33;
-static const uint16_t MPU6050_GYRO_OFFSET_Y  = 25;
-static const uint16_t MPU6050_GYRO_OFFSET_Z  = 134;
 
 /*
    -------------------------------------------------
@@ -45,9 +37,6 @@ static uint16_t packet_size;
 static uint16_t fifo_count;
 static uint8_t  fifo_buffer[64];
 
-/* Indicates whether MPU interrupt pin has gone high */
-static volatile bool mpu_interrupt = false;
-
 /*
    -------------------------------------------------
    ---          ORIENTATION/MOTION VARS          ---
@@ -60,36 +49,18 @@ static VectorInt16 aaReal;   // [x, y, z]       gravity-free accel sensor measur
 static VectorInt16 aaWorld;  // [x, y, z]       world-frame accel sensor measurements
 static VectorFloat gravity;  // [x, y, z]       gravity vector
 
-
-static offset_axis_t gyro_offsets = { 0 };
-
-
-/*
-   ----------------------------------------------------------------
-   ---      FETCH UNCALIBRATED RAW ANGULAR RATES FROM IMU       ---
-   ----------------------------------------------------------------
-*/
-
-static void update_raw_rates(axis_t& raw_rates) {
-    Wire.beginTransmission(mpu_address);
-    Wire.write(0x43);
-    Wire.endTransmission();
-    Wire.requestFrom(mpu_address, 6);
-
-    raw_rates[ROLL_AXIS]  = Wire.read() << 8 | Wire.read();
-    raw_rates[PITCH_AXIS] = Wire.read() << 8 | Wire.read();
-    raw_rates[YAW_AXIS]   = Wire.read() << 8 | Wire.read();
-}
+/* Indicates whether MPU interrupt pin has gone high */
+static volatile bool mpu_interrupt = false;
 
 
 /*
    ----------------------------------------------------------------
-   ---       FETCH ANGULAR RATES FROM IMU, CALIBRATED           ---
+   ---       FETCH ANGULAR RATES FROM IMU                      ----
    ----------------------------------------------------------------
 */
 
-/* TODO: check out max/min and scale to perhaps [-500, 500] */
-void update_angular_rates(axis_t& angular_rates) {
+/* max..min [32767, -32768] */
+void MPU6050IMU::update_angular_rates(axis_t& angular_rates) {
     //digitalWrite(DEBUG_PIN, HIGH);
     Wire.beginTransmission(mpu_address);
     Wire.write(0x43);
@@ -99,10 +70,6 @@ void update_angular_rates(axis_t& angular_rates) {
     angular_rates[ROLL_AXIS]  = Wire.read() << 8 | Wire.read();
     angular_rates[PITCH_AXIS] = Wire.read() << 8 | Wire.read();
     angular_rates[YAW_AXIS]   = Wire.read() << 8 | Wire.read();
-
-    angular_rates[ROLL_AXIS]  -= gyro_offsets[ROLL_AXIS];
-    angular_rates[PITCH_AXIS] -= gyro_offsets[PITCH_AXIS];
-    angular_rates[YAW_AXIS]   -= gyro_offsets[YAW_AXIS];
 
     //digitalWrite(DEBUG_PIN, LOW);
 }
@@ -114,7 +81,7 @@ void update_angular_rates(axis_t& angular_rates) {
    -------------------------------------------------------------
 */
 
-void update_attitude(axis_t& attitude) {
+void MPU6050IMU::update_attitude(axis_t& attitude) {
     /* skip if no MPU interrupt or no extra packet(s) available */
     if (!mpu_interrupt && (fifo_count < packet_size)) {
         return;
@@ -173,109 +140,22 @@ void update_attitude(axis_t& attitude) {
         mpu.dmpGetYawPitchRoll(yaw_pitch_roll, &q, &gravity);
         // digitalWrite(DEBUG_PIN, LOW);
 
+        /* Formula: FACTOR ~=~ scalar * (INT16_MAX / M_PI)
+         * where scalar: [-M_PI..M_PI]
+         * TODO: make absolutely sure that scalar is never out of interval
+         */
+        static const int16_t FACTOR = 10425;
         /* Yaw degrees */
         // Add M_PI to get positive values (yaw_pitch_roll[0] element of (-M_PI, M_PI)).
         // Angle in degree is ratio of reading to max reading * 180
-        // where max reading: 2 * M_PI
-        // int yaw_value = (int)180 - (yaw_pitch_roll[0] + M_PI) * 180 / (M_PI * 2);
-        // yaw_value = yaw_value > 180.0 ? 180.0 : yaw_value;
-        // yaw_value = yaw_value < 0.0 ? 0.0 : yaw_value;
-
-        /* Pitch degrees */
-        // Add 90 to start at horizontal, flat position
-        // Angle in degree is ratio of reading to max reading * 180
-        // where max reading: 2 * M_PI
-        // int pitch_value = (int)(90 + yaw_pitch_roll[1] * 180 / M_PI);
-
-        // 12.5us
-        // digitalWrite(DEBUG_PIN, HIGH);
-        // TODO try using [0..2 * M_PI] everywhere without scaling or use quaternions?
-        attitude[ROLL_AXIS]  = (int16_t) (yaw_pitch_roll[2] * (500.0 / M_PI));
-        attitude[PITCH_AXIS] = (int16_t) (yaw_pitch_roll[1] * (500.0 / M_PI));
-        attitude[YAW_AXIS]   = (int16_t) (yaw_pitch_roll[0] * (500.0 / M_PI));
+        attitude[ROLL_AXIS]  = (int16_t) (yaw_pitch_roll[2] * FACTOR);
+        attitude[PITCH_AXIS] = (int16_t) (yaw_pitch_roll[1] * FACTOR);
+        attitude[YAW_AXIS]   = (int16_t) (yaw_pitch_roll[0] * FACTOR);
         //digitalWrite(DEBUG_PIN, LOW);
     }
     //frequency 100Hz
     //digitalWrite(DEBUG_PIN, LOW);
 }
-
-
-/*
-   ---------------------------------------------------
-   ---             CALIBRATE RATES                 ---
-   ---------------------------------------------------
-*/
-
-static bool calib_rates_ok(axis_t& angular_rates) {
-    static bool rate_calibrated = false;
-
-    const int iterations = 50;
-    const int tolerance  = 10;
-
-    offset_axis_t accumulator = { 0 };
-
-    for (uint16_t count = 0; count < iterations; count++) {
-        update_angular_rates(angular_rates);
-        accumulator[ROLL_AXIS]  += angular_rates[ROLL_AXIS];
-        accumulator[PITCH_AXIS] += angular_rates[PITCH_AXIS];
-        accumulator[YAW_AXIS]   += angular_rates[YAW_AXIS];
-
-        delay(5);
-    }
-
-    accumulator[ROLL_AXIS]  /= iterations;
-    accumulator[PITCH_AXIS] /= iterations;
-    accumulator[YAW_AXIS]   /= iterations;
-
-    Serial.print(F("Average rate over "));
-    Serial.print(iterations);
-    Serial.println(F(" iterations: "));
-    Serial.print((uint32_t) accumulator[ROLL_AXIS]);
-    Serial.print(F("\t"));
-    Serial.print((uint32_t) accumulator[PITCH_AXIS]);
-    Serial.print(F("\t"));
-    Serial.println((uint32_t) accumulator[YAW_AXIS]);
-
-    rate_calibrated =
-        (abs(accumulator[ROLL_AXIS])  < tolerance) &&
-        (abs(accumulator[PITCH_AXIS]) < tolerance) &&
-        (abs(accumulator[YAW_AXIS])   < tolerance);
-
-    return rate_calibrated;
-}
-
-/* TODO overhaul calibration system */
-static void calib_rates() {
-    Serial.println(F("Calibrating gyro rates, hold still!"));
-
-    uint16_t iterations = 300;
-
-    axis_t angular_rates = { 0, 0, 0 };
-    update_angular_rates(angular_rates);
-
-    /* Attempt calibration and check if it (probably) succeeded */
-    while (!calib_rates_ok(angular_rates)) {
-        gyro_offsets[ROLL_AXIS]  = 0;
-        gyro_offsets[PITCH_AXIS] = 0;
-        gyro_offsets[YAW_AXIS]   = 0;
-
-        for (uint16_t count = 0; count < iterations; count++) {
-            update_raw_rates(angular_rates);
-            gyro_offsets[ROLL_AXIS]  += angular_rates[ROLL_AXIS];
-            gyro_offsets[PITCH_AXIS] += angular_rates[PITCH_AXIS];
-            gyro_offsets[YAW_AXIS]   += angular_rates[YAW_AXIS];
-
-            delay(5);
-        }
-
-        gyro_offsets[ROLL_AXIS]  /= iterations;
-        gyro_offsets[PITCH_AXIS] /= iterations;
-        gyro_offsets[YAW_AXIS]   /= iterations;
-
-        iterations = iterations < 2000 ? iterations + 200 : iterations;
-    }
-}
-
 
 /*
    ----------------------------------------------------------------
@@ -294,7 +174,7 @@ static void calib_rates() {
    ---------------------------------------------------
 */
 
-void init_mpu6050() {
+MPU6050IMU::MPU6050IMU() {
 /* Join I2C bus (I2Cdev library doesn't do this automatically) */
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
     Wire.begin();
@@ -321,9 +201,9 @@ void init_mpu6050() {
     mpu.setXAccelOffset(MPU6050_ACCEL_OFFSET_X);
     mpu.setYAccelOffset(MPU6050_ACCEL_OFFSET_Y);
     mpu.setZAccelOffset(MPU6050_ACCEL_OFFSET_Z);
-    mpu.setXGyroOffset(MPU6050_GYRO_OFFSET_X);
-    mpu.setYGyroOffset(MPU6050_GYRO_OFFSET_Y);
-    mpu.setZGyroOffset(MPU6050_GYRO_OFFSET_Z);
+    mpu.setXGyroOffset (MPU6050_GYRO_OFFSET_X);
+    mpu.setYGyroOffset (MPU6050_GYRO_OFFSET_Y);
+    mpu.setZGyroOffset (MPU6050_GYRO_OFFSET_Z);
 
     /* TODO Find suitable value */
     mpu.setZAccelOffset(1788);
@@ -364,5 +244,4 @@ void init_mpu6050() {
             }
         }
     }
-    calib_rates();
 }

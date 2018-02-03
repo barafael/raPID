@@ -10,8 +10,8 @@
 #include "../include/PWMReceiver.h"
 #include "../include/arming_state.h"
 #include "../include/error_blink.h"
-#include "../include/imu.h"
 #include "../include/pins.h"
+#include "../include/MPU6050IMU.h"
 #include "../include/settings.h"
 #include "../include/Watchdog.h"
 
@@ -52,7 +52,7 @@ state_t state = DISARMED;
 axis_t attitude = { 0, 0, 0 };
 
 /* Angular Rate */
-axis_t angular_rate = { 0, 0, 0 };
+axis_t angular_rates = { 0, 0, 0 };
 
 
 float pid_output_roll_stbl = 0.0;
@@ -110,23 +110,23 @@ extern "C" int main(void) {
 
     Serial.println(F("Receiver signal detected, continuing."));
 
-    init_mpu6050();
+    MPU6050IMU mpu6050;
 
-    PIDParams roll_param_stbl ( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
-    PIDParams roll_param_rate ( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
+    PIDParams<float> roll_param_stbl ( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
+    PIDParams<float> roll_param_rate ( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
 
-    PIDParams pitch_param_stbl( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
-    PIDParams pitch_param_rate( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
+    PIDParams<float> pitch_param_stbl( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
+    PIDParams<float> pitch_param_rate( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
 
-    PIDParams yaw_param_rate  ( 1.0 , 0.0 , 0.0 , 12.0 , 200.0);
+    PIDParams<float> yaw_param_rate  ( 1.0 , 0.0 , 0.0 , 12.0 , 200.0);
 
-    PIDController roll_controller_stbl(&roll_param_stbl);
-    PIDController roll_controller_rate(&roll_param_rate);
+    PIDController<float> roll_controller_stbl(&roll_param_stbl);
+    PIDController<float> roll_controller_rate(&roll_param_rate);
 
-    PIDController pitch_controller_stbl(&pitch_param_stbl);
-    PIDController pitch_controller_rate(&pitch_param_rate);
+    PIDController<float> pitch_controller_stbl(&pitch_param_stbl);
+    PIDController<float> pitch_controller_rate(&pitch_param_rate);
 
-    PIDController yaw_controller_rate(&yaw_param_rate);
+    PIDController<float> yaw_controller_rate(&yaw_param_rate);
 
     ESCOutput back_left_out_mixer  (LEFT_SERVO_PIN,  1.0, -0.4, 0.4, 0.0);
     ESCOutput back_right_out_mixer (RIGHT_SERVO_PIN, 1.0, 0.4, 0.4, 0.0);
@@ -151,11 +151,11 @@ extern "C" int main(void) {
         receiver.update(channels);
         //print_channels(channels);
 
-        update_attitude(attitude);
+        mpu6050.update_attitude(attitude);
         //print_attitude(attitude);
 
-        update_angular_rates(angular_rate);
-        print_velocity(angular_rate);
+        mpu6050.update_angular_rates(angular_rates);
+        print_velocity(angular_rates);
 
         switch (state) {
             case DISARMING:
@@ -175,8 +175,8 @@ extern "C" int main(void) {
                             front_right_out_mixer.shut_off();
 
                             receiver.update(channels);
-                            update_attitude(attitude);
-                            update_angular_rates(angular_rate);
+                            mpu6050.update_attitude(attitude);
+                            mpu6050.update_angular_rates(angular_rates);
                             dog.feed();
                             delay(10);
                         }
@@ -193,7 +193,7 @@ extern "C" int main(void) {
                 new_rate_p = (channels[AUX2_CHANNEL] + 500) / 1000.0 / 8.0;
 
                 //Serial.print(new_stbl_p);
-                //Serial.print(F("\t"));
+                //Serial.print("\t");
                 //Serial.println(new_rate_p);
 
                 //roll_controller_stbl.set_p(new_stbl_p);
@@ -203,15 +203,15 @@ extern "C" int main(void) {
                 pid_output_roll_stbl = roll_controller_stbl.  compute(attitude[ROLL_AXIS], channels[ROLL_CHANNEL]);
                 //Serial.println(pid_output_roll_stbl);
 
-                pid_output_roll_rate = roll_controller_rate.  compute(angular_rate[ROLL_AXIS], -15 * pid_output_roll_stbl);
+                pid_output_roll_rate = roll_controller_rate.  compute(angular_rates[ROLL_AXIS], -15 * pid_output_roll_stbl);
                 //Serial.println(pid_output_roll_rate);
 
                 pid_output_pitch_stbl = pitch_controller_stbl.compute(attitude[PITCH_AXIS], channels[PITCH_CHANNEL]);
 
-                pid_output_pitch_rate = pitch_controller_rate.compute(angular_rate[PITCH_AXIS], -15 * pid_output_pitch_stbl);
+                pid_output_pitch_rate = pitch_controller_rate.compute(angular_rates[PITCH_AXIS], -15 * pid_output_pitch_stbl);
 
                 /* Yaw needs rate only - yaw stick controls rate of rotation, there is no fixed reference */
-                pid_output_yaw_rate = yaw_controller_rate.    compute(angular_rate[YAW_AXIS], channels[YAW_CHANNEL]);
+                pid_output_yaw_rate = yaw_controller_rate.    compute(angular_rates[YAW_AXIS], channels[YAW_CHANNEL]);
 
                 back_left_out_mixer  .apply(channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
                 back_right_out_mixer .apply(channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
@@ -256,8 +256,8 @@ extern "C" int main(void) {
                             front_right_out_mixer.shut_off();
 
                             receiver.update(channels);
-                            update_attitude(attitude);
-                            update_angular_rates(angular_rate);
+                            mpu6050.update_attitude(attitude);
+                            mpu6050.update_angular_rates(angular_rates);
                             dog.feed();
                             delay(10);
                         }

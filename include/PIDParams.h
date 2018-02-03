@@ -1,17 +1,29 @@
 #ifndef PID_PARAMS_H
 #define PID_PARAMS_H
 
+template <typename T>
 class PIDParams {
     public:
-        float p_gain;
-        float i_gain;
-        float d_gain;
+        T p_gain;
+        T i_gain;
+        T d_gain;
 
-        float integral_limit;
-        float output_limit;
+        T integral_limit;
+        T output_limit;
 
-        PIDParams(const float p_gain, const float i_gain, const float d_gain,
-                  const float integral_limit, const float output_limit);
+        PIDParams<T>(const T p_gain, const T i_gain, const T d_gain,
+                  const T integral_limit, const T output_limit);
 };
+
+template<typename T>
+PIDParams<T>::PIDParams(const T p_gain, const T i_gain, const T d_gain,
+                     const T integral_limit, const T output_limit)
+    : p_gain(p_gain)
+    , i_gain(i_gain)
+    , d_gain(d_gain)
+
+    , integral_limit(integral_limit)
+
+    , output_limit  (output_limit) {}
 
 #endif //PID_PARAMS_H
