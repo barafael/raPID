@@ -227,13 +227,13 @@ static bool calib_rates_ok(axis_t& angular_rates) {
     accumulator[PITCH_AXIS] /= iterations;
     accumulator[YAW_AXIS]   /= iterations;
 
-    Serial.print("Average rate over ");
+    Serial.print(F("Average rate over "));
     Serial.print(iterations);
-    Serial.println(" iterations: ");
+    Serial.println(F(" iterations: "));
     Serial.print((uint32_t) accumulator[ROLL_AXIS]);
-    Serial.print("\t");
+    Serial.print(F("\t"));
     Serial.print((uint32_t) accumulator[PITCH_AXIS]);
-    Serial.print("\t");
+    Serial.print(F("\t"));
     Serial.println((uint32_t) accumulator[YAW_AXIS]);
 
     rate_calibrated =

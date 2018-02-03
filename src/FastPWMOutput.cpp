@@ -50,7 +50,7 @@ void FastPWMOutput::set_frequency(uint32_t freq) {
 
 void FastPWMOutput::set_limits(uint16_t lower, uint16_t upper) {
     if (upper < lower) {
-        Serial.print("Dubious limits given to output on pin ");
+        Serial.print(F("Dubious limits given to output on pin "));
         Serial.println(pin);
         uint16_t tmp = lower;
         lower = upper;

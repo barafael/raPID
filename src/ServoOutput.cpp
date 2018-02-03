@@ -38,7 +38,7 @@ void ServoOutput::invert() {
 /* TODO: improve output limit/scaling model */
 void ServoOutput::set_limits(uint16_t lower, uint16_t upper) {
     if (upper < lower) {
-        Serial.print("Dubious limits given to output on pin ");
+        Serial.print(F("Dubious limits given to output on pin "));
         Serial.println(pin);
         uint16_t tmp = lower;
         lower = upper;

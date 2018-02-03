@@ -72,7 +72,7 @@ PWMReceiver receiver({THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
 static void print_attitude(axis_t attitude) {
     for (size_t index = 0; index < 3; index++) {
         Serial.print(attitude[index]);
-        Serial.print("\t");
+        Serial.print(F("\t"));
     }
     Serial.println();
 }
@@ -80,7 +80,7 @@ static void print_attitude(axis_t attitude) {
 static void print_channels(channels_t channels) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         Serial.print(channels[index]);
-        Serial.print("\t");
+        Serial.print(F("\t"));
     }
     Serial.println();
 }
@@ -95,10 +95,10 @@ extern "C" int main(void) {
 
     while (!receiver.has_signal()) {
         delay(500);
-        Serial.println("No receiver signal! Waiting.");
+        Serial.println(F("No receiver signal! Waiting."));
     }
 
-    Serial.println("Receiver signal detected, continuing.");
+    Serial.println(F("Receiver signal detected, continuing."));
 
     init_mpu6050();
 
@@ -150,15 +150,15 @@ extern "C" int main(void) {
 
         switch (state) {
             case DISARMING:
-                Serial.println("Disarming!");
+                Serial.println(F("Disarming!"));
                 if (!disarming_input(&channels)) {
-                    Serial.println("Disarming interrupted! Arming again.");
+                    Serial.println(F("Disarming interrupted! Arming again."));
                     state = ARMED;
                     break;
                 } else {
                     state = disarming_complete() ? DISARMED : DISARMING;
                     if (state == DISARMED) {
-                        Serial.println("Release the hold!");
+                        Serial.println(F("Release the hold!"));
                         while (disarming_input(&channels)) {
                             back_left_out_mixer  .shut_off();
                             back_right_out_mixer .shut_off();
@@ -171,12 +171,12 @@ extern "C" int main(void) {
                             dog.feed();
                             delay(10);
                         }
-                        Serial.println("DISARMING COMPLETE!");
+                        Serial.println(F("DISARMING COMPLETE!"));
                         break;
                     }
                 }
 
-                Serial.println("Proceeding to 'ARMED' state actions from 'DISARMING'");
+                Serial.println(F("Proceeding to 'ARMED' state actions from 'DISARMING'"));
                 /* Keep disarming, but stay armed (no break) */
 
             case ARMED:
@@ -184,7 +184,7 @@ extern "C" int main(void) {
                 new_rate_p = (channels[AUX2_CHANNEL] + 500) / 1000.0 / 8.0;
 
                 //Serial.print(new_stbl_p);
-                //Serial.print("\t");
+                //Serial.print(F("\t"));
                 //Serial.println(new_rate_p);
 
                 //roll_controller_stbl.set_p(new_stbl_p);
@@ -211,34 +211,34 @@ extern "C" int main(void) {
 
 //#define DEBUG_COL
 #ifdef DEBUG_COL
-                Serial.print("setp:");
+                Serial.print(F("setp:"));
                 Serial.print(channels[ROLL_CHANNEL]);
-                Serial.print("\troll-angl:");
+                Serial.print(F("\troll-angl:"));
                 Serial.print(attitude[ROLL_AXIS]);
-                Serial.print("\tpid_output_roll_stbl:");
+                Serial.print(F("\tpid_output_roll_stbl:"));
                 Serial.print(pid_output_roll_stbl);
-                Serial.print("\tpid_output_roll_rate:");
+                Serial.print(F("\tpid_output_roll_rate:"));
                 Serial.println(pid_output_roll_rate);
 #endif
 
                 /* State can be DISARMING because in that state everything from ARMED state must happen anyway */
                 if (state != DISARMING && disarming_input(&channels)) {
-                    Serial.println("Initializing Disarm!");
+                    Serial.println(F("Initializing Disarm!"));
                     state = DISARMING;
                     disarm_init();
                 }
                 break;
 
             case ARMING:
-                Serial.println("Arming!");
+                Serial.println(F("Arming!"));
                 if (!arming_input(&channels)) {
-                    Serial.println("Arming interrupted! Disarming again.");
+                    Serial.println(F("Arming interrupted! Disarming again."));
                     state = DISARMED;
                     break;
                 } else {
                     state = arming_complete() ? ARMED : ARMING;
                     if (state == ARMED) {
-                        Serial.println("Release the hold!");
+                        Serial.println(F("Release the hold!"));
                         while (arming_input(&channels)) {
                             /* Still don't fire the motors up */
                             back_left_out_mixer  .shut_off();
@@ -252,11 +252,11 @@ extern "C" int main(void) {
                             dog.feed();
                             delay(10);
                         }
-                        Serial.println("ARMING COMPLETE!");
+                        Serial.println(F("ARMING COMPLETE!"));
                         break;
                     }
                 }
-                Serial.println("Proceeding to 'DISARMED' state actions from 'ARMING'");
+                Serial.println(F("Proceeding to 'DISARMED' state actions from 'ARMING'"));
                 /* Keep arming, but stay disarmed (no break) */
 
             case DISARMED:
@@ -272,11 +272,11 @@ extern "C" int main(void) {
                 break;
 
             case CONFIG:
-                Serial.println("CONFIG!");
+                Serial.println(F("CONFIG!"));
                 state = DISARMED;
                 break;
             default:
-                Serial.println("Unimplemented state! Will disarm.");
+                Serial.println(F("Unimplemented state! Will disarm."));
                 state = DISARMED;
                 break;
         }
