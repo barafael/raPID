@@ -15,7 +15,8 @@ class PWMReceiver : Receiver {
         volatile channels_t pwm_pulse_start_time = { 0 };
 
     public:
-        explicit PWMReceiver(std::initializer_list<uint8_t> pins);
+        PWMReceiver(uint8_t throttle_pin, uint8_t roll_pin, uint8_t pitch_pin, uint8_t yaw_pin,
+                             uint8_t aux1_pin, uint8_t aux2_pin);
 
         const void update(channels_t channels);
         const bool has_signal();

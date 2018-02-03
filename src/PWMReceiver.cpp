@@ -65,10 +65,11 @@ void update_aux2() {
     }
 }
 
-void (*interrupts[6]) ();
-/* TODO only initialize 'NUM_CHANNELS' channels! */
-PWMReceiver::PWMReceiver(std::initializer_list<uint8_t> pins)
-    : pins{pins} {
+static void (*interrupts[6]) () = {};
+
+PWMReceiver::PWMReceiver(uint8_t thr_pin, uint8_t roll_pin,uint8_t pitch_pin,uint8_t yaw_pin,  uint8_t aux1_pin, uint8_t aux2_pin) {
+        pwm_rx_instance = this;
+
         interrupts[0] = update_throttle;
         interrupts[1] = update_roll;
         interrupts[2] = update_pitch;
@@ -76,11 +77,17 @@ PWMReceiver::PWMReceiver(std::initializer_list<uint8_t> pins)
         interrupts[4] = update_aux1;
         interrupts[5] = update_aux2;
 
-        pwm_rx_instance = this;
+        pins.reserve(6);
 
-        for (auto pin: pins) {
-            pinMode(pin, INPUT);
-            attachInterrupt(pin, interrupts[pin], CHANGE);
+        pins[0] = thr_pin;
+        pins[1] = roll_pin;
+        pins[2] = pitch_pin;
+        pins[3] = yaw_pin;
+        pins[4] = aux1_pin;
+        pins[5] = aux2_pin;
+
+        for (size_t index = 0; index < 6; index++) {
+            attachInterrupt(pins[index], interrupts[index], CHANGE);
         }
 }
 

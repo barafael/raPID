@@ -65,10 +65,6 @@ float pid_output_yaw_rate = 0.0;
 
 channels_t channels = { 0 };
 
-PWMReceiver receiver({THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
-                      PITCH_INPUT_PIN,    YAW_INPUT_PIN,
-                      AUX1_INPUT_PIN,     AUX2_INPUT_PIN});
-
 static void print_attitude(axis_t attitude) {
     for (size_t index = 0; index < 3; index++) {
         Serial.print(attitude[index]);
@@ -92,6 +88,10 @@ extern "C" int main(void) {
     pinMode(DEBUG_PIN, OUTPUT);
 
     delay(1000);
+
+    PWMReceiver receiver(THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
+            PITCH_INPUT_PIN,    YAW_INPUT_PIN,
+            AUX1_INPUT_PIN,     AUX2_INPUT_PIN);
 
     while (!receiver.has_signal()) {
         delay(500);
