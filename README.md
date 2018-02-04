@@ -39,6 +39,7 @@ controller), acro mode can be achieved.
 - [ ] Safety Enhancements
   - [ ] Make sure arming functionality works and is reliable
   - [ ] Add safety mechanisms for receiver signal loss
+  - [ ] Fix/Improve watchdog timer functionality. Is this even necessary? crash of software -> likely crash of vehicle
 
 ## Ideas
 - [ ] Live coefficient tweaking (standard tx or telemetry hardware)
