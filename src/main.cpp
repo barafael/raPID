@@ -155,12 +155,12 @@ extern "C" int main(void) {
         //print_attitude(attitude);
 
         mpu6050.update_angular_rates(angular_rates);
-        print_velocity(angular_rates);
+        //print_velocity(angular_rates);
 
         switch (state) {
             case DISARMING:
                 Serial.println(F("Disarming!"));
-                if (!disarming_input(&channels)) {
+                if (!disarming_input(channels)) {
                     Serial.println(F("Disarming interrupted! Arming again."));
                     state = ARMED;
                     break;
@@ -168,7 +168,7 @@ extern "C" int main(void) {
                     state = disarming_complete() ? DISARMED : DISARMING;
                     if (state == DISARMED) {
                         Serial.println(F("Release the hold!"));
-                        while (disarming_input(&channels)) {
+                        while (disarming_input(channels)) {
                             back_left_out_mixer  .shut_off();
                             back_right_out_mixer .shut_off();
                             front_left_out_mixer .shut_off();
@@ -231,7 +231,7 @@ extern "C" int main(void) {
 #endif
 
                 /* State can be DISARMING because in that state everything from ARMED state must happen anyway */
-                if (state != DISARMING && disarming_input(&channels)) {
+                if (state != DISARMING && disarming_input(channels)) {
                     Serial.println(F("Initializing Disarm!"));
                     state = DISARMING;
                     disarm_init();
@@ -240,7 +240,7 @@ extern "C" int main(void) {
 
             case ARMING:
                 Serial.println(F("Arming!"));
-                if (!arming_input(&channels)) {
+                if (!arming_input(channels)) {
                     Serial.println(F("Arming interrupted! Disarming again."));
                     state = DISARMED;
                     break;
@@ -248,7 +248,7 @@ extern "C" int main(void) {
                     state = arming_complete() ? ARMED : ARMING;
                     if (state == ARMED) {
                         Serial.println(F("Release the hold!"));
-                        while (arming_input(&channels)) {
+                        while (arming_input(channels)) {
                             /* Still don't fire the motors up */
                             back_left_out_mixer  .shut_off();
                             back_right_out_mixer .shut_off();
@@ -274,7 +274,7 @@ extern "C" int main(void) {
                 front_left_out_mixer .shut_off();
                 front_right_out_mixer.shut_off();
 
-                if (state != ARMING && arming_input(&channels)) {
+                if (state != ARMING && arming_input(channels)) {
                     state = ARMING;
                     arm_init();
                 }
