@@ -36,6 +36,9 @@ class ESCOutput : Output {
             }
 
         void apply(uint16_t _milli_throttle,
+                int16_t roll_stbl, int16_t pitch_stbl, int16_t yaw_stbl);
+
+        void apply(uint16_t _milli_throttle,
                 float roll_stbl, float pitch_stbl, float yaw_stbl);
 
         void shut_off();

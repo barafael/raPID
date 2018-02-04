@@ -38,6 +38,31 @@ void ESCOutput::apply(uint16_t _milli_throttle,
     write(throttle_tmp);
 }
 
+void ESCOutput::apply(uint16_t _milli_throttle,
+        int16_t roll_stbl, int16_t pitch_stbl, int16_t yaw_stbl) {
+    /* Throttle cutoff to avoid spinning props due to movement when throttle is
+     * low but state is armed
+     * Do it here, before the control values are added up
+     */
+    if (low_throttle_cutoff_enabled && (_milli_throttle < THROTTLE_LOW_CUTOFF)) {
+        shut_off();
+        return;
+    }
+
+    /* intermediary int16_t to prevent overflow */
+    int16_t throttle_tmp =  (int16_t) (_milli_throttle * mixer.throttle_volume);
+
+    throttle_tmp += (int16_t) (roll_stbl  * mixer.roll_volume);
+    throttle_tmp += (int16_t) (pitch_stbl * mixer.pitch_volume);
+    throttle_tmp += (int16_t) (yaw_stbl   * mixer.yaw_volume);
+
+    static const size_t DIVIDER = 6;
+    throttle_tmp = throttle_tmp << DIVIDER;
+    clamp(throttle_tmp, 0, 1000);
+
+    write(throttle_tmp);
+}
+
 void ESCOutput::set_limits(uint16_t lower, uint16_t upper) {
     if (upper < lower) {
         Serial.print(F("Dubious limits given to output on pin "));

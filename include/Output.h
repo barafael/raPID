@@ -21,6 +21,9 @@ class Output {
         /* Pure virtual method meant to be overridden in servo, esc, and anyPWM */
         virtual void apply(uint16_t value,
                 const float roll_stbl, const float pitch_stbl, const float yaw_stbl) = 0;
+
+        virtual void apply(uint16_t value,
+                const int16_t roll_stbl, const int16_t pitch_stbl, const int16_t yaw_stbl) = 0;
 };
 
 #endif // OUTPUT_H

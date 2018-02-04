@@ -56,13 +56,13 @@ axis_t attitude = { 0, 0, 0 };
 axis_t angular_rates = { 0, 0, 0 };
 
 
-float pid_output_roll_stbl = 0.0;
-float pid_output_roll_rate = 0.0;
+int16_t pid_output_roll_stbl = 0.0;
+int16_t pid_output_roll_rate = 0.0;
 
-float pid_output_pitch_stbl = 0.0;
-float pid_output_pitch_rate = 0.0;
+int16_t pid_output_pitch_stbl = 0.0;
+int16_t pid_output_pitch_rate = 0.0;
 
-float pid_output_yaw_rate = 0.0;
+int16_t pid_output_yaw_rate = 0.0;
 
 channels_t channels = { 0 };
 
@@ -121,21 +121,21 @@ extern "C" int main(void) {
 
     MPU6050IMU mpu6050;
 
-    PIDParams<float> roll_param_stbl ( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
-    PIDParams<float> roll_param_rate ( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
+    PIDParams<int16_t> roll_param_stbl ( 10 , 0 , 0 , 120 , 2000);
+    PIDParams<int16_t> roll_param_rate ( 10 , 0 , 0 , 120 , 2000);
 
-    PIDParams<float> pitch_param_stbl( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
-    PIDParams<float> pitch_param_rate( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
+    PIDParams<int16_t> pitch_param_stbl( 10 , 0 , 0 , 120 , 2000);
+    PIDParams<int16_t> pitch_param_rate( 10 , 0 , 0 , 120 , 2000);
 
-    PIDParams<float> yaw_param_rate  ( 1.0 , 0.0 , 0.0 , 12.0 , 200.0);
+    PIDParams<int16_t> yaw_param_rate  ( 100 , 0 , 0 , 120 , 2000);
 
-    PIDController<float> roll_controller_stbl(&roll_param_stbl);
-    PIDController<float> roll_controller_rate(&roll_param_rate);
+    PIDController<int16_t> roll_controller_stbl(&roll_param_stbl);
+    PIDController<int16_t> roll_controller_rate(&roll_param_rate);
 
-    PIDController<float> pitch_controller_stbl(&pitch_param_stbl);
-    PIDController<float> pitch_controller_rate(&pitch_param_rate);
+    PIDController<int16_t> pitch_controller_stbl(&pitch_param_stbl);
+    PIDController<int16_t> pitch_controller_rate(&pitch_param_rate);
 
-    PIDController<float> yaw_controller_rate(&yaw_param_rate);
+    PIDController<int16_t> yaw_controller_rate(&yaw_param_rate);
 
     ESCOutput back_left_out_mixer  (LEFT_SERVO_PIN,  1.0, -0.4, 0.4, 0.0);
     ESCOutput back_right_out_mixer (RIGHT_SERVO_PIN, 1.0, 0.4, 0.4, 0.0);
