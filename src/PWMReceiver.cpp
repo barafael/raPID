@@ -67,7 +67,7 @@ void update_aux2() {
 
 static void (*interrupts[6]) () = {};
 
-PWMReceiver::PWMReceiver(uint8_t thr_pin, uint8_t roll_pin,uint8_t pitch_pin,uint8_t yaw_pin,  uint8_t aux1_pin, uint8_t aux2_pin) {
+PWMReceiver::PWMReceiver(uint8_t thr_pin, uint8_t roll_pin, uint8_t pitch_pin, uint8_t yaw_pin, uint8_t aux1_pin, uint8_t aux2_pin) {
         pwm_rx_instance = this;
 
         interrupts[0] = update_throttle;

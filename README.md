@@ -36,6 +36,12 @@ controller), acro mode can be achieved.
 ## Fixes
 - [ ] Fix serial monitor ritual (current: remove tx, reboot, wait for sermon, connect tx)
 - [ ] Fix gyro vs. fused and rate vs. stbl issues (-15 factor)
+- [ ] Receiver
+  - [ ] Per-channel offsets to set zero/mid-points and somehow work around special case for throttle, which needs 50% extra offset
+  - [ ] Higher resolution, use complete int16_t range for later fast calculation
+- [ ] Outputs
+  - [ ] Rethink about set_limits, general implementation for generic waveforms? Specialization in servo. Maximum range must be at least standard max signal pulse width
+  - [ ] Weights in output matrix are linear. Would it make sense to use matrix of function pointers to support expo? Performance (inlining possible?)?
 - [ ] Safety Enhancements
   - [ ] Make sure arming functionality works and is reliable
   - [ ] Add safety mechanisms for receiver signal loss
