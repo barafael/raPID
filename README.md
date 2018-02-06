@@ -34,7 +34,7 @@ controller), acro mode can be achieved.
   - [ ] [unnecessary] Calculating error external from algorithm or pass an ```errorfunc(number, number) -> number``` function pointer (more general)
 
 ## Fixes
-- [ ] Fix serial monitor ritual (current: remove tx, reboot, wait for sermon, connect tx)
+- [x] Fix serial monitor ritual (current: remove tx, reboot, wait for sermon, connect tx)
 - [ ] Fix gyro vs. fused and rate vs. stbl issues (-15 factor)
 - [ ] Receiver
   - [ ] Per-channel offsets to set zero/mid-points and somehow work around special case for throttle, which needs 50% extra offset
@@ -49,14 +49,25 @@ controller), acro mode can be achieved.
 
 ## Ideas
 - [ ] Live coefficient tweaking (standard tx or telemetry hardware)
+  - [ ] RFM95 lora board for config data, telemetry
 - [ ] IMU solution overhaul: Ultimate SENtral or other; constant sampling rate simplifies PID and makes theory on time-discrete systems applicable
   - [x] General IMU interface class to test different IMU implementations
 - [ ] Matrix multiplication for output coefficients (every output is some weighted sum of the inputs + pid response) Possibly use DMP instructions and SIMD - one microsecond for multiplying 8x12 and a 12 column vec is achievable
+  - [ ] 8x12 x 12x1 int16_t mat/vec naive for loop implementation: 12us. Unrolled loops: 3us-6us. Sufficient, probably.
+  - [ ] 8x12 x 12x1 float mat/vec unrolled loops: 170us. Insufficient.
 - [ ] Arbitrary flight modes (different PID settings, offsets, and I/O matrix)
 - [ ] Flight mode interpolation (otherwise called transitional mixers) to smoothly switch between any two flight modes
+  - [ ] Flight mode matrix to other flight mode matrix: ```(1-tr) * old_mat + tr * new_mat``` for now. Sine/other functions, duration, etc. later.
+  - [ ] How to support more complex transitions where linear is insufficient? Pass pointer to function that takes end and start points, and percent, and gives interpolation value:
+        ```squared_sine(startpoint, endpoint, percent) -> interpolated```
 - [ ] Adjust settings wirelessly, ideally using a desktop application/website (have not thought about that part yet... far off)
-- [ ] Telemetry hardware + data logging
 - [ ] Use an RTOS?
+  * Periodic tasks that run slower than flight loop:
+    * Arming/disarming toggle check
+    * Flightmode matrix transition update
+    * Telemetry
+    * Watchdog
+    * Serial debug output (?)
 
 Blog-in-progress @ [https://barafael.github.io/Remote-Control-Vehicle-Balance-controller/](https://barafael.github.io/Remote-Control-Vehicle-Balance-controller/)
 
