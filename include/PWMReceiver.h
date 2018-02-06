@@ -29,4 +29,11 @@ class PWMReceiver : Receiver {
         friend void update_aux2();
 };
 
+void update_throttle();
+void update_roll();
+void update_pitch();
+void update_yaw();
+void update_aux1();
+void update_aux2();
+
 #endif // PWMRECEIVER_H

@@ -5,66 +5,6 @@
 /* Access variable for ISRs */
 PWMReceiver *pwm_rx_instance = nullptr;
 
-/*
-   ----------------------------------------------------------------
-   ---           PWMRECEIVER READ INTERRUPT ROUTINES            ---
-   ----------------------------------------------------------------
-*/
-
-void update_throttle() {
-    if (digitalRead(pwm_rx_instance->pins[0]) == HIGH) {
-        pwm_rx_instance->pwm_pulse_start_time[THROTTLE_CHANNEL] = micros();
-    } else {
-        pwm_rx_instance->channels_shared[THROTTLE_CHANNEL] =
-            (uint16_t)(micros() - pwm_rx_instance->pwm_pulse_start_time[THROTTLE_CHANNEL]);
-    }
-}
-
-void update_roll() {
-    if (digitalRead(pwm_rx_instance->pins[1]) == HIGH) {
-        pwm_rx_instance->pwm_pulse_start_time[ROLL_CHANNEL] = micros();
-    } else {
-        pwm_rx_instance->channels_shared[ROLL_CHANNEL] =
-            (uint16_t)(micros() - pwm_rx_instance->pwm_pulse_start_time[ROLL_CHANNEL]);
-    }
-}
-
-void update_pitch() {
-    if (digitalRead(pwm_rx_instance->pins[2]) == HIGH) {
-        pwm_rx_instance->pwm_pulse_start_time[PITCH_CHANNEL] = micros();
-    } else {
-        pwm_rx_instance->channels_shared[PITCH_CHANNEL] =
-            (uint16_t)(micros() - pwm_rx_instance->pwm_pulse_start_time[PITCH_CHANNEL]);
-    }
-}
-
-void update_yaw() {
-    if (digitalRead(pwm_rx_instance->pins[3]) == HIGH) {
-        pwm_rx_instance->pwm_pulse_start_time[YAW_CHANNEL] = micros();
-    } else {
-        pwm_rx_instance->channels_shared[YAW_CHANNEL] =
-            (uint16_t)(micros() - pwm_rx_instance->pwm_pulse_start_time[YAW_CHANNEL]);
-    }
-}
-
-void update_aux1() {
-    if (digitalRead(pwm_rx_instance->pins[4]) == HIGH) {
-        pwm_rx_instance->pwm_pulse_start_time[AUX1_CHANNEL] = micros();
-    } else {
-        pwm_rx_instance->channels_shared[AUX1_CHANNEL] =
-            (uint16_t)(micros() - pwm_rx_instance->pwm_pulse_start_time[AUX1_CHANNEL]);
-    }
-}
-
-void update_aux2() {
-    if (digitalRead(pwm_rx_instance->pins[5]) == HIGH) {
-        pwm_rx_instance->pwm_pulse_start_time[AUX2_CHANNEL] = micros();
-    } else {
-        pwm_rx_instance->channels_shared[AUX2_CHANNEL] =
-            (uint16_t)(micros() - pwm_rx_instance->pwm_pulse_start_time[AUX2_CHANNEL]);
-    }
-}
-
 static void (*interrupts[6]) () = {};
 
 PWMReceiver::PWMReceiver(uint8_t thr_pin, uint8_t roll_pin, uint8_t pitch_pin, uint8_t yaw_pin, uint8_t aux1_pin, uint8_t aux2_pin) {
@@ -125,3 +65,63 @@ const bool PWMReceiver::has_signal() {
     return true;
 }
 
+
+/*
+   ----------------------------------------------------------------
+   ---           PWMRECEIVER READ INTERRUPT ROUTINES            ---
+   ----------------------------------------------------------------
+*/
+
+void update_throttle() {
+    if (digitalRead(pwm_rx_instance->pins[0]) == HIGH) {
+        pwm_rx_instance->pwm_pulse_start_time[THROTTLE_CHANNEL] = micros();
+    } else {
+        pwm_rx_instance->channels_shared[THROTTLE_CHANNEL] =
+            (uint16_t)(micros() - pwm_rx_instance->pwm_pulse_start_time[THROTTLE_CHANNEL]);
+    }
+}
+
+void update_roll() {
+    if (digitalRead(pwm_rx_instance->pins[1]) == HIGH) {
+        pwm_rx_instance->pwm_pulse_start_time[ROLL_CHANNEL] = micros();
+    } else {
+        pwm_rx_instance->channels_shared[ROLL_CHANNEL] =
+            (uint16_t)(micros() - pwm_rx_instance->pwm_pulse_start_time[ROLL_CHANNEL]);
+    }
+}
+
+void update_pitch() {
+    if (digitalRead(pwm_rx_instance->pins[2]) == HIGH) {
+        pwm_rx_instance->pwm_pulse_start_time[PITCH_CHANNEL] = micros();
+    } else {
+        pwm_rx_instance->channels_shared[PITCH_CHANNEL] =
+            (uint16_t)(micros() - pwm_rx_instance->pwm_pulse_start_time[PITCH_CHANNEL]);
+    }
+}
+
+void update_yaw() {
+    if (digitalRead(pwm_rx_instance->pins[3]) == HIGH) {
+        pwm_rx_instance->pwm_pulse_start_time[YAW_CHANNEL] = micros();
+    } else {
+        pwm_rx_instance->channels_shared[YAW_CHANNEL] =
+            (uint16_t)(micros() - pwm_rx_instance->pwm_pulse_start_time[YAW_CHANNEL]);
+    }
+}
+
+void update_aux1() {
+    if (digitalRead(pwm_rx_instance->pins[4]) == HIGH) {
+        pwm_rx_instance->pwm_pulse_start_time[AUX1_CHANNEL] = micros();
+    } else {
+        pwm_rx_instance->channels_shared[AUX1_CHANNEL] =
+            (uint16_t)(micros() - pwm_rx_instance->pwm_pulse_start_time[AUX1_CHANNEL]);
+    }
+}
+
+void update_aux2() {
+    if (digitalRead(pwm_rx_instance->pins[5]) == HIGH) {
+        pwm_rx_instance->pwm_pulse_start_time[AUX2_CHANNEL] = micros();
+    } else {
+        pwm_rx_instance->channels_shared[AUX2_CHANNEL] =
+            (uint16_t)(micros() - pwm_rx_instance->pwm_pulse_start_time[AUX2_CHANNEL]);
+    }
+}
