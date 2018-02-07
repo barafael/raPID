@@ -6,19 +6,34 @@
 
 class PWMReceiver : Receiver {
     private:
+        /* TODO: maybe use static datastructure again */
         std::vector<uint8_t> pins;
 
-        /* The servo interrupt writes to this variable and the receiver function reads */
+        /* Channel offsets and throttle zero-point */
+        channels_t offsets = { 0 };
+
+        /* Per-channel trim */
+        channels_t trims = { 0 };
+
+        /* Interrupts write to this array and the update function reads
+         * Note: disable interrupts when reading to avoid race conditions
+         */
         volatile channels_t channels_shared = { 0 };
 
-        /* Written by interrupt on rising edge */
+        /* Written by interrupt on rising edge, read on falling edge
+         * No synchronization necessary if an interrupt only touches one array member.
+         */
         volatile channels_t pwm_pulse_start_time = { 0 };
 
     public:
         PWMReceiver(uint8_t throttle_pin, uint8_t roll_pin, uint8_t pitch_pin, uint8_t yaw_pin,
-                             uint8_t aux1_pin, uint8_t aux2_pin);
+                             uint8_t aux1_pin, uint8_t aux2_pin,
+                             channels_t offsets);
 
         const void update(channels_t channels);
+
+        void set_trims(channels_t channels);
+
         const bool has_signal();
 
         friend void update_throttle();

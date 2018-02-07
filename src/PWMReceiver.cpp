@@ -5,10 +5,15 @@
 /* Access variable for ISRs */
 PWMReceiver *pwm_rx_instance = nullptr;
 
-static void (*interrupts[6]) () = {};
+/* Array of void functions without params, one for each input */
+static void (*interrupts[NUM_CHANNELS])() = {};
 
-PWMReceiver::PWMReceiver(uint8_t thr_pin, uint8_t roll_pin, uint8_t pitch_pin, uint8_t yaw_pin, uint8_t aux1_pin, uint8_t aux2_pin) {
+PWMReceiver::PWMReceiver(uint8_t thr_pin, uint8_t roll_pin, uint8_t pitch_pin, uint8_t yaw_pin, uint8_t aux1_pin, uint8_t aux2_pin, channels_t offsets) {
         pwm_rx_instance = this;
+
+        for (size_t index = 0; index < NUM_CHANNELS; index++) {
+            this->offsets[index] = offsets[index];
+        }
 
         interrupts[0] = update_throttle;
         interrupts[1] = update_roll;
@@ -46,11 +51,16 @@ const void PWMReceiver::update(channels_t channels) {
     interrupts();
 
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
-        if (channels[index] < 1000) channels[index] = 1000;
-        if (channels[index] > 2000) channels[index] = 2000;
-        channels[index] -= 1500;
+        channels[index] += offsets[index];
+        channels[index] += trims[index];
+        clamp(channels[index], 1000, 2000);
     }
-    channels[THROTTLE_CHANNEL] += 500;
+}
+
+void PWMReceiver::set_trims(channels_t trims) {
+    for (size_t index = 0; index < NUM_CHANNELS; index++) {
+        this->trims[index] = trims[index];
+    }
 }
 
 const bool PWMReceiver::has_signal() {
