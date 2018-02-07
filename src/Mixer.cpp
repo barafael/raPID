@@ -18,6 +18,4 @@ Mixer::Mixer(float thr_vol, float roll_vol, float pitch_vol, float yaw_vol)
         clamp(pitch_volume,    -1.0, 1.0);
         clamp(yaw_volume,      -1.0, 1.0);
     }
-
-
-            }
+}

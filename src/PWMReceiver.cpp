@@ -8,32 +8,34 @@ PWMReceiver *pwm_rx_instance = nullptr;
 /* Array of void functions without params, one for each input */
 static void (*interrupts[NUM_CHANNELS])() = {};
 
-PWMReceiver::PWMReceiver(uint8_t thr_pin, uint8_t roll_pin, uint8_t pitch_pin, uint8_t yaw_pin, uint8_t aux1_pin, uint8_t aux2_pin, channels_t offsets) {
-        pwm_rx_instance = this;
+PWMReceiver::PWMReceiver(uint8_t throttle_pin, uint8_t roll_pin, uint8_t pitch_pin, uint8_t yaw_pin,
+        uint8_t aux1_pin, uint8_t aux2_pin,
+        channels_t offsets) {
+    pwm_rx_instance = this;
 
-        for (size_t index = 0; index < NUM_CHANNELS; index++) {
-            this->offsets[index] = offsets[index];
-        }
+    for (size_t index = 0; index < NUM_CHANNELS; index++) {
+        this->offsets[index] = offsets[index];
+    }
 
-        interrupts[0] = update_throttle;
-        interrupts[1] = update_roll;
-        interrupts[2] = update_pitch;
-        interrupts[3] = update_yaw;
-        interrupts[4] = update_aux1;
-        interrupts[5] = update_aux2;
+    interrupts[0] = update_throttle;
+    interrupts[1] = update_roll;
+    interrupts[2] = update_pitch;
+    interrupts[3] = update_yaw;
+    interrupts[4] = update_aux1;
+    interrupts[5] = update_aux2;
 
-        pins.reserve(6);
+    pins.reserve(6);
 
-        pins[0] = thr_pin;
-        pins[1] = roll_pin;
-        pins[2] = pitch_pin;
-        pins[3] = yaw_pin;
-        pins[4] = aux1_pin;
-        pins[5] = aux2_pin;
+    pins[0] = throttle_pin;
+    pins[1] = roll_pin;
+    pins[2] = pitch_pin;
+    pins[3] = yaw_pin;
+    pins[4] = aux1_pin;
+    pins[5] = aux2_pin;
 
-        for (size_t index = 0; index < 6; index++) {
-            attachInterrupt(pins[index], interrupts[index], CHANGE);
-        }
+    for (size_t index = 0; index < 6; index++) {
+        attachInterrupt(pins[index], interrupts[index], CHANGE);
+    }
 }
 
 

@@ -1,8 +1,8 @@
 #include "../include/ServoOutput.h"
 
 void ServoOutput::write(uint16_t _value) {
-    this->value = _value > 1000 ? 1000 : _value;
-    uint16_t angle = (uint32_t) (this->range * value) / 1000;
+    this->value    = _value > 1000 ? 1000 : _value;
+    uint16_t angle = (uint32_t)(this->range * value) / 1000;
     if (inverted) {
         output.writeMicroseconds(upper_limit - angle);
     } else {
@@ -30,8 +30,8 @@ const bool ServoOutput::is_inverted() {
     return inverted;
 }
 
-void ServoOutput::invert() {
-    inverted = !inverted;
+void ServoOutput::invert(bool invert) {
+    inverted = invert;
 }
 
 /* TODO: move to superclass */
@@ -41,8 +41,8 @@ void ServoOutput::set_limits(uint16_t lower, uint16_t upper) {
         Serial.print(F("Dubious limits given to output on pin "));
         Serial.println(pin);
         uint16_t tmp = lower;
-        lower = upper;
-        upper = tmp;
+        lower        = upper;
+        upper        = tmp;
     }
     upper_limit = upper > 1300 ? 1300 : upper;
     lower_limit = lower;
@@ -66,4 +66,3 @@ void ServoOutput::set_pitch_volume(float volume) {
 void ServoOutput::set_yaw_volume(float volume) {
     mixer.yaw_volume = volume;
 }
-

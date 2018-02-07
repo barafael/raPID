@@ -43,7 +43,7 @@ static uint8_t  fifo_buffer[64];
    -------------------------------------------------
 */
 
-static Quaternion q;         // [w, x, y, z]    quaternion container
+static Quaternion  q;        // [w, x, y, z]    quaternion container
 static VectorInt16 aa;       // [x, y, z]       accel sensor measurements
 static VectorInt16 aaReal;   // [x, y, z]       gravity-free accel sensor measurements
 static VectorInt16 aaWorld;  // [x, y, z]       world-frame accel sensor measurements
@@ -145,9 +145,7 @@ void MPU6050IMU::update_attitude(axis_t& attitude) {
          * TODO: make absolutely sure that scalar is never out of interval
          */
         static const int16_t FACTOR = 10425;
-        /* Yaw degrees */
-        // Add M_PI to get positive values (yaw_pitch_roll[0] element of (-M_PI, M_PI)).
-        // Angle in degree is ratio of reading to max reading * 180
+
         attitude[ROLL_AXIS]  = (int16_t) (yaw_pitch_roll[2] * FACTOR);
         attitude[PITCH_AXIS] = (int16_t) (yaw_pitch_roll[1] * FACTOR);
         attitude[YAW_AXIS]   = (int16_t) (yaw_pitch_roll[0] * FACTOR);
@@ -156,6 +154,7 @@ void MPU6050IMU::update_attitude(axis_t& attitude) {
     //frequency 100Hz
     //digitalWrite(DEBUG_PIN, LOW);
 }
+
 
 /*
    ----------------------------------------------------------------

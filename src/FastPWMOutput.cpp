@@ -29,9 +29,9 @@ void FastPWMOutput::apply(uint16_t _milli_throttle,
     /* intermediary int16_t to prevent overflow */
     int16_t throttle_tmp = (int16_t) (_milli_throttle * mixer.throttle_volume);
 
-    throttle_tmp += (int16_t) (roll_stbl       * mixer.roll_volume);
-    throttle_tmp += (int16_t) (pitch_stbl      * mixer.pitch_volume);
-    throttle_tmp += (int16_t) (yaw_stbl        * mixer.yaw_volume);
+    throttle_tmp += (int16_t) (roll_stbl  * mixer.roll_volume);
+    throttle_tmp += (int16_t) (pitch_stbl * mixer.pitch_volume);
+    throttle_tmp += (int16_t) (yaw_stbl   * mixer.yaw_volume);
 
     clamp(throttle_tmp, 0, 1000);
 
