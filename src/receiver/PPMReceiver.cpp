@@ -1,4 +1,4 @@
-#include "../include/PPMReceiver.h"
+#include "../include/receiver/PPMReceiver.h"
 
 PPMReceiver::PPMReceiver(uint8_t _input_pin, channels_t offsets) {
     input_pin = _input_pin;

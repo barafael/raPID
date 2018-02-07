@@ -25,7 +25,7 @@ class CascadedPIDController {
                   const T setpoint);
 };
 
-#include "../src/CascadedPIDController.tpp"
+#include "../src/pid/CascadedPIDController.tpp"
 
 #endif // CASCADED_PID_CONTROLLER_H
 

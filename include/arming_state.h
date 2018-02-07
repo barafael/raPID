@@ -4,7 +4,7 @@
 #include "Arduino.h"
 
 #include "settings.h"
-#include "Receiver.h"
+#include "receiver/Receiver.h"
 
 // TRANSITION
 // PASS_THROUGH

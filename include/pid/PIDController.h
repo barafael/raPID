@@ -9,7 +9,7 @@
 
 #include "PIDParams.h"
 #include "util.h"
-#include "MovingAverage.h"
+#include "filter/MovingAverage.h"
 
 typedef enum { ERROR, SETPOINT, MEASURED } derivative_type;
 
@@ -69,7 +69,7 @@ class PIDController {
         void enable_derivative_filter(bool enable);
 };
 
-#include "../src/PIDController.tpp"
+#include "../src/pid/PIDController.tpp"
 
 #endif // PID_CONTROLLER_H
 

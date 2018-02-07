@@ -1,4 +1,4 @@
-#include "../include/MPU6050IMU.h"
+#include "../include/imu/MPU6050IMU.h"
 
 #include "MPU6050_6Axis_MotionApps20.h"
 // #include "MPU6050_9Axis_MotionApps41.h"
