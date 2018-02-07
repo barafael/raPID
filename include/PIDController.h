@@ -46,7 +46,7 @@ class PIDController {
 
         static const size_t MAF_SIZE = 5;
 
-        MovingAverage<T, MAF_SIZE> deriv_filter;
+        MovingAverage<T> deriv_filter(MAF_SIZE);
 
     public:
         PIDController() = default;

@@ -3,7 +3,7 @@
 
 #include <cstddef>
 
-template <typename T, std::size_t n>
+template <typename T>
 class Filter {
     virtual T next(T value);
 };
