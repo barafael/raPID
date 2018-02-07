@@ -5,13 +5,13 @@
 #include "I2Cdev.h"
 #include "Servo.h"
 
-#include "../include/ESCOutput.h"
-#include "../include/PIDController.h"
-#include "../include/PWMReceiver.h"
+#include "../include/output/ESCOutput.h"
+#include "../include/pid/PIDController.h"
+#include "../include/receiver/PWMReceiver.h"
 #include "../include/arming_state.h"
 #include "../include/error_blink.h"
 #include "../include/pins.h"
-#include "../include/MPU6050IMU.h"
+#include "../include/imu/MPU6050IMU.h"
 #include "../include/settings.h"
 #include "../include/Watchdog.h"
 

@@ -10,8 +10,8 @@
 #include "PIDParams.h"
 #include "util.h"
 
-#include "Lowpass.h"
-#include "MovingAverage.h"
+#include "filter/MovingAverage.h"
+#include "filter/Lowpass.h"
 
 typedef enum { ERROR, SETPOINT, MEASURED } derivative_type;
 typedef enum { NONE, MOVING_AVERAGE, LOWPASS } filter_type;
@@ -76,7 +76,7 @@ class PIDController {
         void enable_derivative_filter(bool enable);
 };
 
-#include "../src/PIDController.tpp"
+#include "../src/pid/PIDController.tpp"
 
 #endif // PID_CONTROLLER_H
 
