@@ -19,6 +19,56 @@ PIDController<T>::PIDController(PIDParams<T> *params)
     , last_time      ( 0 ) {}
 
 template<typename T>
+PIDController<T>::PIDController(PIDParams<T> *params, float lowpass_beta)
+    : enabled ( true )
+
+    , p_gain ( params->p_gain )
+    , i_gain ( params->i_gain )
+    , d_gain ( params->d_gain )
+
+    , integral       ( 0 )
+    , integral_limit ( params->integral_limit )
+
+    , derivative     ( 0 )
+    , last_error     ( 0 )
+    , last_setpoint  ( 0 )
+    , last_measured  ( 0 )
+
+    , output_limit   ( params->output_limit )
+
+    , last_time      ( 0 ) {
+        this->lowpass_beta = lowpass_beta;
+        lowpass_filter = Lowpass<T>(lowpass_beta);
+        deriv_filter = &lowpass_filter;
+        derivative_filter_type = LOWPASS;
+}
+
+template<typename T>
+PIDController<T>::PIDController(PIDParams<T> *params, size_t mov_avg_size)
+    : enabled ( true )
+
+    , p_gain ( params->p_gain )
+    , i_gain ( params->i_gain )
+    , d_gain ( params->d_gain )
+
+    , integral       ( 0 )
+    , integral_limit ( params->integral_limit )
+
+    , derivative     ( 0 )
+    , last_error     ( 0 )
+    , last_setpoint  ( 0 )
+    , last_measured  ( 0 )
+
+    , output_limit   ( params->output_limit )
+
+    , last_time      ( 0 ) {
+        this->mov_avg_size = mov_avg_size;
+        ma_filter = MovingAverage<T>(mov_avg_size);
+        deriv_filter = &ma_filter;
+        derivative_filter_type = MOVING_AVERAGE;
+}
+
+template<typename T>
 void PIDController<T>::set_enabled(bool enable) {
     enabled = enable;
 }
@@ -65,8 +115,8 @@ T PIDController<T>::compute(const T measured, const T setpoint) {
             break;
     }
 
-    if (derivative_filter_enabled) {
-        d_term = deriv_filter.next(d_term);
+    if (deriv_filter != nullptr) {
+        d_term = deriv_filter->next(d_term);
     }
 
     this->last_time     = now;
@@ -108,14 +158,4 @@ void PIDController<T>::set_params(const PIDParams<T> *params) {
 template<typename T>
 void PIDController<T>::integral_reset() {
     integral = 0;
-}
-
-template<typename T>
-void PIDController<T>::set_derivative_type(derivative_type type) {
-    this->d_type = type;
-}
-
-template<typename T>
-void PIDController<T>::enable_derivative_filter(bool enable) {
-    this->derivative_filter_enabled = enable;
 }

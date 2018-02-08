@@ -2,22 +2,29 @@
 #define MOVING_AVERAGE_H
 
 #include <stdint.h>
+#include <vector>
 
 #include "Filter.h"
 
-template <typename T, std::size_t n>
-class MovingAverage : Filter<T, n> {
+template <typename T>
+class MovingAverage : public Filter<T> {
     private:
-        T values[n] = {};
+        std::vector<T> values;
         size_t marker = 0;
+        size_t n = 0;
 
     public:
-        MovingAverage() = default;
-        T next(T value);
+        explicit MovingAverage(size_t n);
+        virtual T next(T value);
 };
 
-template <typename T, std::size_t n>
-T MovingAverage<T, n>::next(T value) {
+template <typename T>
+MovingAverage<T>::MovingAverage(size_t n)
+    : values(n)
+    , n(n) {}
+
+template <typename T>
+T MovingAverage<T>::next(T value) {
     marker = (marker + 1) % n;
     values[marker] = value;
     T sum = 0;
@@ -28,4 +35,3 @@ T MovingAverage<T, n>::next(T value) {
 }
 
 #endif // MOVING_AVERAGE_H
-
