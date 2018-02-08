@@ -6,26 +6,35 @@
 #include "Filter.h"
 
 template <typename T>
-class LowPass : Filter<T> {
+class Lowpass : public Filter<T> {
     private:
         T prev_output = 0.0f;
         float beta = 1.0;
         float ateb = 0.0;
 
     public:
-        explicit LowPass(float beta);
-        T next(T value);
+        explicit Lowpass(float beta);
+        virtual T next(T value);
         void set_beta(float beta);
 };
 
 template <typename T>
-T LowPass<T>::next(T value) {
+Lowpass<T>::Lowpass(float beta) {
+    if (beta < 0.0f || beta > 1.0f) {
+        beta = 0.0;
+    }
+    this->beta = beta;
+    this->ateb = 1.0f - beta;
+}
+
+template <typename T>
+T Lowpass<T>::next(T value) {
     prev_output = prev_output * beta + value * ateb;
     return prev_output;
 }
 
 template <typename T>
-void LowPass<T>::set_beta(float beta) {
+void Lowpass<T>::set_beta(float beta) {
     if (beta < 0.0f || beta > 1.0f) {
         return;
     }

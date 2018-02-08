@@ -9,9 +9,12 @@
 
 #include "PIDParams.h"
 #include "util.h"
+
+#include "Lowpass.h"
 #include "MovingAverage.h"
 
 typedef enum { ERROR, SETPOINT, MEASURED } derivative_type;
+typedef enum { NONE, MOVING_AVERAGE, LOWPASS } filter_type;
 
 template<typename T>
 class PIDController {
@@ -42,15 +45,21 @@ class PIDController {
 
         uint64_t last_time;
 
-        bool derivative_filter_enabled = false;
+        filter_type derivative_filter_type = NONE;
 
-        static const size_t MAF_SIZE = 5;
+        float lowpass_beta = 0.8;
+        size_t mov_avg_size = 10;
 
-        MovingAverage<T> deriv_filter(MAF_SIZE);
+        Lowpass<T> lowpass_filter  = Lowpass<T>(lowpass_beta);
+        MovingAverage<T> ma_filter = MovingAverage<T>(mov_avg_size);
+
+        Filter<T> *deriv_filter;
 
     public:
         PIDController() = default;
         explicit PIDController(PIDParams<T> *params);
+        PIDController(PIDParams<T> *params, float lowpass_beta);
+        PIDController(PIDParams<T> *params, size_t mov_avg_size);
 
         /* En/Disable Passthrough of setpoint */
         void set_enabled(bool enable);
@@ -64,8 +73,6 @@ class PIDController {
         void set_params(const PIDParams<T> *params);
 
         void integral_reset();
-
-        void set_derivative_type(derivative_type type);
         void enable_derivative_filter(bool enable);
 };
 

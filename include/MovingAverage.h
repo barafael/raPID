@@ -7,7 +7,7 @@
 #include "Filter.h"
 
 template <typename T>
-class MovingAverage : Filter<T> {
+class MovingAverage : public Filter<T> {
     private:
         std::vector<T> values;
         size_t marker = 0;
@@ -15,7 +15,7 @@ class MovingAverage : Filter<T> {
 
     public:
         explicit MovingAverage(size_t n);
-        T next(T value);
+        virtual T next(T value);
 };
 
 template <typename T>
