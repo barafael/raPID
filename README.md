@@ -28,7 +28,8 @@ controller), acro mode can be achieved.
   - [x] 400Hz update rate for ESCs using analogWrite timers (to do: test it)
   - [x] Arbitrary waveform generation for PWM to drive even LEDs (to do: test it)
 - [x] PID Improvements
-  - [x] D noise filter, derivative-on-{error, feedback, setpoint}
+  - [x] D noise filters: lowpass, moving average
+  - [x] Derivative-on-{error, feedback, setpoint}
   - [x] Implement cascaded PID in a more explicit way
   - [x] Fixed point PID implementation (to do: test it)
   - [ ] [unnecessary] Calculating error external from algorithm or pass an ```errorfunc(number, number) -> number``` function pointer (more general)
