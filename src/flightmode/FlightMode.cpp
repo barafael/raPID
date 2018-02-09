@@ -1,31 +1,31 @@
 #include "../include/FlightMode.h"
 
-#include "../include/PIDParams.h"
-#include "../include/Mixer.h"
+#include "../include/pid/PIDParams.h"
+#include "../include/output/Mixer.h"
 
 /* TODO implement flight mode offset? */
 
-void FlightMode::set_roll_stbl(PIDParams *stbl) {
+void FlightMode::set_roll_stbl(PIDParams<float> *stbl) {
     this->roll_stbl = *stbl;
 }
 
-void FlightMode::set_roll_rate(PIDParams *rate) {
+void FlightMode::set_roll_rate(PIDParams<float> *rate) {
     this->roll_rate = *rate;
 }
 
-void FlightMode::set_pitch_stbl(PIDParams *stbl) {
+void FlightMode::set_pitch_stbl(PIDParams<float> *stbl) {
     this->pitch_stbl = *stbl;
 }
 
-void FlightMode::set_pitch_rate(PIDParams *rate) {
+void FlightMode::set_pitch_rate(PIDParams<float> *rate) {
     this->pitch_rate = *rate;
 }
 
-void FlightMode::set_yaw_stbl(PIDParams *stbl) {
+void FlightMode::set_yaw_stbl(PIDParams<float> *stbl) {
     this->yaw_stbl = *stbl;
 }
 
-void FlightMode::set_yaw_rate(PIDParams *rate) {
+void FlightMode::set_yaw_rate(PIDParams<float> *rate) {
     this->yaw_rate = *rate;
 }
 

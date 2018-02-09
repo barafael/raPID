@@ -1,4 +1,4 @@
-#include "../include/FastPWMOutput.h"
+#include "../include/output/FastPWMOutput.h"
 
 /* TODO implement arming for ESC type? */
 /* TODO better model for position/thrust/endpoints */
@@ -29,9 +29,9 @@ void FastPWMOutput::apply(uint16_t _milli_throttle,
     /* intermediary int16_t to prevent overflow */
     int16_t throttle_tmp = (int16_t) (_milli_throttle * mixer.throttle_volume);
 
-    throttle_tmp += (int16_t) (roll_stbl       * mixer.roll_volume);
-    throttle_tmp += (int16_t) (pitch_stbl      * mixer.pitch_volume);
-    throttle_tmp += (int16_t) (yaw_stbl        * mixer.yaw_volume);
+    throttle_tmp += (int16_t) (roll_stbl  * mixer.roll_volume);
+    throttle_tmp += (int16_t) (pitch_stbl * mixer.pitch_volume);
+    throttle_tmp += (int16_t) (yaw_stbl   * mixer.yaw_volume);
 
     clamp(throttle_tmp, 0, 1000);
 
@@ -50,7 +50,7 @@ void FastPWMOutput::set_frequency(uint32_t freq) {
 
 void FastPWMOutput::set_limits(uint16_t lower, uint16_t upper) {
     if (upper < lower) {
-        Serial.print("Dubious limits given to output on pin ");
+        Serial.print(F("Dubious limits given to output on pin "));
         Serial.println(pin);
         uint16_t tmp = lower;
         lower = upper;

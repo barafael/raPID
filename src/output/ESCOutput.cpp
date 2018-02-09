@@ -1,6 +1,6 @@
-#include "../include/ESCOutput.h"
+#include "../include/output/ESCOutput.h"
 
-/* TODO implement arming for ESC type? */
+/* TODO implement arming for ESC type? How? Blocking function? Timer, asynchronicity? */
 /* TODO better model for position/thrust/endpoints */
 /* TODO remove includes when not using warning output */
 
@@ -40,7 +40,7 @@ void ESCOutput::apply(uint16_t _milli_throttle,
 
 void ESCOutput::set_limits(uint16_t lower, uint16_t upper) {
     if (upper < lower) {
-        Serial.print("Dubious limits given to output on pin ");
+        Serial.print(F("Dubious limits given to output on pin "));
         Serial.println(pin);
         uint16_t tmp = lower;
         lower = upper;

@@ -36,7 +36,7 @@ class ServoOutput : Output {
                 const float roll_stbl, const float pitch_stbl, const float yaw_stbl);
 
         const bool is_inverted();
-        void invert();
+        void invert(bool invert);
 
         void set_limits(uint16_t lower, uint16_t upper);
 

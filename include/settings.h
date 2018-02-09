@@ -2,6 +2,7 @@
 #define SETTINGS_H
 
 #include <stdint.h>
+#include <cstddef>
 
 static const uint16_t DISARM_TIMEOUT = 2500;
 
