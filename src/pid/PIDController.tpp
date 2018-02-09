@@ -80,9 +80,9 @@ T PIDController<T>::compute(const T measured, const T setpoint) {
     }
 
     /* TODO: handle overflows for 'now' using rollover or somesuch. */
-    uint64_t now = millis();
+    uint64_t now = micros();
 
-    uint32_t elapsed_time = now - last_time;
+    uint64_t elapsed_time = now - last_time;
 
     T error = measured - setpoint;
 
