@@ -8,7 +8,7 @@
 #include "../include/output/ESCOutput.h"
 #include "../include/pid/PIDController.h"
 #include "../include/receiver/PWMReceiver.h"
-#include "../include/arming_state.h"
+#include "../include/ArmingState.h"
 #include "../include/error_blink.h"
 #include "../include/pins.h"
 #include "../include/imu/MPU6050IMU.h"
@@ -54,7 +54,6 @@ axis_t attitude = { 0, 0, 0 };
 
 /* Angular Rate */
 axis_t angular_rates = { 0, 0, 0 };
-
 
 float pid_output_roll_stbl = 0.0;
 float pid_output_roll_rate = 0.0;
@@ -157,6 +156,8 @@ extern "C" int main(void) {
 
     Watchdog dog;
 
+    ArmingState arming_state(channels);
+
     /* Flight loop */
     while (true) {
         receiver.update(channels);
@@ -168,44 +169,14 @@ extern "C" int main(void) {
         mpu6050.update_angular_rates(angular_rates);
         //print_velocity(angular_rates);
 
-        switch (state) {
-            case DISARMING:
-                Serial.println(F("Disarming!"));
-                if (!disarming_input(channels)) {
-                    Serial.println(F("Disarming interrupted! Arming again."));
-                    state = ARMED;
-                    break;
-                } else {
-                    state = disarming_complete() ? DISARMED : DISARMING;
-                    if (state == DISARMED) {
-                        Serial.println(F("Release the hold!"));
-                        while (disarming_input(channels)) {
-                            back_left_out_mixer  .shut_off();
-                            back_right_out_mixer .shut_off();
-                            front_left_out_mixer .shut_off();
-                            front_right_out_mixer.shut_off();
-
-                            receiver.update(channels);
-                            mpu6050.update_attitude(attitude);
-                            mpu6050.update_angular_rates(angular_rates);
-                            dog.feed();
-                            delay(10);
-                        }
-                        Serial.println(F("DISARMING COMPLETE!"));
-                        break;
-                    }
-                }
-
-                Serial.println(F("Proceeding to 'ARMED' state actions from 'DISARMING'"));
-                /* Keep disarming, but stay armed (no break) */
-
+        switch (arming_state.get_state()) {
             case ARMED:
-                //Serial.println(attitude[ROLL_AXIS] - channels[ROLL_CHANNEL]);
+                //Serial.print(new_stbl_p);
                 pid_output_roll_stbl = roll_controller_stbl.  compute(attitude[ROLL_AXIS], channels[ROLL_CHANNEL]);
-                //Serial.println(pid_output_roll_stbl);
+                //Serial.println(new_rate_p);
 
                 pid_output_roll_rate = roll_controller_rate.  compute(angular_rates[ROLL_AXIS], pid_output_roll_stbl);
-                //Serial.println(pid_output_roll_rate);
+                //roll_controller_rate.set_p(new_rate_p);
 
                 pid_output_pitch_stbl = pitch_controller_stbl.compute(attitude[PITCH_AXIS], channels[PITCH_CHANNEL]);
 
@@ -231,43 +202,7 @@ extern "C" int main(void) {
                 Serial.println(pid_output_roll_rate);
 #endif
 
-                /* State can be DISARMING because in that state everything from ARMED state must happen anyway */
-                if (state != DISARMING && disarming_input(channels)) {
-                    Serial.println(F("Initializing Disarm!"));
-                    state = DISARMING;
-                    disarm_init();
-                }
                 break;
-
-            case ARMING:
-                Serial.println(F("Arming!"));
-                if (!arming_input(channels)) {
-                    Serial.println(F("Arming interrupted! Disarming again."));
-                    state = DISARMED;
-                    break;
-                } else {
-                    state = arming_complete() ? ARMED : ARMING;
-                    if (state == ARMED) {
-                        Serial.println(F("Release the hold!"));
-                        while (arming_input(channels)) {
-                            /* Still don't fire the motors up */
-                            back_left_out_mixer  .shut_off();
-                            back_right_out_mixer .shut_off();
-                            front_left_out_mixer .shut_off();
-                            front_right_out_mixer.shut_off();
-
-                            receiver.update(channels);
-                            mpu6050.update_attitude(attitude);
-                            mpu6050.update_angular_rates(angular_rates);
-                            dog.feed();
-                            delay(10);
-                        }
-                        Serial.println(F("ARMING COMPLETE!"));
-                        break;
-                    }
-                }
-                Serial.println(F("Proceeding to 'DISARMED' state actions from 'ARMING'"));
-                /* Keep arming, but stay disarmed (no break) */
 
             case DISARMED:
                 back_left_out_mixer  .shut_off();
@@ -275,16 +210,8 @@ extern "C" int main(void) {
                 front_left_out_mixer .shut_off();
                 front_right_out_mixer.shut_off();
 
-                if (state != ARMING && arming_input(channels)) {
-                    state = ARMING;
-                    arm_init();
-                }
                 break;
 
-            case CONFIG:
-                Serial.println(F("CONFIG!"));
-                state = DISARMED;
-                break;
             default:
                 Serial.println(F("Unimplemented state! Will disarm."));
                 state = DISARMED;
