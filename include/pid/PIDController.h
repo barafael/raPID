@@ -54,7 +54,7 @@ class PIDController {
         Lowpass<T> lowpass_filter  = Lowpass<T>(lowpass_beta);
         MovingAverage<T> ma_filter = MovingAverage<T>(mov_avg_size);
 
-        Filter<T> *deriv_filter;
+        Filter<T> *deriv_filter = nullptr;
 
     public:
         PIDController() = default;

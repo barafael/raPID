@@ -106,6 +106,8 @@ extern "C" int main(void) {
     pinMode(LED_PIN, OUTPUT);
     pinMode(DEBUG_PIN, OUTPUT);
 
+    static bool blink_state = false;
+
     delay(1000);
 
     channels_t offsets = { -1000, -1500, -1500, -1500, -1500, -1500 };
@@ -288,8 +290,6 @@ extern "C" int main(void) {
                 state = DISARMED;
                 break;
         }
-
-        static bool blink_state = false;
 
         /* Blink LED to indicate activity */
         blink_state = !blink_state;
