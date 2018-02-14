@@ -33,7 +33,7 @@ PWMReceiver::PWMReceiver(uint8_t throttle_pin, uint8_t roll_pin, uint8_t pitch_p
     pins[4] = aux1_pin;
     pins[5] = aux2_pin;
 
-    for (size_t index = 0; index < 6; index++) {
+    for (size_t index = 0; index < NUM_CHANNELS; index++) {
         attachInterrupt(pins[index], interrupts[index], CHANGE);
     }
 }
@@ -53,9 +53,9 @@ const void PWMReceiver::update(channels_t channels) {
     interrupts();
 
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
+        clamp(channels[index], 1000, 2000);
         channels[index] += offsets[index];
         channels[index] += trims[index];
-        clamp(channels[index], 1000, 2000);
     }
 }
 

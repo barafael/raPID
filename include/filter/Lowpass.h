@@ -8,7 +8,7 @@
 template <typename T>
 class Lowpass : public Filter<T> {
     private:
-        T prev_output = 0.0f;
+        T prev_output = 0;
         float beta = 1.0;
         float ateb = 0.0;
 
@@ -21,7 +21,7 @@ class Lowpass : public Filter<T> {
 template <typename T>
 Lowpass<T>::Lowpass(float beta) {
     if (beta < 0.0f || beta > 1.0f) {
-        beta = 0.0;
+        beta = 0.0f;
     }
     this->beta = beta;
     this->ateb = 1.0f - beta;

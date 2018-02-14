@@ -108,7 +108,7 @@ extern "C" int main(void) {
 
     delay(1000);
 
-    channels_t offsets = { -1000, -1500, -1500, -1500 };
+    channels_t offsets = { -1000, -1500, -1500, -1500, -1500, -1500 };
 
     PWMReceiver receiver(THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
                          PITCH_INPUT_PIN,    YAW_INPUT_PIN,
