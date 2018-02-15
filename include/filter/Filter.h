@@ -3,9 +3,10 @@
 
 #include <cstddef>
 
-template <typename T, std::size_t n>
+template <typename T>
 class Filter {
-    virtual T next(T value);
+    public:
+        virtual T next(T value) = 0;
 };
 
 #endif // FILTER_H

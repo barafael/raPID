@@ -6,7 +6,8 @@
 typedef enum {
     DMP_INIT_MEM_LOAD_FAILED,
     DMP_CONF_UPDATES_FAILED,
-    DMP_ERROR_UNKNOWN
+    DMP_ERROR_UNKNOWN,
+    STATE_TIMER_HARDWARE_BUSY
 } error_type;
 
 void blink_pattern(const char* pattern);

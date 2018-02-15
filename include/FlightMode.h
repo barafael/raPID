@@ -1,8 +1,8 @@
 #ifndef FLIGHTMODE_H
 #define FLIGHTMODE_H
 
-#include "PIDParams.h"
-#include "Mixer.h"
+#include "pid/PIDParams.h"
+#include "output/Mixer.h"
 
 class FlightMode {
     private:

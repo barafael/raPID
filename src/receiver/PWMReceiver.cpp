@@ -1,9 +1,82 @@
 #include "Arduino.h"
 
-#include "../include/PWMReceiver.h"
+#include "../include/receiver/PWMReceiver.h"
 
 /* Access variable for ISRs */
 PWMReceiver *pwm_rx_instance = nullptr;
+
+/* Array of void functions without params, one for each input */
+static void (*interrupts[NUM_CHANNELS])() = {};
+
+PWMReceiver::PWMReceiver(uint8_t throttle_pin, uint8_t roll_pin, uint8_t pitch_pin, uint8_t yaw_pin,
+        uint8_t aux1_pin, uint8_t aux2_pin,
+        channels_t offsets) {
+    pwm_rx_instance = this;
+
+    for (size_t index = 0; index < NUM_CHANNELS; index++) {
+        this->offsets[index] = offsets[index];
+    }
+
+    interrupts[0] = update_throttle;
+    interrupts[1] = update_roll;
+    interrupts[2] = update_pitch;
+    interrupts[3] = update_yaw;
+    interrupts[4] = update_aux1;
+    interrupts[5] = update_aux2;
+
+    pins.reserve(6);
+
+    pins[0] = throttle_pin;
+    pins[1] = roll_pin;
+    pins[2] = pitch_pin;
+    pins[3] = yaw_pin;
+    pins[4] = aux1_pin;
+    pins[5] = aux2_pin;
+
+    for (size_t index = 0; index < NUM_CHANNELS; index++) {
+        attachInterrupt(pins[index], interrupts[index], CHANGE);
+    }
+}
+
+
+/*
+   ---------------------------------------------------------
+   ---           PWMRECEIVER UPDATE FUNCTION             ---
+   ---------------------------------------------------------
+*/
+
+const void PWMReceiver::update(channels_t channels) {
+    noInterrupts();
+    for (size_t index = 0; index < NUM_CHANNELS; index++) {
+        channels[index] = channels_shared[index];
+    }
+    interrupts();
+
+    for (size_t index = 0; index < NUM_CHANNELS; index++) {
+        clamp(channels[index], 1000, 2000);
+        channels[index] += offsets[index];
+        channels[index] += trims[index];
+    }
+}
+
+void PWMReceiver::set_trims(channels_t trims) {
+    for (size_t index = 0; index < NUM_CHANNELS; index++) {
+        this->trims[index] = trims[index];
+    }
+}
+
+const bool PWMReceiver::has_signal() {
+    noInterrupts();
+    for (size_t index = 0; index < NUM_CHANNELS; index++) {
+        if (channels_shared[index] == 0) {
+            interrupts();
+            return false;
+        }
+    }
+    interrupts();
+    return true;
+}
+
 
 /*
    ----------------------------------------------------------------
@@ -64,64 +137,3 @@ void update_aux2() {
             (uint16_t)(micros() - pwm_rx_instance->pwm_pulse_start_time[AUX2_CHANNEL]);
     }
 }
-
-static void (*interrupts[6]) () = {};
-
-PWMReceiver::PWMReceiver(uint8_t thr_pin, uint8_t roll_pin,uint8_t pitch_pin,uint8_t yaw_pin,  uint8_t aux1_pin, uint8_t aux2_pin) {
-        pwm_rx_instance = this;
-
-        interrupts[0] = update_throttle;
-        interrupts[1] = update_roll;
-        interrupts[2] = update_pitch;
-        interrupts[3] = update_yaw;
-        interrupts[4] = update_aux1;
-        interrupts[5] = update_aux2;
-
-        pins.reserve(6);
-
-        pins[0] = thr_pin;
-        pins[1] = roll_pin;
-        pins[2] = pitch_pin;
-        pins[3] = yaw_pin;
-        pins[4] = aux1_pin;
-        pins[5] = aux2_pin;
-
-        for (size_t index = 0; index < 6; index++) {
-            attachInterrupt(pins[index], interrupts[index], CHANGE);
-        }
-}
-
-
-/*
-   ---------------------------------------------------------
-   ---           PWMRECEIVER UPDATE FUNCTION             ---
-   ---------------------------------------------------------
-*/
-
-const void PWMReceiver::update(channels_t channels) {
-    noInterrupts();
-    for (size_t index = 0; index < NUM_CHANNELS; index++) {
-        channels[index] = channels_shared[index];
-    }
-    interrupts();
-
-    for (size_t index = 0; index < NUM_CHANNELS; index++) {
-        if (channels[index] < 1000) channels[index] = 1000;
-        if (channels[index] > 2000) channels[index] = 2000;
-        channels[index] -= 1500;
-    }
-    channels[THROTTLE_CHANNEL] += 500;
-}
-
-const bool PWMReceiver::has_signal() {
-    noInterrupts();
-    for (size_t index = 0; index < NUM_CHANNELS; index++) {
-        if (channels_shared[index] == 0) {
-            interrupts();
-            return false;
-        }
-    }
-    interrupts();
-    return true;
-}
-
