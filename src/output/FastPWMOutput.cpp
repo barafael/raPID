@@ -4,6 +4,15 @@
 /* TODO better model for position/thrust/endpoints */
 /* TODO remove includes when not using warning output */
 
+FastPWMOutput::FastPWMOutput(const uint8_t pin,
+        float throttle_volume, float roll_volume, float pitch_volume, float yaw_volume)
+    : Output(pin, throttle_volume, roll_volume, pitch_volume, yaw_volume) {
+        Serial.println(pin);
+        analogWriteResolution(resolution_bits);
+    pinMode(pin, OUTPUT);
+    analogWriteFrequency(pin, frequency_hz);
+}
+
 void FastPWMOutput::shut_off() {
     write(0);
 }
@@ -11,9 +20,8 @@ void FastPWMOutput::shut_off() {
 /* Avoiding invert functionality, maybe simplify? */
 void FastPWMOutput::write(uint16_t _milli_throttle) {
     this->milli_throttle = _milli_throttle > 1000 ? 1000 : _milli_throttle;
-    uint16_t thrust = (uint32_t) (this->range * milli_throttle) / 1000;
-    float value = thrust / 1000.0f;
-    analogWrite(pin, lower_limit + range * value);
+    float thrust = milli_throttle / 1000.0;
+    analogWrite(pin, lower_limit + range * thrust);
 }
 
 void FastPWMOutput::apply(uint16_t _milli_throttle,

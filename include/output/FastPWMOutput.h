@@ -19,14 +19,15 @@ class FastPWMOutput : Output {
         float min_pulse_width_sec = 0.001f;
         float max_pulse_width_sec = 0.002f;
 
-        uint8_t min_dutycycle_percent = min_pulse_width_sec/wavelength_sec * 100;
-        uint8_t max_dutycycle_percent = max_pulse_width_sec/wavelength_sec * 100;
+        uint8_t min_dutycycle_percent = (min_pulse_width_sec/wavelength_sec) * 100.0f;
+        uint8_t max_dutycycle_percent = (max_pulse_width_sec/wavelength_sec) * 100.0f;
 
-        uint16_t lower_limit = (1 << resolution_bits) / 100 * min_dutycycle_percent;
-        uint16_t upper_limit = (1 << resolution_bits) / 100 * max_dutycycle_percent;
+        uint16_t lower_limit = (1 << resolution_bits) * (min_dutycycle_percent / 100.0f);
+        uint16_t upper_limit = (1 << resolution_bits) * (max_dutycycle_percent / 100.0f);
+
+        uint16_t range = upper_limit - lower_limit;
 
         uint16_t throttle_low_cutoff = 25;
-        uint16_t range = upper_limit - lower_limit;
 
         bool low_throttle_cutoff_enabled = true;
 
@@ -35,10 +36,7 @@ class FastPWMOutput : Output {
     public:
         FastPWMOutput(const uint8_t pin,
                 float throttle_volume,
-                float roll_volume, float pitch_volume, float yaw_volume)
-            : Output(pin, throttle_volume, roll_volume, pitch_volume, yaw_volume) {
-                pinMode(pin, OUTPUT);
-            }
+                float roll_volume, float pitch_volume, float yaw_volume);
 
         void apply(uint16_t _milli_throttle,
                 float roll_stbl, float pitch_stbl, float yaw_stbl);
