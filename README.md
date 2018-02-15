@@ -32,7 +32,7 @@ the setpoint to the next controller) and only using the rate controller.
   - [x] D noise filters: lowpass, moving average
   - [x] Derivative-on-{error, feedback, setpoint}
   - [x] Implement cascaded PID in a more explicit way
-  - [x] Fixed point PID implementation (to do: test it)
+  - [ ] Fixed point PID implementation
   - [ ] [unnecessary] Calculating error external from algorithm or pass an ```errorfunc(number, number) -> number``` function pointer (more general)
 
 ## TODO
@@ -42,6 +42,7 @@ the setpoint to the next controller) and only using the rate controller.
   - [x] Per-channel offsets to set zero/mid-points and somehow work around special case for throttle, which needs 50% extra offset
   - [ ] Higher resolution, use complete int16_t range for later fast calculation
 - [ ] Outputs
+  - [x] 400Hz PWM output test and fix
   - [ ] Rethink set_limits, general implementation of generic waveforms? Specialization in servo (endpoints, expo?, trimming, inversion). Maximum range must be at least standard max signal pulse width
 - [ ] Safety Enhancements
   - [ ] Make sure arming functionality works and is reliable
