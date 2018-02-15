@@ -3,18 +3,18 @@
 
 #include "Arduino.h"
 
-#include "receiver/Receiver.h"
 #include "error_blink.h"
+#include "receiver/Receiver.h"
 
 // TRANSITION PASS_THROUGH FAILSAFE, CONFIG
-typedef enum { DISARMED, ARMING, ARMED, DISARMING } state_t;
+typedef enum { DISARMED, ARMING, ARMING_STANDBY, ARMED, DISARMING, DISARMING_STANDBY } state_t;
 
 class ArmingState {
     private:
         const uint16_t DISARM_TIMEOUT_MS = 2500;
         const uint16_t ARM_TIMEOUT_MS = 1000;
-        /* 0.1 seconds polling interval, too low? */
-        const uint32_t INTERVAL_US = 100000;
+        /* find appropriate polling interval */
+        const uint32_t INTERVAL_US = 500000;
 
         state_t internal_state = DISARMED;
         IntervalTimer state_change_timer;
