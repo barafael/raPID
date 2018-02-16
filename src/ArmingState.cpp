@@ -111,15 +111,19 @@ ArmingState::ArmingState(channels_t channels)
 }
 
 state_t ArmingState::get_state() {
+    noInterrupts();
     switch (internal_state) {
         case ARMED:
         case DISARMING:
         case DISARMING_STANDBY:
+            interrupts();
             return ARMED;
         case DISARMED:
         case ARMING:
         case ARMING_STANDBY:
+            interrupts();
             return DISARMED;
     }
+    interrupts();
     return DISARMED;
 }
