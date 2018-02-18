@@ -12,12 +12,12 @@
 #include "../include/pins.h"
 #include "../include/settings.h"
 
-static const uint16_t MPU6050_ACCEL_OFFSET_X = -3690;
-static const uint16_t MPU6050_ACCEL_OFFSET_Y = -2625;
-static const uint16_t MPU6050_ACCEL_OFFSET_Z = 940;
-static const uint16_t MPU6050_GYRO_OFFSET_X  = 33;
-static const uint16_t MPU6050_GYRO_OFFSET_Y  = 25;
-static const uint16_t MPU6050_GYRO_OFFSET_Z  = 134;
+static const uint16_t MPU6050_ACCEL_OFFSET_X = 1030;
+static const uint16_t MPU6050_ACCEL_OFFSET_Y = -758;
+static const uint16_t MPU6050_ACCEL_OFFSET_Z = 1257;
+static const uint16_t MPU6050_GYRO_OFFSET_X  = 76;
+static const uint16_t MPU6050_GYRO_OFFSET_Y  = -57;
+static const uint16_t MPU6050_GYRO_OFFSET_Z  = -65;
 
 class MPU6050IMU : IMU {
     private:
