@@ -23,8 +23,9 @@ class MPU6050IMU : IMU {
     private:
     public:
         MPU6050IMU();
-        void update_angular_rates(axis_t& angular_rates);
-        void update_attitude(axis_t& attitude);
-}; 
+        void update_angular_rates(axis_t& angular_rates) override;
+        void update_attitude(axis_t& attitude) override;
+};
+
 #endif // MPU6050IMU_H
 

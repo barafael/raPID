@@ -30,11 +30,11 @@ class PWMReceiver : Receiver {
                              uint8_t aux1_pin, uint8_t aux2_pin,
                              channels_t offsets);
 
-        const void update(channels_t channels);
+        const void update(channels_t channels) override;
 
-        void set_trims(channels_t channels);
+        void set_trims(channels_t channels) override;
 
-        const bool has_signal();
+        const bool has_signal() override;
 
         friend void update_throttle();
         friend void update_roll();

@@ -39,7 +39,7 @@ class FastPWMOutput : Output {
                 float roll_volume, float pitch_volume, float yaw_volume);
 
         void apply(uint16_t _milli_throttle,
-                float roll_stbl, float pitch_stbl, float yaw_stbl);
+                float roll_stbl, float pitch_stbl, float yaw_stbl) override;
 
         void set_resolution(uint8_t res);
         void set_frequency(uint32_t freq);

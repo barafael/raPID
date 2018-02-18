@@ -15,7 +15,7 @@ class MovingAverage : public Filter<T> {
 
     public:
         explicit MovingAverage(size_t n);
-        virtual T next(T value);
+        T next(T value) override;
 };
 
 template <typename T>

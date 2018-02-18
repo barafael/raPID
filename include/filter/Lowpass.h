@@ -14,7 +14,7 @@ class Lowpass : public Filter<T> {
 
     public:
         explicit Lowpass(float beta);
-        virtual T next(T value);
+        T next(T value) override;
         void set_beta(float beta);
 };
 

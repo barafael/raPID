@@ -171,12 +171,9 @@ extern "C" int main(void) {
 
         switch (arming_state.get_state()) {
             case ARMED:
-                //Serial.print(new_stbl_p);
                 pid_output_roll_stbl = roll_controller_stbl.  compute(attitude[ROLL_AXIS], channels[ROLL_CHANNEL]);
-                //Serial.println(new_rate_p);
 
                 pid_output_roll_rate = roll_controller_rate.  compute(angular_rates[ROLL_AXIS], pid_output_roll_stbl);
-                //roll_controller_rate.set_p(new_rate_p);
 
                 pid_output_pitch_stbl = pitch_controller_stbl.compute(attitude[PITCH_AXIS], channels[PITCH_CHANNEL]);
 

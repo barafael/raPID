@@ -20,11 +20,11 @@ class PPMReceiver : Receiver {
     public:
         PPMReceiver(uint8_t _input_pin, channels_t offsets);
 
-        const void update(channels_t channels);
+        const void update(channels_t channels) override;
 
-        void set_trims(channels_t channels);
+        void set_trims(channels_t channels) override;
 
-        const bool has_signal();
+        const bool has_signal() override;
 };
 
 #endif // PPMRECEIVER_H

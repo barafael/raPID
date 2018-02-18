@@ -36,7 +36,7 @@ class ESCOutput : Output {
             }
 
         void apply(uint16_t _milli_throttle,
-                float roll_stbl, float pitch_stbl, float yaw_stbl);
+                float roll_stbl, float pitch_stbl, float yaw_stbl) override;
 
         void shut_off();
 

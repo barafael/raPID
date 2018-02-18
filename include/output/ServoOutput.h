@@ -33,7 +33,7 @@ class ServoOutput : Output {
             }
 
         void apply(uint16_t _value,
-                const float roll_stbl, const float pitch_stbl, const float yaw_stbl);
+                const float roll_stbl, const float pitch_stbl, const float yaw_stbl) override;
 
         const bool is_inverted();
         void invert(bool invert);
