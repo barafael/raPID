@@ -6,6 +6,8 @@
 #include "Servo.h"
 
 #include "../include/output/ESCOutput.h"
+#include "../include/output/FastPWMOutput.h"
+#include "../include/output/LEDOutput.h"
 #include "../include/pid/PIDController.h"
 #include "../include/receiver/PWMReceiver.h"
 #include "../include/ArmingState.h"
