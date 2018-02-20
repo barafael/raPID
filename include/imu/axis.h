@@ -1,5 +1,5 @@
 #ifndef AXIS_H
-#define RAW_IMU_H
+#define AXIS_H
 
 using axis_index = enum {
     ROLL_AXIS  = 0,
