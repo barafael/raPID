@@ -40,11 +40,10 @@ class ServoOutput : Output {
 
         void set_limits(uint16_t lower, uint16_t upper);
 
-        void set_throttle_volume(float volume);
-
-        void set_roll_volume (float volume);
-        void set_pitch_volume(float volume);
-        void set_yaw_volume  (float volume);
+        void set_throttle_volume(float volume) override;
+        void set_roll_volume    (float volume) override;
+        void set_pitch_volume   (float volume) override;
+        void set_yaw_volume     (float volume) override;
 };
 
 #endif // SERVO_OUTPUT_H
