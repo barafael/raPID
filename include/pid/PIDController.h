@@ -13,7 +13,7 @@
 #include "filter/MovingAverage.h"
 #include "filter/Lowpass.h"
 
-typedef enum { ERROR, SETPOINT, MEASURED } derivative_type;
+typedef enum { ERROR, SETPOINT, FEEDBACK } derivative_type;
 typedef enum { NONE, MOVING_AVERAGE, LOWPASS } filter_type;
 
 template<typename T>

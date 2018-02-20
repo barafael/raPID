@@ -111,7 +111,7 @@ T PIDController<T>::compute(const T measured, const T setpoint) {
             d_term = ((setpoint - last_setpoint) / elapsed_time) * d_gain;
             break;
 
-        case MEASURED:
+        case FEEDBACK:
             /* Derivative term on measurement */
             d_term = ((measured - last_measured) / elapsed_time) * d_gain;
             break;
