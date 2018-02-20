@@ -10,8 +10,12 @@
 
 class SoftwareIMU {
     private:
+    protected:
+        RawIMU *rawIMU = nullptr;
     public:
-        SoftwareIMU(RawIMU *rawIMU);
+        explicit SoftwareIMU(RawIMU *rawIMU)
+            : rawIMU(rawIMU) {}
+
         virtual void update_angular_rates(axis_t& angular_rates) = 0;
         virtual void update_attitude(axis_t& attitude) = 0;
 };
