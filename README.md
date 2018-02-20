@@ -27,13 +27,13 @@ the setpoint to the next controller) and only using the rate controller.
 - [x] Support several output waveforms
   - [x] Various output classes (Servo, ESC, anyPWM)
   - [x] 400Hz update rate for ESCs using analogWrite timers (to do: test it)
-  - [x] Arbitrary waveform generation for PWM to drive even LEDs (to do: test it)
+  - [x] Arbitrary PWM waveform generation to drive even LEDs
 - [x] PID Improvements
   - [x] D noise filters: lowpass, moving average
   - [x] Derivative-on-{error, feedback, setpoint}
   - [x] Implement cascaded PID in a more explicit way
   - [ ] Fixed point PID implementation
-  - [ ] [unnecessary] Calculating error external from algorithm or pass an ```errorfunc(number, number) -> number``` function pointer (more general)
+  - [ ] [not needed right now] Calculating error external from algorithm or pass an ```errorfunc(number, number) -> number``` function pointer (more general)
 
 ## TODO
 - [x] Fix serial monitor ritual (current: remove tx, reboot, wait for sermon, connect tx)
@@ -45,9 +45,10 @@ the setpoint to the next controller) and only using the rate controller.
   - [x] 400Hz PWM output test and fix
   - [ ] Rethink set_limits, general implementation of generic waveforms? Specialization in servo (endpoints, expo?, trimming, inversion). Maximum range must be at least standard max signal pulse width
 - [ ] Safety Enhancements
-  - [ ] Make sure arming functionality works and is reliable
-  - [ ] Add safety mechanisms for receiver signal loss
+  - [x] Make sure arming functionality works and is reliable
+  - [ ] Add safety mechanisms for receiver signal loss (detect RX failsafe output)
   - [ ] Fix/Improve watchdog timer functionality. Is this even necessary? A software crash will likely lead to crash of vehicle, since the controller boots to disarmed mode. Check if wakeup from watchdog, then proceeding armed?
+    * Currently, watchdog is disabled
 - [ ] Test PPM receiver read
 
 ## Ideas
@@ -61,7 +62,7 @@ the setpoint to the next controller) and only using the rate controller.
   - [ ] 8x12 x 12x1 float matrix-vector multiplication with unrolled loops: 170us. Insufficient.
 - [ ] Arbitrary flight modes (different PID settings, offsets, and I/O matrix)
 - [ ] Flight mode interpolation (otherwise called transitional mixers) to smoothly switch between any two flight modes
-  - [ ] Flight mode matrix to other flight mode matrix: ```(1-tr) * old_mat + tr * new_mat``` for now. Sine/other functions, duration, etc. later.
+  - [ ] Flight mode matrix to other flight mode matrix: ```(1 - transition) * old_mat + transition * new_mat``` for now. Sine/other functions, duration of transition, etc. later.
   - [ ] How to support more complex transitions where linear is insufficient? Pass pointer to function that takes end and start points, and percent, and gives interpolation value:
         ```squared_sine(startpoint, endpoint, percent) -> interpolated```
 - [ ] Adjust settings wirelessly, ideally using a desktop application/website (have not thought about that part yet... far off)
@@ -86,3 +87,4 @@ Blog-in-progress @ [https://barafael.github.io/Remote-Control-Vehicle-Balance-co
 
 * OpenAeroVTOL from the RCGroups forums, by HappySundays - awesome project.
 * Jeff Rowberg's MPU6050 library and example code.
+>
