@@ -6,7 +6,7 @@
 
 #include "Arduino.h"
 
-#include "IMU.h"
+#include "HardwareIMU.h"
 
 #include "../include/error_blink.h"
 #include "../include/pins.h"
@@ -19,7 +19,7 @@ static const uint16_t MPU6050_GYRO_OFFSET_X  = 76;
 static const uint16_t MPU6050_GYRO_OFFSET_Y  = -57;
 static const uint16_t MPU6050_GYRO_OFFSET_Z  = -65;
 
-class MPU6050IMU : IMU {
+class MPU6050IMU : HardwareIMU {
     private:
     public:
         MPU6050IMU();
