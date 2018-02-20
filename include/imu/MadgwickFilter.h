@@ -1,8 +1,11 @@
+#ifndef MADGWICK_FILTER_H
+#define MADGWICK_FILTER_H
+
 #include <math.h>
 
 #include "SoftwareIMU.h"
 
-#include "axis.h"
+#include "axis.hpp"
 
 class MadgwickFilter : public SoftwareIMU {
     private:
@@ -23,3 +26,5 @@ class MadgwickFilter : public SoftwareIMU {
 
         void update(float q[4]);
 };
+
+#endif // MADGWICK_FILTER_H

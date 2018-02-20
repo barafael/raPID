@@ -2,18 +2,15 @@
 
 #include <stdint.h>
 
-#include "I2Cdev.h"
-#include "Servo.h"
-
 #include "../include/output/ESCOutput.h"
 #include "../include/output/FastPWMOutput.h"
 #include "../include/output/LEDOutput.h"
+#include "../include/imu/axis.hpp"
 #include "../include/pid/PIDController.h"
 #include "../include/receiver/PWMReceiver.h"
 #include "../include/ArmingState.h"
 #include "../include/error_blink.h"
 #include "../include/pins.h"
-#include "../include/imu/MPU6050IMU.h"
 #include "../include/settings.h"
 #include "../include/Watchdog.h"
 
@@ -37,12 +34,12 @@
    ---             HARDWARE SETUP             ---
    ----------------------------------------------
 
-   MPU6050 Breakout ----- Teensy 3.2
-   3.3V ----------------- 3.3V
-   GND ------------------ GND
+   SENtral Breakout ----- Teensy 3.2
+   3.3V ----------------- 15
+   GND ------------------ 14
    SDA ------------------ A4/pin 18
    SCL ------------------ A5/pin 19
-   INT ------------------ Digital Pin 12 (see pins.h)
+   INT ------------------ Digital Pin 6 (see pins.h)
 
    See ../include/pins.h for more pin definitions.
    */
@@ -125,7 +122,7 @@ extern "C" int main(void) {
 
     Serial.println(F("Receiver signal detected, continuing."));
 
-    MPU6050IMU mpu6050;
+    SENtralIMU sentral;
 
     PIDParams<float> roll_param_stbl ( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
     PIDParams<float> roll_param_rate ( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
@@ -165,10 +162,10 @@ extern "C" int main(void) {
         receiver.update(channels);
         //print_channels(channels);
 
-        mpu6050.update_attitude(attitude);
+        sentral.update_attitude(attitude);
         //print_attitude(attitude);
 
-        mpu6050.update_angular_rates(angular_rates);
+        sentral.update_angular_rates(angular_rates);
         //print_velocity(angular_rates);
 
         switch (arming_state.get_state()) {

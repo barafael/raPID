@@ -6,7 +6,7 @@
 
 #include "RawIMU.h"
 
-#include "axis.h"
+#include "axis.hpp"
 
 class SoftwareIMU {
     private:

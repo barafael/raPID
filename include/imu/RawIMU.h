@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <array>
 
-#include "axis.h"
+#include "axis.hpp"
 
 /* This class represents an interface to an absolutely unspectacular IMU sensor
  * that consists just of a gyroscope and accelerometer combo without and

@@ -1,8 +1,11 @@
+#ifndef MAHONY_FILTER_H
+#define MAHONY_FILTER_H
+
 #include <math.h>
 
 #include "SoftwareIMU.h"
 
-#include "axis.h"
+#include "axis.hpp"
 
 class MahonyFilter : public SoftwareIMU {
     private:
@@ -24,3 +27,4 @@ class MahonyFilter : public SoftwareIMU {
         void update(float q[4]);
 };
 
+#endif // MAHONY_FILTER_H
