@@ -13,8 +13,9 @@
 class RawIMU {
     private:
     public:
-        virtual void update_angular_rates(axis_t& angular_rates) = 0;
-        virtual void update_acceleration(axis_t& acceleration) = 0;
+        virtual void update_gyroscope(axis_t& angular_rates) = 0;
+        virtual void update_accelerometer(axis_t& acceleration) = 0;
+        virtual void update_magnetometer(axis_t& magnetization) = 0;
 };
 
 #endif // RAW_IMU_H
