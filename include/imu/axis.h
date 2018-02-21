@@ -1,6 +1,8 @@
 #ifndef AXIS_H
 #define AXIS_H
 
+#include<array>
+
 using axis_index = enum {
     ROLL_AXIS  = 0,
     PITCH_AXIS = 1,
