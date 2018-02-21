@@ -11,6 +11,7 @@
 #include "../include/ArmingState.h"
 #include "../include/error_blink.h"
 #include "../include/pins.h"
+#include "../include/imu/SENtralIMU.h"
 #include "../include/settings.h"
 #include "../include/Watchdog.h"
 
