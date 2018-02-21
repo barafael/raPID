@@ -17,6 +17,7 @@ class SENtralIMU : HardwareIMU {
         SENtralIMU();
         void update_angular_rates(axis_t& angular_rates) override;
         void update_attitude(axis_t& attitude) override;
+        void update_sensors();
 };
 
 #endif // SENTRAL_IMU_H

@@ -123,8 +123,8 @@ uint8_t Mmode = 0x02;        // 2 for 8 Hz, 6 for 100 Hz continuous magnetometer
 float aRes, gRes, mRes;      // scale resolutions per LSB for the sensors
 
 // Pin definitions
-int intPin = 6;  // These can be changed, 2 and 3 are the Arduinos ext int pins
-int myLed     = 13;  // LED on the Teensy 3.1
+int intPin = 8;  // These can be changed, 2 and 3 are the Arduinos ext int pins
+int myLed  = 15;  // Use 15 for led, 13 is GND for sentral board
 
 // BMP280 compensation parameters
 uint16_t dig_T1, dig_P1;
@@ -1072,15 +1072,18 @@ void sentral_data_ready() {
    ---             IMU INITIALISATION              ---
    ---------------------------------------------------
 */
+
 SENtralIMU::SENtralIMU() {
-    const uint8_t GND = 14;
-    const uint8_t POWER = 15;
+    const uint8_t GND = 13;
+    const uint8_t POWER = 14;
 
     pinMode(POWER, OUTPUT);
     pinMode(GND, OUTPUT);
 
     digitalWrite(POWER, HIGH);
     digitalWrite(GND, LOW);
+
+    Wire.begin(I2C_MASTER, 0x00, I2C_PINS_16_17, I2C_PULLUP_EXT, I2C_RATE_400);
 
     pinMode(intPin, INPUT);
 
@@ -1090,7 +1093,6 @@ SENtralIMU::SENtralIMU() {
     // reading clears the register and interrupt
     readByte(EM7180_ADDRESS, EM7180_EventStatus);
 
-    Wire.begin(I2C_MASTER, 0x00, I2C_PINS_18_19, I2C_PULLUP_EXT, I2C_RATE_400);
 
     delay(50);
 
@@ -1377,7 +1379,7 @@ SENtralIMU::SENtralIMU() {
     }
 }
 
-void update_sensors() {
+void SENtralIMU::update_sensors() {
     if (mpu_interrupt == true) { // On interrupt, read data
         mpu_interrupt = false; // reset newData flag
 
