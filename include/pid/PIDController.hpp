@@ -8,10 +8,10 @@
 #include "Arduino.h"
 
 #include "PIDParams.hpp"
-#include "util.h"
+#include "../util.h"
 
-#include "filter/MovingAverage.hpp"
-#include "filter/Lowpass.hpp"
+#include "../filter/MovingAverage.hpp"
+#include "../filter/Lowpass.hpp"
 
 typedef enum { ERROR, SETPOINT, FEEDBACK } derivative_type;
 typedef enum { NONE, MOVING_AVERAGE, LOWPASS } filter_type;

@@ -1,4 +1,4 @@
-#include "../include/output/ESCOutput.hpp"
+#include "../../include/output/ESCOutput.hpp"
 
 /* TODO implement arming for ESC type? How? Blocking function? Timer, asynchronicity? */
 /* TODO better model for position/thrust/endpoints */

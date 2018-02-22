@@ -5,8 +5,8 @@
 
 #include "Servo.h"
 
-#include "settings.h"
-#include "util.h"
+#include "../settings.h"
+#include "../util.h"
 
 static const uint16_t BASE_PULSE_MS = 800;
 

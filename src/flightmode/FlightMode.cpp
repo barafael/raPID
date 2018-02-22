@@ -1,7 +1,7 @@
-#include "../include/FlightMode.hpp"
+#include "../../include/FlightMode.hpp"
 
-#include "../include/pid/PIDParams.hpp"
-#include "../include/output/Mixer.hpp"
+#include "../../include/pid/PIDParams.hpp"
+#include "../../include/output/Mixer.hpp"
 
 /* TODO implement flight mode offset? */
 

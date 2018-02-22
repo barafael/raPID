@@ -7,9 +7,9 @@
 
 #include "HardwareIMU.hpp"
 
-#include "../include/error_blink.h"
-#include "../include/pins.h"
-#include "../include/settings.h"
+#include "../../include/error_blink.h"
+#include "../../include/pins.h"
+#include "../../include/settings.h"
 
 class SENtralIMU : HardwareIMU {
     private:

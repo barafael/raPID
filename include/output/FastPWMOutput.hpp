@@ -5,8 +5,8 @@
 
 #include "Output.hpp"
 
-#include "util.h"
-#include "settings.h"
+#include "../util.h"
+#include "../settings.h"
 
 class FastPWMOutput : Output {
     private:

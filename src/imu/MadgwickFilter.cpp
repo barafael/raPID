@@ -1,4 +1,4 @@
-#include "../include/imu/MadgwickFilter.hpp"
+#include "../../include/imu/MadgwickFilter.hpp"
 
 MadgwickFilter::MadgwickFilter(RawIMU *rawIMU, float gyroMeasError, float gyroMeasDrift)
     : SoftwareIMU(rawIMU) {
