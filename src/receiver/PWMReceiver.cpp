@@ -67,7 +67,7 @@ void PWMReceiver::set_trims(channels_t trims) {
 
 const bool PWMReceiver::has_signal() {
     noInterrupts();
-    for (size_t index = 0; index < NUM_CHANNELS; index++) {
+    for (size_t index = 0; index < 4; index++) {
         if (channels_shared[index] == 0) {
             interrupts();
             return false;

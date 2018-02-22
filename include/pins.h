@@ -5,18 +5,20 @@
 
 static const uint8_t DEBUG_PIN = 15;
 
-static const uint8_t LED_PIN = 13;
-static const uint8_t ARMING_STATE_PIN = 14;
+static const uint8_t LED_PIN = 15;
 
-static const uint8_t MPU_INTERRUPT_PIN = 12;
+static const uint8_t SENTRAL_GND = 13;
+static const uint8_t SENTRAL_POWER = 14;
+
+static const uint8_t SENTRAL_INTERRUPT_PIN = 8;
 
 typedef enum {
-    THROTTLE_INPUT_PIN  = 11,
-    ROLL_INPUT_PIN      = 10,
-    PITCH_INPUT_PIN     = 9,
-    YAW_INPUT_PIN       = 8,
-    AUX1_INPUT_PIN      = 7,
-    AUX2_INPUT_PIN      = 6
+    THROTTLE_INPUT_PIN  = 23,
+    ROLL_INPUT_PIN      = 22,
+    PITCH_INPUT_PIN     = 21,
+    YAW_INPUT_PIN       = 20,
+    AUX1_INPUT_PIN      = 19,
+    AUX2_INPUT_PIN      = 18
 } input_pin;
 
 typedef enum {

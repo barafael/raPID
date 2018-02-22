@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <array>
 
-#include "axis.h"
+#include "axis.hpp"
 
 class HardwareIMU {
     private:
