@@ -190,9 +190,9 @@ extern "C" int main(void) {
                 front_left_out_mixer .apply(channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
                 front_right_out_mixer.apply(channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
 
-                Serial.print(F("setp:"));
 #define DEBUG_COL
 #ifdef DEBUG_COL
+                Serial.print(F("setp:"));
                 Serial.print(channels[ROLL_CHANNEL]);
                 Serial.print(F("\troll-angl:"));
                 Serial.print(attitude[ROLL_AXIS]);

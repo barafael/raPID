@@ -122,9 +122,6 @@ uint8_t Mscale = MFS_16BITS; // Choose either 14-bit or 16-bit magnetometer reso
 uint8_t Mmode = 0x02;        // 2 for 8 Hz, 6 for 100 Hz continuous magnetometer data read
 float aRes, gRes, mRes;      // scale resolutions per LSB for the sensors
 
-// Pin definitions
-int intPin = 8;
-
 // BMP280 compensation parameters
 uint16_t dig_T1, dig_P1;
 int16_t  dig_T2, dig_T3, dig_P2, dig_P3, dig_P4, dig_P5, dig_P6, dig_P7, dig_P8, dig_P9;
@@ -1073,21 +1070,17 @@ void sentral_data_ready() {
 */
 
 SENtralIMU::SENtralIMU() {
-    const uint8_t GND = 13;
-    const uint8_t POWER = 14;
+    pinMode(SENTRAL_POWER, OUTPUT);
+    pinMode(SENTRAL_GND, OUTPUT);
 
-    // TODO move pin definitions (including interrupt and i2c pins to pins.h
-    pinMode(POWER, OUTPUT);
-    pinMode(GND, OUTPUT);
-
-    digitalWrite(POWER, HIGH);
-    digitalWrite(GND, LOW);
+    digitalWrite(SENTRAL_POWER, HIGH);
+    digitalWrite(SENTRAL_GND, LOW);
 
     Wire.begin(I2C_MASTER, 0x00, I2C_PINS_16_17, I2C_PULLUP_EXT, I2C_RATE_400);
 
-    pinMode(intPin, INPUT);
+    pinMode(SENTRAL_INTERRUPT_PIN, INPUT);
 
-    attachInterrupt(intPin, sentral_data_ready, RISING);
+    attachInterrupt(SENTRAL_INTERRUPT_PIN, sentral_data_ready, RISING);
 
     // Check event status register to clear the EM7180 interrupt before the main loop
     // reading clears the register and interrupt
@@ -1397,7 +1390,7 @@ static void Quat2EulerAngle(const float Quat[4], float& roll, float& pitch, floa
     yaw        = atan2(siny, cosy);
 }
 
-void SENtralIMU::update_sensors() {
+void update_sensors() {
     if (mpu_interrupt) {
         mpu_interrupt = false;
 
@@ -1410,7 +1403,7 @@ void SENtralIMU::update_sensors() {
 
             uint8_t errorStatus = readByte(EM7180_ADDRESS, EM7180_ErrorRegister);
             if (errorStatus != 0x00) { // non-zero value indicates error, what is it?
-                Serial.print(" EM7180 sensor status = ");
+                Serial.print("EM7180 sensor status = ");
                 Serial.println(errorStatus);
                 if (errorStatus & 0x11)
                     Serial.println("Magnetometer failure!");
@@ -1429,7 +1422,6 @@ void SENtralIMU::update_sensors() {
                 if (errorStatus & 0x80)
                     Serial.println("Invalid sample rate!");
             }
-            // Handle errors ToDo
         }
 
         // if no errors, see if new data is ready
@@ -1468,22 +1460,14 @@ void SENtralIMU::update_sensors() {
         if (eventStatus & QUATERNION_AVAILABLE) {
             readSENtralQuatData(Quat);
 
-            /* Quaternion(x, y, z, w):
-
-               roll  = atan2(2*y*w - 2*x*z, 1 - 2*y*y - 2*z*z);
-               pitch = atan2(2*x*w - 2*y*z, 1 - 2*x*x - 2*z*z);
-               yaw   = asin(2*x*y + 2*z*w);
-
-https://answers.unity.com/questions/416169/finding-pitchrollyaw-from-quaternions.html
-*/
-
             // Hardware AHRS:
             //Yaw   = asin(2.0f * Quat[0] * Quat[1] + 2.0f * Quat[2] * Quat[3]);
             Yaw   = atan2(2.0f * (Quat[0] * Quat[1] + Quat[3] * Quat[2]),
                         Quat[3] * Quat[3] + Quat[0] * Quat[0] - Quat[1] * Quat[1] - Quat[2] * Quat[2]);
             Yaw *= 180.0f / PI;
             // Declination at Danville, California is 13 degrees 48 minutes and 47 seconds on 2014-04-04
-            Yaw += 13.8f;
+            // Declination at Passau, Germany is 3° 36'
+            Yaw += 3.6f;
 
             // Ensure yaw stays between 0 and 360
             if (Yaw < 0) {

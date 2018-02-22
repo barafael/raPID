@@ -6,9 +6,11 @@
 static const uint8_t DEBUG_PIN = 15;
 
 static const uint8_t LED_PIN = 15;
-static const uint8_t ARMING_STATE_PIN = 14;
 
-static const uint8_t MPU_INTERRUPT_PIN = 12;
+static const uint8_t SENTRAL_GND = 13;
+static const uint8_t SENTRAL_POWER = 14;
+
+static const uint8_t SENTRAL_INTERRUPT_PIN = 8;
 
 typedef enum {
     THROTTLE_INPUT_PIN  = 23,
