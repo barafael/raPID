@@ -163,11 +163,14 @@ extern "C" int main(void) {
         receiver.update(channels);
         //print_channels(channels);
 
+        //delay(50);
         sentral.update_attitude(attitude);
         //print_attitude(attitude);
 
         sentral.update_angular_rates(angular_rates);
         //print_velocity(angular_rates);
+
+        //sentral.update_sensors();
 
         switch (arming_state.get_state()) {
             case ARMED:
@@ -187,9 +190,9 @@ extern "C" int main(void) {
                 front_left_out_mixer .apply(channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
                 front_right_out_mixer.apply(channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
 
-//#define DEBUG_COL
-#ifdef DEBUG_COL
                 Serial.print(F("setp:"));
+#define DEBUG_COL
+#ifdef DEBUG_COL
                 Serial.print(channels[ROLL_CHANNEL]);
                 Serial.print(F("\troll-angl:"));
                 Serial.print(attitude[ROLL_AXIS]);

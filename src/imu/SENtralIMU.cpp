@@ -44,7 +44,7 @@ void writeByte(uint8_t address, uint8_t subAddress, uint8_t data);
 #include <i2c_t3.h>
 #include <SPI.h>
 
-#define SerialDebug true  // set to true to get Serial output for debugging
+#define SerialDebug false  // set to true to get Serial output for debugging
 
 // Set initial input parameters
 enum Ascale {
@@ -123,8 +123,7 @@ uint8_t Mmode = 0x02;        // 2 for 8 Hz, 6 for 100 Hz continuous magnetometer
 float aRes, gRes, mRes;      // scale resolutions per LSB for the sensors
 
 // Pin definitions
-int intPin = 8;  // These can be changed, 2 and 3 are the Arduinos ext int pins
-int myLed  = 15;  // Use 15 for led, 13 is GND for sentral board
+int intPin = 8;
 
 // BMP280 compensation parameters
 uint16_t dig_T1, dig_P1;
@@ -160,7 +159,7 @@ float zeta = sqrt(3.0f / 4.0f) * GyroMeasDrift;   // compute zeta, the other fre
 #define Ki 0.0f
 
 uint32_t delt_t = 0, count = 0, sumCount = 0;  // used to control display output rate
-float pitch, yaw, roll, Yaw, Pitch, Roll;
+float Yaw, Pitch, Roll;
 float deltat = 0.0f, sum = 0.0f;          // integration interval for both filter schemes
 uint32_t lastUpdate = 0, firstUpdate = 0; // used to calculate integration interval
 uint32_t Now = 0;                         // used to calculate integration interval
@@ -1077,6 +1076,7 @@ SENtralIMU::SENtralIMU() {
     const uint8_t GND = 13;
     const uint8_t POWER = 14;
 
+    // TODO move pin definitions (including interrupt and i2c pins to pins.h
     pinMode(POWER, OUTPUT);
     pinMode(GND, OUTPUT);
 
@@ -1092,7 +1092,6 @@ SENtralIMU::SENtralIMU() {
     // Check event status register to clear the EM7180 interrupt before the main loop
     // reading clears the register and interrupt
     readByte(EM7180_ADDRESS, EM7180_EventStatus);
-
 
     delay(50);
 
@@ -1379,12 +1378,32 @@ SENtralIMU::SENtralIMU() {
     }
 }
 
+static void Quat2EulerAngle(const float Quat[4], float& roll, float& pitch, float& yaw) {
+    // roll (x-axis rotation)
+    float sinr = +2.0 * (Quat[3] * Quat[0] + Quat[1] * Quat[2]);
+    float cosr = +1.0 - 2.0 * (Quat[0] * Quat[0] + Quat[1] * Quat[1]);
+    pitch      = atan2(sinr, cosr);
+
+    // pitch (y-axis rotation)
+    float sinp = +2.0 * (Quat[3] * Quat[1] - Quat[2] * Quat[0]);
+    if (fabs(sinp) >= 1)
+        roll = copysign(M_PI / 2, sinp); // use 90 degrees if out of range
+    else
+        roll = asin(sinp);
+
+    // yaw (z-axis rotation)
+    float siny = +2.0 * (Quat[3] * Quat[2] + Quat[0] * Quat[1]);
+    float cosy = +1.0 - 2.0 * (Quat[1] * Quat[1] + Quat[2] * Quat[2]);
+    yaw        = atan2(siny, cosy);
+}
+
 void SENtralIMU::update_sensors() {
-    if (mpu_interrupt == true) { // On interrupt, read data
-        mpu_interrupt = false; // reset newData flag
+    if (mpu_interrupt) {
+        mpu_interrupt = false;
 
         // Check event status register, way to chech data ready by polling rather than interrupt
-        uint8_t eventStatus = readByte(EM7180_ADDRESS, EM7180_EventStatus); // reading clears the register
+        // reading clears the register
+        uint8_t eventStatus = readByte(EM7180_ADDRESS, EM7180_EventStatus);
 
         // Check for errors
         if (eventStatus & 0x02) { // error detected, what is it?
@@ -1393,28 +1412,28 @@ void SENtralIMU::update_sensors() {
             if (errorStatus != 0x00) { // non-zero value indicates error, what is it?
                 Serial.print(" EM7180 sensor status = ");
                 Serial.println(errorStatus);
-                if (errorStatus == 0x11)
-                    Serial.print("Magnetometer failure!");
-                if (errorStatus == 0x12)
-                    Serial.print("Accelerometer failure!");
-                if (errorStatus == 0x14)
-                    Serial.print("Gyro failure!");
-                if (errorStatus == 0x21)
-                    Serial.print("Magnetometer initialization failure!");
-                if (errorStatus == 0x22)
-                    Serial.print("Accelerometer initialization failure!");
-                if (errorStatus == 0x24)
-                    Serial.print("Gyro initialization failure!");
-                if (errorStatus == 0x30)
-                    Serial.print("Math error!");
-                if (errorStatus == 0x80)
-                    Serial.print("Invalid sample rate!");
+                if (errorStatus & 0x11)
+                    Serial.println("Magnetometer failure!");
+                if (errorStatus & 0x12)
+                    Serial.println("Accelerometer failure!");
+                if (errorStatus & 0x14)
+                    Serial.println("Gyro failure!");
+                if (errorStatus & 0x21)
+                    Serial.println("Magnetometer initialization failure!");
+                if (errorStatus & 0x22)
+                    Serial.println("Accelerometer initialization failure!");
+                if (errorStatus & 0x24)
+                    Serial.println("Gyro initialization failure!");
+                if (errorStatus & 0x30)
+                    Serial.println("Math error!");
+                if (errorStatus & 0x80)
+                    Serial.println("Invalid sample rate!");
             }
-
             // Handle errors ToDo
         }
 
         // if no errors, see if new data is ready
+#ifdef SENTRAL_COLLECT_ALL
         if (eventStatus & 0x10) { // new acceleration data available
             readSENtralAccelData(accelCount);
 
@@ -1422,15 +1441,6 @@ void SENtralIMU::update_sensors() {
             ax = (float) accelCount[0] * 0.000488; // get actual g value
             ay = (float) accelCount[1] * 0.000488;
             az = (float) accelCount[2] * 0.000488;
-        }
-
-        if (eventStatus & 0x20) { // new gyro data available
-            readSENtralGyroData(gyroCount);
-
-            // Now we'll calculate the gyro value into actual dps's
-            gx = (float) gyroCount[0] * 0.153; // get actual dps value
-            gy = (float) gyroCount[1] * 0.153;
-            gz = (float) gyroCount[2] * 0.153;
         }
 
         if (eventStatus & 0x08) { // new mag data available
@@ -1441,20 +1451,66 @@ void SENtralIMU::update_sensors() {
             my = (float) magCount[1] * 0.305176;
             mz = (float) magCount[2] * 0.305176;
         }
+#endif
+#define GYRO_DATA_AVAILABLE 0x20
+        if (eventStatus & GYRO_DATA_AVAILABLE) {
+            readSENtralGyroData(gyroCount);
 
-        if (eventStatus & 0x04) { // new quaternion data available
-            readSENtralQuatData(Quat);
+            // Now we'll calculate the gyro value into actual dps's
+            // get actual dps value
+            gx = (float) gyroCount[0] * 0.153;
+            gy = (float) gyroCount[1] * 0.153;
+            gz = (float) gyroCount[2] * 0.153;
         }
 
-        // get BMP280 pressure
-        if (eventStatus & 0x40) { // new baro data available
-            //   Serial.println("new Baro data!");
+#define QUATERNION_AVAILABLE 0x04
+        // new quaternion data available
+        if (eventStatus & QUATERNION_AVAILABLE) {
+            readSENtralQuatData(Quat);
+
+            /* Quaternion(x, y, z, w):
+
+               roll  = atan2(2*y*w - 2*x*z, 1 - 2*y*y - 2*z*z);
+               pitch = atan2(2*x*w - 2*y*z, 1 - 2*x*x - 2*z*z);
+               yaw   = asin(2*x*y + 2*z*w);
+
+https://answers.unity.com/questions/416169/finding-pitchrollyaw-from-quaternions.html
+*/
+
+            // Hardware AHRS:
+            //Yaw   = asin(2.0f * Quat[0] * Quat[1] + 2.0f * Quat[2] * Quat[3]);
+            Yaw   = atan2(2.0f * (Quat[0] * Quat[1] + Quat[3] * Quat[2]),
+                        Quat[3] * Quat[3] + Quat[0] * Quat[0] - Quat[1] * Quat[1] - Quat[2] * Quat[2]);
+            Yaw *= 180.0f / PI;
+            // Declination at Danville, California is 13 degrees 48 minutes and 47 seconds on 2014-04-04
+            Yaw += 13.8f;
+
+            // Ensure yaw stays between 0 and 360
+            if (Yaw < 0) {
+                Yaw += 360.0f;
+            }
+
+            Roll  = atan2(2.0f * (Quat[3] * Quat[0] + Quat[1] * Quat[2]),
+                        Quat[3] * Quat[3] - Quat[0] * Quat[0] - Quat[1] * Quat[1] + Quat[2] * Quat[2]);
+            Roll *= 180.0f / PI;
+
+            Pitch = -asin(2.0f * (Quat[0] * Quat[2] - Quat[3] * Quat[1]));
+            //Pitch  = atan2(2.0f * Quat[0] * Quat[3] - 2.0f * Quat[1] * Quat[2],
+            //            1.0f - 2.0f * Quat[0] * Quat[0] - 2.0f * Quat[2] * Quat[2]);
+            Pitch *= 180.0f / PI;
+        }
+
+            // get BMP280 pressure
+#define BARO_DATA_AVAILABLE 0x40
+        if (eventStatus & BARO_DATA_AVAILABLE) {
             rawPressure = readSENtralBaroData();
-            pressure    = (float) rawPressure * 0.01f + 1013.25f; // pressure in mBar
+            // pressure in mBar
+            pressure    = (float) rawPressure * 0.01f + 1013.25f;
 
             // get BMP280 temperature
             rawTemperature = readSENtralTempData();
-            temperature    = (float) rawTemperature * 0.01; // temperature in degrees C
+            // temperature in degrees C
+            temperature    = (float) rawTemperature * 0.01;
         }
     }
 
@@ -1466,9 +1522,9 @@ void SENtralIMU::update_sensors() {
     sum += deltat; // sum for averaging filter update rate
     sumCount++;
 
-    // Serial print and/or display at 0.5 s rate independent of data rates
     delt_t = millis() - count;
     if (SerialDebug) {
+#ifdef SENTRAL_COLLECT_ALL
         Serial.print("ax = ");
         Serial.print((int) 1000 * ax);
         Serial.print(" ay = ");
@@ -1476,13 +1532,6 @@ void SENtralIMU::update_sensors() {
         Serial.print(" az = ");
         Serial.print((int) 1000 * az);
         Serial.println(" mg");
-        Serial.print("gx = ");
-        Serial.print(gx, 2);
-        Serial.print(" gy = ");
-        Serial.print(gy, 2);
-        Serial.print(" gz = ");
-        Serial.print(gz, 2);
-        Serial.println(" deg/s");
         Serial.print("mx = ");
         Serial.print((int) mx);
         Serial.print(" my = ");
@@ -1490,6 +1539,15 @@ void SENtralIMU::update_sensors() {
         Serial.print(" mz = ");
         Serial.print((int) mz);
         Serial.println(" mG");
+#endif
+        // Angular rates from gyro
+        Serial.print("gx = ");
+        Serial.print(gx, 2);
+        Serial.print(" gy = ");
+        Serial.print(gy, 2);
+        Serial.print(" gz = ");
+        Serial.print(gz, 2);
+        Serial.println(" deg/s");
 
         Serial.println("Hardware quaternions:");
         Serial.print("Q0 = ");
@@ -1506,19 +1564,6 @@ void SENtralIMU::update_sensors() {
     //    temperature = ((float) tempCount) / 333.87 + 21.0; // Gyro chip temperature in degrees Centigrade
     // Print temperature in degrees Centigrade
     //    Serial.print("Gyro temperature is ");  Serial.print(temperature, 1);  Serial.println(" degrees C"); // Print T values to tenths of s degree C
-
-    //Hardware AHRS:
-    Yaw   = atan2(2.0f * (Quat[0] * Quat[1] + Quat[3] * Quat[2]),
-            Quat[3] * Quat[3] + Quat[0] * Quat[0] - Quat[1] * Quat[1] - Quat[2] * Quat[2]);
-    Pitch = -asin(2.0f * (Quat[0] * Quat[2] - Quat[3] * Quat[1]));
-    Roll  = atan2(2.0f * (Quat[3] * Quat[0] + Quat[1] * Quat[2]),
-            Quat[3] * Quat[3] - Quat[0] * Quat[0] - Quat[1] * Quat[1] + Quat[2] * Quat[2]);
-    Pitch *= 180.0f / PI;
-    Yaw *= 180.0f / PI;
-    Yaw += 13.8f; // Declination at Danville, California is 13 degrees 48 minutes and 47 seconds on 2014-04-04
-    if (Yaw < 0)
-        Yaw += 360.0f; // Ensure yaw stays between 0 and 360
-    Roll *= 180.0f / PI;
 
     // Or define output variable according to the Android system, where heading (0 to 360) is defined by the angle between the y-axis
     // and True North, pitch is rotation about the x-axis (-180 to +180), and roll is rotation about the y-axis (-90 to +90)
@@ -1546,17 +1591,16 @@ void SENtralIMU::update_sensors() {
         Serial.print(altitude, 2);
         Serial.println(" feet");
         Serial.println(" ");
+
+        Serial.print("rate = ");
+        Serial.print((float) sumCount / sum, 2);
+        Serial.println(" Hz");
+
+        // Serial.print(millis()/1000.0, 1);Serial.print(",");
+        // Serial.print(yaw); Serial.print(",");Serial.print(pitch); Serial.print(",");Serial.print(roll); Serial.print(",");
+        // Serial.print(Yaw); Serial.print(",");Serial.print(Pitch); Serial.print(",");Serial.println(Roll);
     }
 
-    Serial.print("rate = ");
-    Serial.print((float) sumCount / sum, 2);
-    Serial.println(" Hz");
-    //     Serial.print(millis()/1000.0, 1);Serial.print(",");
-    //     Serial.print(yaw); Serial.print(",");Serial.print(pitch); Serial.print(",");Serial.print(roll); Serial.print(",");
-    //     Serial.print(Yaw); Serial.print(",");Serial.print(Pitch); Serial.print(",");Serial.println(Roll);
-
-
-    digitalWrite(myLed, !digitalRead(myLed));
     count    = millis();
     sumCount = 0;
     sum      = 0;
@@ -1569,10 +1613,14 @@ void SENtralIMU::update_sensors() {
 */
 
     /* max..min [32767, -32768] */
-    void SENtralIMU::update_angular_rates(axis_t & angular_rates) {
-        //digitalWrite(DEBUG_PIN, HIGH);
-        //digitalWrite(DEBUG_PIN, LOW);
-    }
+void SENtralIMU::update_angular_rates(axis_t & angular_rates) {
+    //digitalWrite(DEBUG_PIN, HIGH);
+    update_sensors();
+    angular_rates[ROLL_AXIS]= gx;
+    angular_rates[PITCH_AXIS] = gy;
+    angular_rates[YAW_AXIS] = gz;
+    //digitalWrite(DEBUG_PIN, LOW);
+}
 
 
     /*
@@ -1583,5 +1631,9 @@ void SENtralIMU::update_sensors() {
 
     void SENtralIMU::update_attitude(axis_t & attitude) {
         //digitalWrite(DEBUG_PIN, HIGH);
+        update_sensors();
+        attitude[ROLL_AXIS] = Roll;
+        attitude[PITCH_AXIS] = Pitch;
+        attitude[YAW_AXIS] = Yaw;
         //digitalWrite(DEBUG_PIN, LOW);
     }
