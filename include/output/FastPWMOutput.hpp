@@ -3,7 +3,7 @@
 
 #include "Arduino.h"
 
-#include "Output.h"
+#include "Output.hpp"
 
 #include "util.h"
 #include "settings.h"

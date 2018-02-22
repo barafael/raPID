@@ -3,7 +3,7 @@
 
 #include <math.h>
 
-#include "SoftwareIMU.h"
+#include "SoftwareIMU.hpp"
 
 #include "axis.hpp"
 

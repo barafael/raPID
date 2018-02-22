@@ -1,4 +1,4 @@
-#include "../include/imu/MahonyFilter.h"
+#include "../include/imu/MahonyFilter.hpp"
 
 void MahonyFilter::update(float q[4]) {
     rawIMU->update_gyroscope(angular_rates);

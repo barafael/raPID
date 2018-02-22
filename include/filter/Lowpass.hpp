@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "Filter.h"
+#include "Filter.hpp"
 
 template <typename T>
 class Lowpass : public Filter<T> {

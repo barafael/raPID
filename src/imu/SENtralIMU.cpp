@@ -1,4 +1,4 @@
-#include "../include/imu/SENtralIMU.h"
+#include "../include/imu/SENtralIMU.hpp"
 #include "SENtralRegisters.h"
 
 void sentral_data_ready();

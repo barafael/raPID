@@ -1,4 +1,4 @@
-#include "../include/output/Output.h"
+#include "../include/output/Output.hpp"
 
 Output::Output(const uint8_t pin)
     : pin   { pin }

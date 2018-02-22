@@ -1,4 +1,4 @@
-#include "../include/output/FastPWMOutput.h"
+#include "../include/output/FastPWMOutput.hpp"
 
 /* TODO implement arming for ESC type? */
 /* TODO better model for position/thrust/endpoints */

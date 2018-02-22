@@ -5,7 +5,7 @@
 
 #include "Arduino.h"
 
-#include "HardwareIMU.h"
+#include "HardwareIMU.hpp"
 
 #include "../include/error_blink.h"
 #include "../include/pins.h"

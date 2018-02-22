@@ -1,4 +1,4 @@
-#include "../include/output/ServoOutput.h"
+#include "../include/output/ServoOutput.hpp"
 
 void ServoOutput::write(uint16_t _value) {
     this->value    = _value > 1000 ? 1000 : _value;

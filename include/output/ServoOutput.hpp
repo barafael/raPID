@@ -1,46 +1,42 @@
-#ifndef ESC_OUTPUT_H
-#define ESC_OUTPUT_H
+#ifndef SERVO_OUTPUT_H
+#define SERVO_OUTPUT_H
 
-#include "Output.h"
+#include "Output.hpp"
 
 #include "Servo.h"
 
-#include "settings.h"
 #include "util.h"
 
 static const uint16_t BASE_PULSE_MS = 800;
 
-/* TODO: eventually, this class should refrain from using Servo.h
- * The servo library is limited to 50Hz and standard servo waveform.
- */
-class ESCOutput : Output {
+class ServoOutput : Output {
     private:
         Servo output;
 
-        uint16_t milli_throttle = 0;
+        /* TODO: make necessary or remove */
+        uint16_t value = 0;
 
         uint16_t upper_limit = 1000;
         uint16_t lower_limit = 0;
         uint16_t range = upper_limit - lower_limit;
 
-        bool low_throttle_cutoff_enabled = true;
+        bool inverted = false;
 
-        void write(uint16_t _milli_throttle);
+        void write(uint16_t _value);
 
     public:
-        ESCOutput(const uint8_t pin,
+        ServoOutput(const uint8_t pin,
                 float throttle_volume,
                 float roll_volume, float pitch_volume, float yaw_volume)
             : Output(pin, throttle_volume, roll_volume, pitch_volume, yaw_volume) {
                 output.attach(pin);
             }
 
-        void apply(uint16_t _milli_throttle,
-                float roll_stbl, float pitch_stbl, float yaw_stbl) override;
+        void apply(uint16_t _value,
+                const float roll_stbl, const float pitch_stbl, const float yaw_stbl) override;
 
-        void shut_off();
-
-        void set_throttle_cutoff_enabled(bool enable);
+        const bool is_inverted();
+        void invert(bool invert);
 
         void set_limits(uint16_t lower, uint16_t upper);
 
@@ -50,5 +46,5 @@ class ESCOutput : Output {
         void set_yaw_volume     (float volume) override;
 };
 
-#endif // ESC_OUTPUT_H
+#endif // SERVO_OUTPUT_H
 

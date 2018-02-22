@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <vector>
 
-#include "Filter.h"
+#include "Filter.hpp"
 
 template <typename T>
 class MovingAverage : public Filter<T> {

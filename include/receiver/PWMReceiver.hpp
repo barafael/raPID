@@ -1,7 +1,7 @@
 #ifndef PWMRECEIVER_H
 #define PWMRECEIVER_H
 
-#include "Receiver.h"
+#include "Receiver.hpp"
 #include <vector>
 
 class PWMReceiver : Receiver {

@@ -2,18 +2,18 @@
 
 #include <stdint.h>
 
-#include "../include/output/ESCOutput.h"
-#include "../include/output/FastPWMOutput.h"
-#include "../include/output/LEDOutput.h"
+#include "../include/output/ESCOutput.hpp"
+#include "../include/output/FastPWMOutput.hpp"
+#include "../include/output/LEDOutput.hpp"
 #include "../include/imu/axis.hpp"
-#include "../include/pid/PIDController.h"
-#include "../include/receiver/PWMReceiver.h"
-#include "../include/ArmingState.h"
+#include "../include/pid/PIDController.hpp"
+#include "../include/receiver/PWMReceiver.hpp"
+#include "../include/ArmingState.hpp"
 #include "../include/error_blink.h"
 #include "../include/pins.h"
-#include "../include/imu/SENtralIMU.h"
+#include "../include/imu/SENtralIMU.hpp"
 #include "../include/settings.h"
-#include "../include/Watchdog.h"
+#include "../include/Watchdog.hpp"
 
 #define TIMING_ANALYSIS
 #ifdef TIMING_ANALYSIS

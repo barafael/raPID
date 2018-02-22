@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-#include "Mixer.h"
+#include "Mixer.hpp"
 
 class Output {
     protected:

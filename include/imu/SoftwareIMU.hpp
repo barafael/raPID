@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <array>
 
-#include "RawIMU.h"
+#include "RawIMU.hpp"
 
 #include "axis.hpp"
 

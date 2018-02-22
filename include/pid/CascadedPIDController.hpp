@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "PIDController.h"
+#include "PIDController.hpp"
 
 typedef enum { STABILIZE, RATE } controller_mode;
 

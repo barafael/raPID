@@ -1,4 +1,4 @@
-#include "../include/ArmingState.h"
+#include "../include/ArmingState.hpp"
 
 ArmingState *arming_state_instance = nullptr;
 

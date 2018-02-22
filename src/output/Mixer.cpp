@@ -1,4 +1,4 @@
-#include "../include/output/Mixer.h"
+#include "../include/output/Mixer.hpp"
 #include "../include/util.h"
 
 Mixer::Mixer(float thr_vol, float roll_vol, float pitch_vol, float yaw_vol)

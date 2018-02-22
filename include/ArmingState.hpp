@@ -4,7 +4,7 @@
 #include "Arduino.h"
 
 #include "error_blink.h"
-#include "receiver/Receiver.h"
+#include "receiver/Receiver.hpp"
 
 // TRANSITION PASS_THROUGH FAILSAFE, CONFIG
 typedef enum { DISARMED, ARMING, ARMING_STANDBY, ARMED, DISARMING, DISARMING_STANDBY } state_t;
