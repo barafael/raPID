@@ -8,6 +8,7 @@
 #include "../include/imu/axis.hpp"
 #include "../include/pid/PIDController.hpp"
 #include "../include/receiver/PWMReceiver.hpp"
+#include "../include/receiver/PPMReceiver.hpp"
 #include "../include/ArmingState.hpp"
 #include "../include/error_blink.h"
 #include "../include/pins.h"
@@ -115,6 +116,8 @@ extern "C" int main(void) {
                          PITCH_INPUT_PIN,    YAW_INPUT_PIN,
                          AUX1_INPUT_PIN,     AUX2_INPUT_PIN,
                          offsets);
+  
+    // PPMReceiver receiver(PPM_PIN, offsets);
 
     while (!receiver.has_signal()) {
         delay(500);
@@ -123,15 +126,13 @@ extern "C" int main(void) {
 
     Serial.println(F("Receiver signal detected, continuing."));
 
-    SENtralIMU sentral;
+    PIDParams<float> roll_param_stbl ( 2.0 , 0.0 , 0.0 , 12.0 , 400.0);
+    PIDParams<float> roll_param_rate ( 1.5 , 0.0 , 0.0 , 12.0 , 400.0);
 
-    PIDParams<float> roll_param_stbl ( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
-    PIDParams<float> roll_param_rate ( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
+    PIDParams<float> pitch_param_stbl( 2.0 , 0.0 , 0.0 , 12.0 , 400.0);
+    PIDParams<float> pitch_param_rate( 1.5 , 0.0 , 0.0 , 12.0 , 400.0);
 
-    PIDParams<float> pitch_param_stbl( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
-    PIDParams<float> pitch_param_rate( 0.1 , 0.0 , 0.0 , 12.0 , 200.0);
-
-    PIDParams<float> yaw_param_rate  ( 1.0 , 0.0 , 0.0 , 12.0 , 200.0);
+    PIDParams<float> yaw_param_rate  ( 1.5 , 0.0 , 0.0 , 12.0 , 400.0);
 
     PIDController<float> roll_controller_stbl(&roll_param_stbl);
     PIDController<float> roll_controller_rate(&roll_param_rate);
@@ -141,18 +142,23 @@ extern "C" int main(void) {
 
     PIDController<float> yaw_controller_rate(&yaw_param_rate);
 
-    ESCOutput back_left_out_mixer  (LEFT_SERVO_PIN,  1.0, -0.4, 0.4, 0.0);
-    ESCOutput back_right_out_mixer (RIGHT_SERVO_PIN, 1.0, 0.4, 0.4, 0.0);
-    ESCOutput front_left_out_mixer (FRONT_SERVO_PIN, 1.0, -0.4, -0.4, 0.0);
-    ESCOutput front_right_out_mixer(BACK_SERVO_PIN,  1.0, 0.4, -0.4, 0.0);
+    FastPWMOutput back_left_out_mixer  (LEFT_SERVO_PIN  , 1.0 , -1.0 , -1.0 , 0.0);
+    FastPWMOutput back_right_out_mixer (RIGHT_SERVO_PIN , 1.0 , 1.0  , -1.0 , 0.0);
+    FastPWMOutput front_left_out_mixer (FRONT_SERVO_PIN , 1.0 , -1.0 , 1.0  , 0.0);
+    FastPWMOutput front_right_out_mixer(BACK_SERVO_PIN  , 1.0 , 1.0  , 1.0  , 0.0);
 
     back_left_out_mixer  .shut_off();
     back_right_out_mixer .shut_off();
     front_left_out_mixer .shut_off();
     front_right_out_mixer.shut_off();
 
-    //roll_controller_stbl.set_enabled(false);
-    //roll_controller_rate.set_enabled(false);
+    roll_controller_stbl.set_enabled(true);
+    roll_controller_rate.set_enabled(false);
+
+    pitch_controller_stbl.set_enabled(true);
+    pitch_controller_rate.set_enabled(false);
+
+    SENtralIMU sentral;
 
     Watchdog dog;
 
@@ -161,16 +167,13 @@ extern "C" int main(void) {
     /* Flight loop */
     while (true) {
         receiver.update(channels);
-        //print_channels(channels);
+        print_channels(channels);
 
-        //delay(50);
         sentral.update_attitude(attitude);
         //print_attitude(attitude);
 
         sentral.update_angular_rates(angular_rates);
         //print_velocity(angular_rates);
-
-        //sentral.update_sensors();
 
         switch (arming_state.get_state()) {
             case ARMED:
