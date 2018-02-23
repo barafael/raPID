@@ -126,10 +126,10 @@ extern "C" int main(void) {
 
     Serial.println(F("Receiver signal detected, continuing."));
 
-    PIDParams<float> roll_param_stbl ( 2.0 , 0.0 , 0.0 , 12.0 , 400.0);
+    PIDParams<float> roll_param_stbl ( 0.75 , 0.0 , 0.0 , 12.0 , 400.0);
     PIDParams<float> roll_param_rate ( 1.5 , 0.0 , 0.0 , 12.0 , 400.0);
 
-    PIDParams<float> pitch_param_stbl( 2.0 , 0.0 , 0.0 , 12.0 , 400.0);
+    PIDParams<float> pitch_param_stbl( 0.75 , 0.0 , 0.0 , 12.0 , 400.0);
     PIDParams<float> pitch_param_rate( 1.5 , 0.0 , 0.0 , 12.0 , 400.0);
 
     PIDParams<float> yaw_param_rate  ( 1.5 , 0.0 , 0.0 , 12.0 , 400.0);
@@ -142,21 +142,21 @@ extern "C" int main(void) {
 
     PIDController<float> yaw_controller_rate(&yaw_param_rate);
 
-    FastPWMOutput back_left_out_mixer  (LEFT_SERVO_PIN  , 1.0 , -1.0 , -1.0 , 0.0);
-    FastPWMOutput back_right_out_mixer (RIGHT_SERVO_PIN , 1.0 , 1.0  , -1.0 , 0.0);
-    FastPWMOutput front_left_out_mixer (FRONT_SERVO_PIN , 1.0 , -1.0 , 1.0  , 0.0);
-    FastPWMOutput front_right_out_mixer(BACK_SERVO_PIN  , 1.0 , 1.0  , 1.0  , 0.0);
+    FastPWMOutput back_left_out_mixer  (LEFT_SERVO_PIN  , 1.0 , -0.25 , -0.25 , 0.0);
+    FastPWMOutput back_right_out_mixer (RIGHT_SERVO_PIN , 1.0 , 0.25  , -0.25 , 0.0);
+    FastPWMOutput front_left_out_mixer (FRONT_SERVO_PIN , 1.0 , -0.25 , 0.25  , 0.0);
+    FastPWMOutput front_right_out_mixer(BACK_SERVO_PIN  , 1.0 , 0.25  , 0.25  , 0.0);
 
     back_left_out_mixer  .shut_off();
     back_right_out_mixer .shut_off();
     front_left_out_mixer .shut_off();
     front_right_out_mixer.shut_off();
 
-    roll_controller_stbl.set_enabled(true);
-    roll_controller_rate.set_enabled(false);
+    roll_controller_stbl.set_enabled(false);
+    roll_controller_rate.set_enabled(true);
 
-    pitch_controller_stbl.set_enabled(true);
-    pitch_controller_rate.set_enabled(false);
+    pitch_controller_stbl.set_enabled(false);
+    pitch_controller_rate.set_enabled(true);
 
     SENtralIMU sentral;
 
