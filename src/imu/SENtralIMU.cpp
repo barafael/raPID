@@ -1,5 +1,5 @@
 #include "../../include/imu/SENtralIMU.hpp"
-#include "SENtralRegisters.h"
+#include "SENtralRegisters.hpp"
 
 void sentral_data_ready();
 void accelgyrocalMPU9250(float * dest1, float * dest2);
