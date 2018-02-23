@@ -49,7 +49,7 @@ the setpoint to the next controller) and only using the rate controller.
   - [ ] Add safety mechanisms for receiver signal loss (detect RX failsafe output)
   - [ ] Fix/Improve watchdog timer functionality. Is this even necessary? A software crash will likely lead to crash of vehicle, since the controller boots to disarmed mode. Check if wakeup from watchdog, then proceeding armed?
     * Currently, watchdog is disabled
-- [ ] Test PPM receiver read
+- [ ] Fix PPM receiver read
 
 ## Ideas
 - [ ] Live coefficient tweaking (standard tx or telemetry hardware)
