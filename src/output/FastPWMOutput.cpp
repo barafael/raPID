@@ -60,8 +60,8 @@ void FastPWMOutput::set_limits(uint16_t lower, uint16_t upper) {
         Serial.print(F("Dubious limits given to output on pin "));
         Serial.println(pin);
         uint16_t tmp = lower;
-        lower = upper;
-        upper = tmp;
+        lower        = upper;
+        upper        = tmp;
     }
     upper_limit = upper > 1300 ? 1300 : upper;
     lower_limit = lower;

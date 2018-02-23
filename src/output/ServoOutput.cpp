@@ -50,7 +50,6 @@ void ServoOutput::set_limits(uint16_t lower, uint16_t upper) {
     range = upper_limit - lower_limit;
 }
 
-
 void ServoOutput::set_throttle_volume(float volume) {
     mixer.throttle_volume = volume;
 }

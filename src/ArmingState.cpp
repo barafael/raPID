@@ -20,20 +20,20 @@ void update_state() {
     switch (arming_state_instance->internal_state) {
         case ARMED:
 #ifdef ARMING_DEBUG
-                Serial.println("Armed");
+            Serial.println("Armed");
 #endif
             if (triggered) {
-                arming_state_instance->internal_state = DISARMING;
+                arming_state_instance->internal_state    = DISARMING;
                 arming_state_instance->state_change_time = millis();
             }
             break;
 
         case DISARMED:
 #ifdef ARMING_DEBUG
-                Serial.println("Disarmed");
+            Serial.println("Disarmed");
 #endif
             if (triggered) {
-                arming_state_instance->internal_state = ARMING;
+                arming_state_instance->internal_state    = ARMING;
                 arming_state_instance->state_change_time = millis();
             }
             break;
@@ -43,10 +43,10 @@ void update_state() {
 #ifdef ARMING_DEBUG
                 Serial.println("Disarming");
 #endif
-                if ((millis() - arming_state_instance->state_change_time)
-                        > arming_state_instance->DISARM_TIMEOUT_MS) {
+                if ((millis() - arming_state_instance->state_change_time) > arming_state_instance->DISARM_TIMEOUT_MS) {
                     arming_state_instance->internal_state = DISARMING_STANDBY;
-                } else break;
+                } else
+                    break;
             } else {
 #ifdef ARMING_DEBUG
                 Serial.println("Going back to armed");
@@ -67,13 +67,13 @@ void update_state() {
 
         case ARMING:
 #ifdef ARMING_DEBUG
-                Serial.println("Arming");
+            Serial.println("Arming");
 #endif
             if (triggered) {
-                if ((millis() - arming_state_instance->state_change_time)
-                        > arming_state_instance->ARM_TIMEOUT_MS) {
+                if ((millis() - arming_state_instance->state_change_time) > arming_state_instance->ARM_TIMEOUT_MS) {
                     arming_state_instance->internal_state = ARMING_STANDBY;
-                } else break;
+                } else
+                    break;
             } else {
 #ifdef ARMING_DEBUG
                 Serial.println("Going back to disarmed");
@@ -95,19 +95,17 @@ void update_state() {
             /* unimplemented state? */
         default:
 #ifdef ARMING_DEBUG
-                Serial.println("Unimpl. Disarmed now!");
+            Serial.println("Unimpl. Disarmed now!");
 #endif
             arming_state_instance->internal_state = DISARMED;
     }
 }
 
-ArmingState::ArmingState(channels_t channels)
-    : channels(channels) {
-        arming_state_instance = this;
-        if (!state_change_timer.begin(update_state, INTERVAL_US)) {
-            error_blink(STATE_TIMER_HARDWARE_BUSY,
-                    "Could not set up interval timer for arming state update!");
-        }
+ArmingState::ArmingState(channels_t channels) : channels(channels) {
+    arming_state_instance = this;
+    if (!state_change_timer.begin(update_state, INTERVAL_US)) {
+        error_blink(STATE_TIMER_HARDWARE_BUSY, "Could not set up interval timer for arming state update!");
+    }
 }
 
 state_t ArmingState::get_state() {
@@ -115,14 +113,10 @@ state_t ArmingState::get_state() {
     switch (internal_state) {
         case ARMED:
         case DISARMING:
-        case DISARMING_STANDBY:
-            interrupts();
-            return ARMED;
+        case DISARMING_STANDBY: interrupts(); return ARMED;
         case DISARMED:
         case ARMING:
-        case ARMING_STANDBY:
-            interrupts();
-            return DISARMED;
+        case ARMING_STANDBY: interrupts(); return DISARMED;
     }
     interrupts();
     return DISARMED;

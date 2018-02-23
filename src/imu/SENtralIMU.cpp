@@ -1,73 +1,64 @@
 #include "../../include/imu/SENtralIMU.hpp"
 #include "SENtralRegisters.hpp"
 
-void sentral_data_ready();
-void accelgyrocalMPU9250(float * dest1, float * dest2);
+void     sentral_data_ready();
+void     accelgyrocalMPU9250(float *dest1, float *dest2);
 uint32_t bmp280_compensate_P(int32_t adc_P);
-int32_t bmp280_compensate_T(int32_t adc_T);
-void BMP280Init();
-void EM7180_set_float_param(uint8_t param, float param_val);
-void EM7180_set_gyro_FS(uint16_t gyro_fs);
-void EM7180_set_integer_param(uint8_t param, uint32_t param_val);
-void EM7180_set_mag_acc_FS(uint16_t mag_fs, uint16_t acc_fs);
-void float_to_bytes(float param_val, uint8_t *buf);
-void getAres();
-void getGres();
-void getMres();
-void I2Cscan();
-void initAK8963(float * destination);
-void initMPU9250();
-void M24512DFMreadBytes(uint8_t device_address, uint8_t data_address1, uint8_t data_address2, uint8_t count, uint8_t * dest);
-uint8_t M24512DFMreadByte(uint8_t device_address, uint8_t data_address1, uint8_t data_address2);
-void M24512DFMwriteBytes(uint8_t device_address, uint8_t data_address1, uint8_t data_address2, uint8_t count, uint8_t * dest);
-void M24512DFMwriteByte(uint8_t device_address, uint8_t data_address1, uint8_t data_address2, uint8_t data);
-void magcalMPU9250(float * dest1, float * dest2);
-void readAccelData(int16_t * destination);
-int32_t readBMP280Pressure();
-int32_t readBMP280Temperature();
-void readBytes(uint8_t address, uint8_t subAddress, uint8_t count, uint8_t * dest);
-uint8_t readByte(uint8_t address, uint8_t subAddress);
-void readGyroData(int16_t * destination);
-void readMagData(int16_t * destination);
-void readSENtralAccelData(int16_t * destination);
-int16_t readSENtralBaroData();
-void readSENtralGyroData(int16_t * destination);
-void readSENtralMagData(int16_t * destination);
-void readSENtralQuatData(float * destination);
-int16_t readSENtralTempData();
-int16_t readTempData();
-void SENtralPassThroughMode();
-float uint32_reg_to_float(uint8_t *buf);
-void update_sensors();
-void writeByte(uint8_t address, uint8_t subAddress, uint8_t data);
+int32_t  bmp280_compensate_T(int32_t adc_T);
+void     BMP280Init();
+void     EM7180_set_float_param(uint8_t param, float param_val);
+void     EM7180_set_gyro_FS(uint16_t gyro_fs);
+void     EM7180_set_integer_param(uint8_t param, uint32_t param_val);
+void     EM7180_set_mag_acc_FS(uint16_t mag_fs, uint16_t acc_fs);
+void     float_to_bytes(float param_val, uint8_t *buf);
+void     getAres();
+void     getGres();
+void     getMres();
+void     I2Cscan();
+void     initAK8963(float *destination);
+void     initMPU9250();
+void     M24512DFMreadBytes(uint8_t device_address, uint8_t data_address1, uint8_t data_address2, uint8_t count,
+                            uint8_t *dest);
+uint8_t  M24512DFMreadByte(uint8_t device_address, uint8_t data_address1, uint8_t data_address2);
+void     M24512DFMwriteBytes(uint8_t device_address, uint8_t data_address1, uint8_t data_address2, uint8_t count,
+                             uint8_t *dest);
+void     M24512DFMwriteByte(uint8_t device_address, uint8_t data_address1, uint8_t data_address2, uint8_t data);
+void     magcalMPU9250(float *dest1, float *dest2);
+void     readAccelData(int16_t *destination);
+int32_t  readBMP280Pressure();
+int32_t  readBMP280Temperature();
+void     readBytes(uint8_t address, uint8_t subAddress, uint8_t count, uint8_t *dest);
+uint8_t  readByte(uint8_t address, uint8_t subAddress);
+void     readGyroData(int16_t *destination);
+void     readMagData(int16_t *destination);
+void     readSENtralAccelData(int16_t *destination);
+int16_t  readSENtralBaroData();
+void     readSENtralGyroData(int16_t *destination);
+void     readSENtralMagData(int16_t *destination);
+void     readSENtralQuatData(float *destination);
+int16_t  readSENtralTempData();
+int16_t  readTempData();
+float    uint32_reg_to_float(uint8_t *buf);
+void     update_sensors();
+void     writeByte(uint8_t address, uint8_t subAddress, uint8_t data);
 
-#include <i2c_t3.h>
 #include <SPI.h>
+#include <i2c_t3.h>
 
-#define SerialDebug false  // set to true to get Serial output for debugging
+#define SerialDebug false
 
 // Set initial input parameters
-enum Ascale {
-    AFS_2G = 0,
-    AFS_4G,
-    AFS_8G,
-    AFS_16G
-};
+enum Ascale { AFS_2G = 0, AFS_4G, AFS_8G, AFS_16G };
 
-enum Gscale {
-    GFS_250DPS = 0,
-    GFS_500DPS,
-    GFS_1000DPS,
-    GFS_2000DPS
-};
+enum Gscale { GFS_250DPS = 0, GFS_500DPS, GFS_1000DPS, GFS_2000DPS };
 
 enum Mscale {
     MFS_14BITS = 0, // 0.6 mG per LSB
-    MFS_16BITS      // 0.15 mG per LSB
+    MFS_16BITS // 0.15 mG per LSB
 };
 
 enum Posr {
-    P_OSR_00 = 0,  // no op
+    P_OSR_00 = 0, // no op
     P_OSR_01,
     P_OSR_02,
     P_OSR_04,
@@ -76,7 +67,7 @@ enum Posr {
 };
 
 enum Tosr {
-    T_OSR_00 = 0,  // no op
+    T_OSR_00 = 0, // no op
     T_OSR_01,
     T_OSR_02,
     T_OSR_04,
@@ -85,19 +76,14 @@ enum Tosr {
 };
 
 enum IIRFilter {
-    full = 0,  // bandwidth at full sample rate
+    full = 0, // bandwidth at full sample rate
     BW0_223ODR,
     BW0_092ODR,
     BW0_042ODR,
     BW0_021ODR // bandwidth at 0.021 x sample rate
 };
 
-enum Mode {
-    BMP280Sleep = 0,
-    forced,
-    forced2,
-    normal
-};
+enum Mode { BMP280Sleep = 0, forced, forced2, normal };
 
 enum SBy {
     t_00_5ms = 0,
@@ -111,99 +97,128 @@ enum SBy {
 };
 
 // Specify BMP280 configuration
-uint8_t Posr = P_OSR_16, Tosr = T_OSR_02, Mode = normal, IIRFilter = BW0_042ODR, SBy = t_62_5ms;     // set pressure amd temperature output data rate
+
+// set pressure amd temperature output data rate
+uint8_t Posr = P_OSR_16, Tosr = T_OSR_02, Mode = normal, IIRFilter = BW0_042ODR, SBy = t_62_5ms;
+
 // t_fine carries fine temperature as global value for BMP280
 int32_t t_fine;
-//
+
 // Specify sensor full scale
 uint8_t Gscale = GFS_250DPS;
 uint8_t Ascale = AFS_2G;
 uint8_t Mscale = MFS_16BITS; // Choose either 14-bit or 16-bit magnetometer resolution
-uint8_t Mmode = 0x02;        // 2 for 8 Hz, 6 for 100 Hz continuous magnetometer data read
-float aRes, gRes, mRes;      // scale resolutions per LSB for the sensors
+uint8_t Mmode  = 0x02; // 2 for 8 Hz, 6 for 100 Hz continuous magnetometer data read
+float   aRes, gRes, mRes; // scale resolutions per LSB for the sensors
 
 // BMP280 compensation parameters
 uint16_t dig_T1, dig_P1;
 int16_t  dig_T2, dig_T3, dig_P2, dig_P3, dig_P4, dig_P5, dig_P6, dig_P7, dig_P8, dig_P9;
-double Temperature, Pressure; // stores BMP280 pressures sensor pressure and temperature
-int32_t rawPress, rawTemp;   // pressure and temperature raw count output for BMP280
+double   Temperature, Pressure;
+int32_t  rawPress, rawTemp;
 
 // MPU9250 variables
-int16_t accelCount[3];  // Stores the 16-bit signed accelerometer sensor output
-int16_t gyroCount[3];   // Stores the 16-bit signed gyro sensor output
-int16_t magCount[3];    // Stores the 16-bit signed magnetometer sensor output
-float Quat[4] = {0, 0, 0, 0}; // quaternion data register
-float magCalibration[3] = {0, 0, 0};  // Factory mag calibration and mag bias
-float gyroBias[3] = {0, 0, 0}, accelBias[3] = {0, 0, 0}, magBias[3] = {0, 0, 0}, magScale[3]  = {0, 0, 0};  // Bias corrections for gyro, accelerometer, mag
-int16_t tempCount, rawPressure, rawTemperature;   // pressure, temperature raw count output
-float   temperature, pressure, altitude; // Stores the MPU9250 internal chip temperature in degrees Celsius
-float SelfTest[6];            // holds results of gyro and accelerometer self test
+int16_t accelCount[3]; // Stores the 16-bit signed accelerometer sensor output
+int16_t gyroCount[3]; // Stores the 16-bit signed gyro sensor output
+int16_t magCount[3]; // Stores the 16-bit signed magnetometer sensor output
+
+// Bias corrections for gyro, accelerometer, mag
+float gyroBias[3] = { 0, 0, 0 };
+float accelBias[3] = { 0, 0, 0 };
+float magBias[3] = { 0, 0, 0 };
+
+float Quat[4] = { 0, 0, 0, 0 };
+
+// Factory mag calibration and mag bias
+float magCalibration[3] = { 0, 0, 0 };
+float magScale[3]       = { 0, 0, 0 };
+
+// pressure, temperature raw count output
+int16_t tempCount, rawPressure, rawTemperature;
+
+// Stores the MPU9250 internal chip temperature in degrees Celsius
+float temperature, pressure, altitude;
+
+// holds results of gyro and accelerometer self test
+float SelfTest[6];
 
 // global constants for 9 DoF fusion and AHRS (Attitude and Heading Reference System)
-float GyroMeasError = PI * (40.0f / 180.0f);   // gyroscope measurement error in rads/s (start at 40 deg/s)
-float GyroMeasDrift = PI * (0.0f  / 180.0f);   // gyroscope measurement drift in rad/s/s (start at 0.0 deg/s/s)
-// There is a tradeoff in the beta parameter between accuracy and response speed.
-// In the original Madgwick study, beta of 0.041 (corresponding to GyroMeasError of 2.7 degrees/s) was found to give optimal accuracy.
-// However, with this value, the LSM9SD0 response time is about 10 seconds to a stable initial quaternion.
-// Subsequent changes also require a longish lag time to a stable output, not fast enough for a quadcopter or robot car!
-// By increasing beta (GyroMeasError) by about a factor of fifteen, the response time constant is reduced to ~2 sec
-// I haven't noticed any reduction in solution accuracy. This is essentially the I coefficient in a PID control sense;
-// the bigger the feedback coefficient, the faster the solution converges, usually at the expense of accuracy.
-// In any case, this is the free parameter in the Madgwick filtering and fusion scheme.
-float beta = sqrt(3.0f / 4.0f) * GyroMeasError;   // compute beta
-float zeta = sqrt(3.0f / 4.0f) * GyroMeasDrift;   // compute zeta, the other free parameter in the Madgwick scheme usually set to a small or zero value
-#define Kp 2.0f * 5.0f // these are the free parameters in the Mahony filter and fusion scheme, Kp for proportional feedback, Ki for integral
+// gyroscope measurement error in rads / s(start at 40 deg / s)
+float GyroMeasError = PI * (40.0f / 180.0f);
+// gyroscope measurement drift in rad / s / s (start at 0.0 deg / s / s)
+float GyroMeasDrift = PI * (0.0f / 180.0f);
+    /* There is a tradeoff in the beta parameter between accuracy and response
+     * speed.  In the original Madgwick study, beta of 0.041 (corresponding to
+     * GyroMeasError of 2.7 degrees/s) was found to give optimal accuracy.
+     * However, with this value, the LSM9SD0 response time is about 10 seconds to a
+     * stable initial quaternion.  Subsequent changes also require a longish lag
+     * time to a stable output, not fast enough for a quadcopter or robot car!  By
+     * increasing beta (GyroMeasError) by about a factor of fifteen, the response
+     * time constant is reduced to ~2 sec I haven't noticed any reduction in
+     * solution accuracy. This is essentially the I coefficient in a PID control
+     * sense; the bigger the feedback coefficient, the faster the solution
+     * converges, usually at the expense of accuracy.  In any case, this is the
+     * free parameter in the Madgwick filtering and fusion scheme.
+     */
+    float beta = sqrt(3.0f / 4.0f) * GyroMeasError;
+// compute zeta, the other free parameter in the Madgwick scheme usually set to a small or zero value
+float zeta = sqrt(3.0f / 4.0f) * GyroMeasDrift;
+
+// Free parameters for Mahony filter: Kp for proportional feedback, Ki for integral
+#define Kp 2.0f * 5.0f
 #define Ki 0.0f
 
-uint32_t delt_t = 0, count = 0, sumCount = 0;  // used to control display output rate
+float eInt[3] = { 0.0f, 0.0f, 0.0f }; // vector to hold integral error for Mahony method
+
+uint32_t delt_t = 0, count = 0, sumCount = 0;
+uint32_t Now        = 0;
+uint32_t lastUpdate = 0, firstUpdate = 0;
+
 float Yaw, Pitch, Roll;
-float deltat = 0.0f, sum = 0.0f;          // integration interval for both filter schemes
-uint32_t lastUpdate = 0, firstUpdate = 0; // used to calculate integration interval
-uint32_t Now = 0;                         // used to calculate integration interval
-uint8_t param[4];                         // used for param transfer
-uint16_t EM7180_mag_fs, EM7180_acc_fs, EM7180_gyro_fs; // EM7180 sensor full scale ranges
 
-float ax, ay, az, gx, gy, gz, mx, my, mz; // variables to hold latest sensor data values
-float q[4] = {1.0f, 0.0f, 0.0f, 0.0f};    // vector to hold quaternion
-float eInt[3] = {0.0f, 0.0f, 0.0f};       // vector to hold integral error for Mahony method
+// Integration interval for both filters
+float deltat = 0.0f, sum = 0.0f;
 
-bool passThru = false;
+// For parameter transfer
+uint8_t param[4];
 
+// EM7180 sensor full scale ranges
+uint16_t EM7180_mag_fs, EM7180_acc_fs, EM7180_gyro_fs;
+
+// Temporary variables to hold latest raw sensor data values
+float ax, ay, az, gx, gy, gz, mx, my, mz;
 
 //===================================================================================================================
 //====== Set of useful function to access acceleration. gyroscope, magnetometer, and temperature data
 //===================================================================================================================
 
-float uint32_reg_to_float (uint8_t *buf)
-{
+float uint32_reg_to_float(uint8_t *buf) {
     union {
         uint32_t ui32;
-        float f;
+        float    f;
     } u;
 
-    u.ui32 =     (((uint32_t)buf[0]) +
-                  (((uint32_t)buf[1]) <<  8) +
-                  (((uint32_t)buf[2]) << 16) +
-                  (((uint32_t)buf[3]) << 24));
+    u.ui32 =
+        (((uint32_t) buf[0]) + (((uint32_t) buf[1]) << 8) + (((uint32_t) buf[2]) << 16) + (((uint32_t) buf[3]) << 24));
     return u.f;
 }
 
-void float_to_bytes (float param_val, uint8_t *buf) {
+void float_to_bytes(float param_val, uint8_t *buf) {
     union {
-        float f;
+        float   f;
         uint8_t comp[sizeof(float)];
     } u;
     u.f = param_val;
-    for (uint8_t i=0; i < sizeof(float); i++) {
+    for (uint8_t i = 0; i < sizeof(float); i++) {
         buf[i] = u.comp[i];
     }
     //Convert to LITTLE ENDIAN
-    for (uint8_t i=0; i < sizeof(float); i++) {
-        buf[i] = buf[(sizeof(float)-1) - i];
+    for (uint8_t i = 0; i < sizeof(float); i++) {
+        buf[i] = buf[(sizeof(float) - 1) - i];
     }
 }
 
-void EM7180_set_gyro_FS (uint16_t gyro_fs) {
+void EM7180_set_gyro_FS(uint16_t gyro_fs) {
     uint8_t bytes[4], STAT;
     bytes[0] = gyro_fs & (0xFF);
     bytes[1] = (gyro_fs >> 8) & (0xFF);
@@ -223,7 +238,7 @@ void EM7180_set_gyro_FS (uint16_t gyro_fs) {
     writeByte(EM7180_ADDRESS, EM7180_AlgorithmControl, 0x00); // Re-start algorithm
 }
 
-void EM7180_set_mag_acc_FS (uint16_t mag_fs, uint16_t acc_fs) {
+void EM7180_set_mag_acc_FS(uint16_t mag_fs, uint16_t acc_fs) {
     uint8_t bytes[4], STAT;
     bytes[0] = mag_fs & (0xFF);
     bytes[1] = (mag_fs >> 8) & (0xFF);
@@ -233,9 +248,12 @@ void EM7180_set_mag_acc_FS (uint16_t mag_fs, uint16_t acc_fs) {
     writeByte(EM7180_ADDRESS, EM7180_LoadParamByte1, bytes[1]); //Mag MSB
     writeByte(EM7180_ADDRESS, EM7180_LoadParamByte2, bytes[2]); //Acc LSB
     writeByte(EM7180_ADDRESS, EM7180_LoadParamByte3, bytes[3]); //Acc MSB
-    writeByte(EM7180_ADDRESS, EM7180_ParamRequest, 0xCA); //Parameter 74; 0xCA is 74 decimal with the MSB set high to indicate a paramter write processs
+    writeByte(EM7180_ADDRESS, EM7180_ParamRequest,
+              0xCA); //Parameter 74; 0xCA is 74 decimal with the MSB set high to indicate a paramter write processs
     writeByte(EM7180_ADDRESS, EM7180_AlgorithmControl, 0x80); //Request parameter transfer procedure
-    STAT = readByte(EM7180_ADDRESS, EM7180_ParamAcknowledge); //Check the parameter acknowledge register and loop until the result matches parameter request byte
+    STAT = readByte(
+        EM7180_ADDRESS,
+        EM7180_ParamAcknowledge); //Check the parameter acknowledge register and loop until the result matches parameter request byte
     while(!(STAT==0xCA)) {
         STAT = readByte(EM7180_ADDRESS, EM7180_ParamAcknowledge);
     }
@@ -311,26 +329,26 @@ void readSENtralGyroData(int16_t * destination)
     destination[2] = (int16_t) (((int16_t)rawData[5] << 8) | rawData[4]);
 }
 
-void readSENtralMagData(int16_t * destination)
-{
-    uint8_t rawData[6];  // x/y/z gyro register data stored here
-    readBytes(EM7180_ADDRESS, EM7180_MX, 6, &rawData[0]);  // Read the six raw data registers sequentially into data array
-    destination[0] = (int16_t) (((int16_t)rawData[1] << 8) | rawData[0]);   // Turn the MSB and LSB into a signed 16-bit value
-    destination[1] = (int16_t) (((int16_t)rawData[3] << 8) | rawData[2]);
-    destination[2] = (int16_t) (((int16_t)rawData[5] << 8) | rawData[4]);
+void readSENtralMagData(int16_t *destination) {
+    uint8_t rawData[6]; // x/y/z gyro register data stored here
+    readBytes(EM7180_ADDRESS, EM7180_MX, 6,
+              &rawData[0]); // Read the six raw data registers sequentially into data array
+    destination[0] =
+        (int16_t)(((int16_t) rawData[1] << 8) | rawData[0]); // Turn the MSB and LSB into a signed 16-bit value
+    destination[1] = (int16_t)(((int16_t) rawData[3] << 8) | rawData[2]);
+    destination[2] = (int16_t)(((int16_t) rawData[5] << 8) | rawData[4]);
 }
 
 void getMres() {
-    switch (Mscale)
-    {
-    // Possible magnetometer scales (and their register bit settings) are:
-    // 14 bit resolution (0) and 16 bit resolution (1)
-    case MFS_14BITS:
-        mRes = 10.*4912./8190.; // Proper scale to return milliGauss
-        break;
-    case MFS_16BITS:
-        mRes = 10.*4912./32760.0; // Proper scale to return milliGauss
-        break;
+    switch (Mscale) {
+        // Possible magnetometer scales (and their register bit settings) are:
+        // 14 bit resolution (0) and 16 bit resolution (1)
+        case MFS_14BITS:
+            mRes = 10. * 4912. / 8190.; // Proper scale to return milliGauss
+            break;
+        case MFS_16BITS:
+            mRes = 10. * 4912. / 32760.0; // Proper scale to return milliGauss
+            break;
     }
 }
 
@@ -376,7 +394,6 @@ void getAres() {
     }
 }
 
-
 void readAccelData(int16_t * destination)
 {
     uint8_t rawData[6];  // x/y/z accel register data stored here
@@ -385,7 +402,6 @@ void readAccelData(int16_t * destination)
     destination[1] = ((int16_t)rawData[2] << 8) | rawData[3] ;
     destination[2] = ((int16_t)rawData[4] << 8) | rawData[5] ;
 }
-
 
 void readGyroData(int16_t * destination)
 {
@@ -437,7 +453,6 @@ void initAK8963(float * destination)
     writeByte(AK8963_ADDRESS, AK8963_CNTL, Mscale << 4 | Mmode); // Set magnetometer data resolution and sample ODR
     delay(20);
 }
-
 
 void initMPU9250()
 {
@@ -497,7 +512,6 @@ void initMPU9250()
     writeByte(MPU9250_ADDRESS, INT_ENABLE, 0x01);  // Enable data ready (bit 0) interrupt
     delay(100);
 }
-
 
 // Function which accumulates gyro and accelerometer data after device initialization. It calculates the average
 // of the at-rest readings and then loads the resulting offsets into accelerometer and gyro bias registers.
@@ -651,7 +665,6 @@ void accelgyrocalMPU9250(float * dest1, float * dest2)
     dest2[2] = (float)accel_bias[2]/(float)accelsensitivity;
 }
 
-
 void magcalMPU9250(float * dest1, float * dest2)
 {
     uint16_t ii = 0, sample_count = 0;
@@ -700,9 +713,6 @@ void magcalMPU9250(float * dest1, float * dest2)
 
     Serial.println("Mag Calibration done!");
 }
-
-
-
 
 // Accelerometer and gyroscope self test; check calibration wrt factory settings
 void MPU9250SelfTest(float * destination) // Should return percent deviation from factory trim values, +/- 14 or less deviation is a pass
@@ -804,31 +814,6 @@ int16_t readSENtralTempData()
     return  (int16_t) (((int16_t)rawData[1] << 8) | rawData[0]);   // Turn the MSB and LSB into a signed 16-bit value
 }
 
-
-void SENtralPassThroughMode()
-{
-    // First put SENtral in standby mode
-    uint8_t c = readByte(EM7180_ADDRESS, EM7180_AlgorithmControl);
-    writeByte(EM7180_ADDRESS, EM7180_AlgorithmControl, c | 0x01);
-//  c = readByte(EM7180_ADDRESS, EM7180_AlgorithmStatus);
-//  Serial.print("c = "); Serial.println(c);
-// Verify standby status
-// if(readByte(EM7180_ADDRESS, EM7180_AlgorithmStatus) & 0x01) {
-    Serial.println("SENtral in standby mode");
-    // Place SENtral in pass-through mode
-    writeByte(EM7180_ADDRESS, EM7180_PassThruControl, 0x01);
-    if(readByte(EM7180_ADDRESS, EM7180_PassThruStatus) & 0x01) {
-        Serial.println("SENtral in pass-through mode");
-    }
-    else {
-        Serial.println("ERROR! SENtral not in pass-through mode!");
-    }
-
-
-}
-
-
-
 // I2C communication with the M24512DFM EEPROM is a little different from I2C communication with the usual motion sensor
 // since the address is defined by two bytes
 
@@ -840,7 +825,6 @@ void M24512DFMwriteByte(uint8_t device_address, uint8_t data_address1, uint8_t d
     Wire.write(data);                         // Put data in Tx buffer
     Wire.endTransmission();                   // Send the Tx buffer
 }
-
 
 void M24512DFMwriteBytes(uint8_t device_address, uint8_t data_address1, uint8_t data_address2, uint8_t count, uint8_t * dest)
 {
@@ -857,7 +841,6 @@ void M24512DFMwriteBytes(uint8_t device_address, uint8_t data_address1, uint8_t 
     }
     Wire.endTransmission();                   // Send the Tx buffer
 }
-
 
 uint8_t M24512DFMreadByte(uint8_t device_address, uint8_t data_address1, uint8_t data_address2)
 {
@@ -887,10 +870,6 @@ void M24512DFMreadBytes(uint8_t device_address, uint8_t data_address1, uint8_t d
         dest[i++] = Wire.read();
     }                // Put read results in the Rx buffer
 }
-
-
-
-
 
 int32_t readBMP280Temperature()
 {
@@ -967,43 +946,35 @@ uint32_t bmp280_compensate_P(int32_t adc_P)
     return (uint32_t)p;
 }
 
-
-
-
 // simple function to scan for I2C devices on the bus
-void I2Cscan()
-{
+void I2Cscan() {
     // scan for i2c devices
     byte error, address;
-    int nDevices;
+    int  nDevices;
 
     Serial.println("Scanning...");
 
     nDevices = 0;
-    for(address = 1; address < 127; address++ )
-    {
+    for (address = 1; address < 127; address++) {
         // The i2c_scanner uses the return value of
         // the Write.endTransmisstion to see if
         // a device did acknowledge to the address.
         Wire.beginTransmission(address);
         error = Wire.endTransmission();
 
-        if (error == 0)
-        {
+        if (error == 0) {
             Serial.print("I2C device found at address 0x");
-            if (address<16)
+            if (address < 16)
                 Serial.print("0");
-            Serial.print(address,HEX);
+            Serial.print(address, HEX);
             Serial.println("  !");
 
             nDevices++;
-        }
-        else if (error==4)
-        {
+        } else if (error == 4) {
             Serial.print("Unknow error at address 0x");
-            if (address<16)
+            if (address < 16)
                 Serial.print("0");
-            Serial.println(address,HEX);
+            Serial.println(address, HEX);
         }
     }
     if (nDevices == 0)
@@ -1011,7 +982,6 @@ void I2Cscan()
     else
         Serial.println("done\n");
 }
-
 
 // I2C read/write functions for the MPU9250 and AK8963 sensors
 
@@ -1061,7 +1031,6 @@ static volatile bool mpu_interrupt = false;
 void sentral_data_ready() {
     mpu_interrupt = true;
 }
-
 
 /*
    ---------------------------------------------------
@@ -1170,205 +1139,202 @@ SENtralIMU::SENtralIMU() {
     delay(10); // give some time to read the screen
 
     // Set up the SENtral as sensor bus in normal operating mode
-    if (!passThru) {
-        // Enter EM7180 initialized state
-        writeByte(EM7180_ADDRESS, EM7180_HostControl, 0x00); // set SENtral in initialized state to configure registers
-        writeByte(EM7180_ADDRESS, EM7180_PassThruControl, 0x00); // make sure pass through mode is off
-        writeByte(EM7180_ADDRESS, EM7180_HostControl, 0x01); // Force initialize
-        writeByte(EM7180_ADDRESS, EM7180_HostControl, 0x00); // set SENtral in initialized state to configure registers
+    // Enter EM7180 initialized state
+    writeByte(EM7180_ADDRESS, EM7180_HostControl, 0x00); // set SENtral in initialized state to configure registers
+    writeByte(EM7180_ADDRESS, EM7180_PassThruControl, 0x00); // make sure pass through mode is off
+    writeByte(EM7180_ADDRESS, EM7180_HostControl, 0x01); // Force initialize
+    writeByte(EM7180_ADDRESS, EM7180_HostControl, 0x00); // set SENtral in initialized state to configure registers
 
-        //Setup LPF bandwidth (BEFORE setting ODR's)
-        //TODO: find custom frequencies
-        writeByte(EM7180_ADDRESS, EM7180_ACC_LPF_BW, 0x03); // 41Hz
-        writeByte(EM7180_ADDRESS, EM7180_GYRO_LPF_BW, 0x03); // 41Hz
-        // Set accel/gyro/mage desired ODR rates
-        writeByte(EM7180_ADDRESS, EM7180_QRateDivisor, 0x02); // 100 Hz
-        writeByte(EM7180_ADDRESS, EM7180_MagRate, 0x64); // 100 Hz
-        writeByte(EM7180_ADDRESS, EM7180_AccelRate, 0x14); // 200/10 Hz
-        writeByte(EM7180_ADDRESS, EM7180_GyroRate, 0x14); // 200/10 Hz
-        writeByte(EM7180_ADDRESS, EM7180_BaroRate, 0x80 | 0x32); // set enable bit and set Baro rate to 25 Hz
-        // writeByte(EM7180_ADDRESS, EM7180_TempRate, 0x19);  // set enable bit and set rate to 25 Hz
+    //Setup LPF bandwidth (BEFORE setting ODR's)
+    //TODO: find custom frequencies
+    writeByte(EM7180_ADDRESS, EM7180_ACC_LPF_BW, 0x03); // 41Hz
+    writeByte(EM7180_ADDRESS, EM7180_GYRO_LPF_BW, 0x03); // 41Hz
+    // Set accel/gyro/mage desired ODR rates
+    writeByte(EM7180_ADDRESS, EM7180_QRateDivisor, 0x02); // 100 Hz
+    writeByte(EM7180_ADDRESS, EM7180_MagRate, 0x64); // 100 Hz
+    writeByte(EM7180_ADDRESS, EM7180_AccelRate, 0x14); // 200/10 Hz
+    writeByte(EM7180_ADDRESS, EM7180_GyroRate, 0x14); // 200/10 Hz
+    writeByte(EM7180_ADDRESS, EM7180_BaroRate, 0x80 | 0x32); // set enable bit and set Baro rate to 25 Hz
+    // writeByte(EM7180_ADDRESS, EM7180_TempRate, 0x19);  // set enable bit and set rate to 25 Hz
 
-        // Configure operating mode
-        writeByte(EM7180_ADDRESS, EM7180_AlgorithmControl, 0x00); // read scale sensor data
-        // Enable interrupt to host upon certain events
-        // choose host interrupts when any sensor updated (0x40), new gyro data (0x20), new accel data (0x10),
-        // new mag data (0x08), quaternions updated (0x04), an error occurs (0x02), or the SENtral needs to be reset(0x01)
-        writeByte(EM7180_ADDRESS, EM7180_EnableEvents, 0x07);
-        // Enable EM7180 run mode
-        writeByte(EM7180_ADDRESS, EM7180_HostControl, 0x01); // set SENtral in normal run mode
-        delay(100);
+    // Configure operating mode
+    writeByte(EM7180_ADDRESS, EM7180_AlgorithmControl, 0x00); // read scale sensor data
+    // Enable interrupt to host upon certain events
+    // choose host interrupts when any sensor updated (0x40), new gyro data (0x20), new accel data (0x10),
+    // new mag data (0x08), quaternions updated (0x04), an error occurs (0x02), or the SENtral needs to be reset(0x01)
+    writeByte(EM7180_ADDRESS, EM7180_EnableEvents, 0x07);
+    // Enable EM7180 run mode
+    writeByte(EM7180_ADDRESS, EM7180_HostControl, 0x01); // set SENtral in normal run mode
+    delay(100);
 
-        // EM7180 parameter adjustments
-        Serial.println("Beginning Parameter Adjustments");
+    // EM7180 parameter adjustments
+    Serial.println("Beginning Parameter Adjustments");
 
-        // Read sensor default FS values from parameter space
-        writeByte(EM7180_ADDRESS, EM7180_ParamRequest, 0x4A); // Request to read parameter 74
-        writeByte(EM7180_ADDRESS, EM7180_AlgorithmControl, 0x80); // Request parameter transfer process
-        byte param_xfer = readByte(EM7180_ADDRESS, EM7180_ParamAcknowledge);
+    // Read sensor default FS values from parameter space
+    writeByte(EM7180_ADDRESS, EM7180_ParamRequest, 0x4A); // Request to read parameter 74
+    writeByte(EM7180_ADDRESS, EM7180_AlgorithmControl, 0x80); // Request parameter transfer process
+    byte param_xfer = readByte(EM7180_ADDRESS, EM7180_ParamAcknowledge);
 
-        while (!(param_xfer == 0x4A)) {
-            param_xfer = readByte(EM7180_ADDRESS, EM7180_ParamAcknowledge);
-        }
-
-        param[0] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte0);
-        param[1] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte1);
-        param[2] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte2);
-        param[3] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte3);
-
-        EM7180_mag_fs = ((int16_t)(param[1] << 8) | param[0]);
-        EM7180_acc_fs = ((int16_t)(param[3] << 8) | param[2]);
-
-        Serial.print("Magnetometer Default Full Scale Range: +/-");
-        Serial.print(EM7180_mag_fs);
-        Serial.println("uT");
-        Serial.print("Accelerometer Default Full Scale Range: +/-");
-        Serial.print(EM7180_acc_fs);
-        Serial.println("g");
-
-        writeByte(EM7180_ADDRESS, EM7180_ParamRequest, 0x4B); // Request to read  parameter 75
+    while (!(param_xfer == 0x4A)) {
         param_xfer = readByte(EM7180_ADDRESS, EM7180_ParamAcknowledge);
-
-        while (!(param_xfer == 0x4B)) {
-            param_xfer = readByte(EM7180_ADDRESS, EM7180_ParamAcknowledge);
-        }
-
-        param[0] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte0);
-        param[1] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte1);
-        param[2] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte2);
-        param[3] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte3);
-
-        EM7180_gyro_fs = ((int16_t)(param[1] << 8) | param[0]);
-
-        Serial.print("Gyroscope Default Full Scale Range: +/-");
-        Serial.print(EM7180_gyro_fs);
-        Serial.println("dps");
-
-        writeByte(EM7180_ADDRESS, EM7180_ParamRequest, 0x00); //End parameter transfer
-        writeByte(EM7180_ADDRESS, EM7180_AlgorithmControl, 0x00); // re-enable algorithm
-
-        //Disable stillness mode
-        EM7180_set_integer_param(0x49, 0x00);
-
-        //Write desired sensor full scale ranges to the EM7180
-        EM7180_set_mag_acc_FS(0x3E8, 0x08); // 1000 uT, 8 g
-        EM7180_set_gyro_FS(0x7D0); // 2000 dps
-
-        // Read sensor new FS values from parameter space
-        writeByte(EM7180_ADDRESS, EM7180_ParamRequest, 0x4A); // Request to read  parameter 74
-        writeByte(EM7180_ADDRESS, EM7180_AlgorithmControl, 0x80); // Request parameter transfer process
-
-        param_xfer = readByte(EM7180_ADDRESS, EM7180_ParamAcknowledge);
-
-        while (!(param_xfer == 0x4A)) {
-            param_xfer = readByte(EM7180_ADDRESS, EM7180_ParamAcknowledge);
-        }
-
-        param[0] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte0);
-        param[1] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte1);
-        param[2] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte2);
-        param[3] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte3);
-
-        EM7180_mag_fs = ((int16_t)(param[1] << 8) | param[0]);
-        EM7180_acc_fs = ((int16_t)(param[3] << 8) | param[2]);
-
-        Serial.print("Magnetometer New Full Scale Range: +/-");
-        Serial.print(EM7180_mag_fs);
-        Serial.println("uT");
-        Serial.print("Accelerometer New Full Scale Range: +/-");
-        Serial.print(EM7180_acc_fs);
-        Serial.println("g");
-        writeByte(EM7180_ADDRESS, EM7180_ParamRequest, 0x4B); // Request to read  parameter 75
-        param_xfer = readByte(EM7180_ADDRESS, EM7180_ParamAcknowledge);
-
-        while (!(param_xfer == 0x4B)) {
-            param_xfer = readByte(EM7180_ADDRESS, EM7180_ParamAcknowledge);
-        }
-
-        param[0] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte0);
-        param[1] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte1);
-        param[2] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte2);
-        param[3] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte3);
-
-        EM7180_gyro_fs = ((int16_t)(param[1] << 8) | param[0]);
-
-        Serial.print("Gyroscope New Full Scale Range: +/-");
-        Serial.print(EM7180_gyro_fs);
-        Serial.println("dps");
-
-        writeByte(EM7180_ADDRESS, EM7180_ParamRequest, 0x00); //End parameter transfer
-        writeByte(EM7180_ADDRESS, EM7180_AlgorithmControl, 0x00); // re-enable algorithm
-
-
-        // Read EM7180 status
-        uint8_t runStatus = readByte(EM7180_ADDRESS, EM7180_RunStatus);
-        if (runStatus & 0x01)
-            Serial.println(" EM7180 run status = normal mode");
-        uint8_t algoStatus = readByte(EM7180_ADDRESS, EM7180_AlgorithmStatus);
-        if (algoStatus & 0x01)
-            Serial.println(" EM7180 standby status");
-        if (algoStatus & 0x02)
-            Serial.println(" EM7180 algorithm slow");
-        if (algoStatus & 0x04)
-            Serial.println(" EM7180 in stillness mode");
-        if (algoStatus & 0x08)
-            Serial.println(" EM7180 mag calibration completed");
-        if (algoStatus & 0x10)
-            Serial.println(" EM7180 magnetic anomaly detected");
-        if (algoStatus & 0x20)
-            Serial.println(" EM7180 unreliable sensor data");
-        uint8_t passthruStatus = readByte(EM7180_ADDRESS, EM7180_PassThruStatus);
-        if (passthruStatus & 0x01)
-            Serial.print(" EM7180 in passthru mode!");
-        uint8_t eventStatus = readByte(EM7180_ADDRESS, EM7180_EventStatus);
-        if (eventStatus & 0x01)
-            Serial.println(" EM7180 CPU reset");
-        if (eventStatus & 0x02)
-            Serial.println(" EM7180 Error");
-        if (eventStatus & 0x04)
-            Serial.println(" EM7180 new quaternion result");
-        if (eventStatus & 0x08)
-            Serial.println(" EM7180 new mag result");
-        if (eventStatus & 0x10)
-            Serial.println(" EM7180 new accel result");
-        if (eventStatus & 0x20)
-            Serial.println(" EM7180 new gyro result");
-
-        delay(10); // give some time to read the screen
-
-        // Check sensor status
-        uint8_t sensorStatus = readByte(EM7180_ADDRESS, EM7180_SensorStatus);
-        Serial.print(" EM7180 sensor status = ");
-        Serial.println(sensorStatus);
-        if (sensorStatus & 0x01)
-            Serial.print("Magnetometer not acknowledging!");
-        if (sensorStatus & 0x02)
-            Serial.print("Accelerometer not acknowledging!");
-        if (sensorStatus & 0x04)
-            Serial.print("Gyro not acknowledging!");
-        if (sensorStatus & 0x10)
-            Serial.print("Magnetometer ID not recognized!");
-        if (sensorStatus & 0x20)
-            Serial.print("Accelerometer ID not recognized!");
-        if (sensorStatus & 0x40)
-            Serial.print("Gyro ID not recognized!");
-
-        Serial.print("Actual MagRate = ");
-        Serial.print(readByte(EM7180_ADDRESS, EM7180_ActualMagRate));
-        Serial.println(" Hz");
-        Serial.print("Actual AccelRate = ");
-        Serial.print(10 * readByte(EM7180_ADDRESS, EM7180_ActualAccelRate));
-        Serial.println(" Hz");
-        Serial.print("Actual GyroRate = ");
-        Serial.print(10 * readByte(EM7180_ADDRESS, EM7180_ActualGyroRate));
-        Serial.println(" Hz");
-        Serial.print("Actual BaroRate = ");
-        Serial.print(readByte(EM7180_ADDRESS, EM7180_ActualBaroRate));
-        Serial.println(" Hz");
-        //  Serial.print("Actual TempRate = "); Serial.print(readByte(EM7180_ADDRESS, EM7180_ActualTempRate)); Serial.println(" Hz");
-
-        delay(10); // give some time to read the screen
     }
+
+    param[0] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte0);
+    param[1] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte1);
+    param[2] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte2);
+    param[3] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte3);
+
+    EM7180_mag_fs = ((int16_t)(param[1] << 8) | param[0]);
+    EM7180_acc_fs = ((int16_t)(param[3] << 8) | param[2]);
+
+    Serial.print("Magnetometer Default Full Scale Range: +/-");
+    Serial.print(EM7180_mag_fs);
+    Serial.println("uT");
+    Serial.print("Accelerometer Default Full Scale Range: +/-");
+    Serial.print(EM7180_acc_fs);
+    Serial.println("g");
+
+    writeByte(EM7180_ADDRESS, EM7180_ParamRequest, 0x4B); // Request to read  parameter 75
+    param_xfer = readByte(EM7180_ADDRESS, EM7180_ParamAcknowledge);
+
+    while (!(param_xfer == 0x4B)) {
+        param_xfer = readByte(EM7180_ADDRESS, EM7180_ParamAcknowledge);
+    }
+
+    param[0] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte0);
+    param[1] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte1);
+    param[2] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte2);
+    param[3] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte3);
+
+    EM7180_gyro_fs = ((int16_t)(param[1] << 8) | param[0]);
+
+    Serial.print("Gyroscope Default Full Scale Range: +/-");
+    Serial.print(EM7180_gyro_fs);
+    Serial.println("dps");
+
+    writeByte(EM7180_ADDRESS, EM7180_ParamRequest, 0x00); //End parameter transfer
+    writeByte(EM7180_ADDRESS, EM7180_AlgorithmControl, 0x00); // re-enable algorithm
+
+    //Disable stillness mode
+    EM7180_set_integer_param(0x49, 0x00);
+
+    //Write desired sensor full scale ranges to the EM7180
+    EM7180_set_mag_acc_FS(0x3E8, 0x08); // 1000 uT, 8 g
+    EM7180_set_gyro_FS(0x7D0); // 2000 dps
+
+    // Read sensor new FS values from parameter space
+    writeByte(EM7180_ADDRESS, EM7180_ParamRequest, 0x4A); // Request to read  parameter 74
+    writeByte(EM7180_ADDRESS, EM7180_AlgorithmControl, 0x80); // Request parameter transfer process
+
+    param_xfer = readByte(EM7180_ADDRESS, EM7180_ParamAcknowledge);
+
+    while (!(param_xfer == 0x4A)) {
+        param_xfer = readByte(EM7180_ADDRESS, EM7180_ParamAcknowledge);
+    }
+
+    param[0] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte0);
+    param[1] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte1);
+    param[2] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte2);
+    param[3] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte3);
+
+    EM7180_mag_fs = ((int16_t)(param[1] << 8) | param[0]);
+    EM7180_acc_fs = ((int16_t)(param[3] << 8) | param[2]);
+
+    Serial.print("Magnetometer New Full Scale Range: +/-");
+    Serial.print(EM7180_mag_fs);
+    Serial.println("uT");
+    Serial.print("Accelerometer New Full Scale Range: +/-");
+    Serial.print(EM7180_acc_fs);
+    Serial.println("g");
+    writeByte(EM7180_ADDRESS, EM7180_ParamRequest, 0x4B); // Request to read  parameter 75
+    param_xfer = readByte(EM7180_ADDRESS, EM7180_ParamAcknowledge);
+
+    while (!(param_xfer == 0x4B)) {
+        param_xfer = readByte(EM7180_ADDRESS, EM7180_ParamAcknowledge);
+    }
+
+    param[0] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte0);
+    param[1] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte1);
+    param[2] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte2);
+    param[3] = readByte(EM7180_ADDRESS, EM7180_SavedParamByte3);
+
+    EM7180_gyro_fs = ((int16_t)(param[1] << 8) | param[0]);
+
+    Serial.print("Gyroscope New Full Scale Range: +/-");
+    Serial.print(EM7180_gyro_fs);
+    Serial.println("dps");
+
+    writeByte(EM7180_ADDRESS, EM7180_ParamRequest, 0x00); //End parameter transfer
+    writeByte(EM7180_ADDRESS, EM7180_AlgorithmControl, 0x00); // re-enable algorithm
+
+    // Read EM7180 status
+    uint8_t runStatus = readByte(EM7180_ADDRESS, EM7180_RunStatus);
+    if (runStatus & 0x01)
+        Serial.println(" EM7180 run status = normal mode");
+    uint8_t algoStatus = readByte(EM7180_ADDRESS, EM7180_AlgorithmStatus);
+    if (algoStatus & 0x01)
+        Serial.println(" EM7180 standby status");
+    if (algoStatus & 0x02)
+        Serial.println(" EM7180 algorithm slow");
+    if (algoStatus & 0x04)
+        Serial.println(" EM7180 in stillness mode");
+    if (algoStatus & 0x08)
+        Serial.println(" EM7180 mag calibration completed");
+    if (algoStatus & 0x10)
+        Serial.println(" EM7180 magnetic anomaly detected");
+    if (algoStatus & 0x20)
+        Serial.println(" EM7180 unreliable sensor data");
+    uint8_t passthruStatus = readByte(EM7180_ADDRESS, EM7180_PassThruStatus);
+    if (passthruStatus & 0x01)
+        Serial.print(" EM7180 in passthru mode!");
+    uint8_t eventStatus = readByte(EM7180_ADDRESS, EM7180_EventStatus);
+    if (eventStatus & 0x01)
+        Serial.println(" EM7180 CPU reset");
+    if (eventStatus & 0x02)
+        Serial.println(" EM7180 Error");
+    if (eventStatus & 0x04)
+        Serial.println(" EM7180 new quaternion result");
+    if (eventStatus & 0x08)
+        Serial.println(" EM7180 new mag result");
+    if (eventStatus & 0x10)
+        Serial.println(" EM7180 new accel result");
+    if (eventStatus & 0x20)
+        Serial.println(" EM7180 new gyro result");
+
+    delay(10); // give some time to read the screen
+
+    // Check sensor status
+    uint8_t sensorStatus = readByte(EM7180_ADDRESS, EM7180_SensorStatus);
+    Serial.print(" EM7180 sensor status = ");
+    Serial.println(sensorStatus);
+    if (sensorStatus & 0x01)
+        Serial.print("Magnetometer not acknowledging!");
+    if (sensorStatus & 0x02)
+        Serial.print("Accelerometer not acknowledging!");
+    if (sensorStatus & 0x04)
+        Serial.print("Gyro not acknowledging!");
+    if (sensorStatus & 0x10)
+        Serial.print("Magnetometer ID not recognized!");
+    if (sensorStatus & 0x20)
+        Serial.print("Accelerometer ID not recognized!");
+    if (sensorStatus & 0x40)
+        Serial.print("Gyro ID not recognized!");
+
+    Serial.print("Actual MagRate = ");
+    Serial.print(readByte(EM7180_ADDRESS, EM7180_ActualMagRate));
+    Serial.println(" Hz");
+    Serial.print("Actual AccelRate = ");
+    Serial.print(10 * readByte(EM7180_ADDRESS, EM7180_ActualAccelRate));
+    Serial.println(" Hz");
+    Serial.print("Actual GyroRate = ");
+    Serial.print(10 * readByte(EM7180_ADDRESS, EM7180_ActualGyroRate));
+    Serial.println(" Hz");
+    Serial.print("Actual BaroRate = ");
+    Serial.print(readByte(EM7180_ADDRESS, EM7180_ActualBaroRate));
+    Serial.println(" Hz");
+    //  Serial.print("Actual TempRate = "); Serial.print(readByte(EM7180_ADDRESS, EM7180_ActualTempRate)); Serial.println(" Hz");
+
+    delay(10); // give some time to read the screen
 }
 
 static void Quat2EulerAngle(const float Quat[4], float& roll, float& pitch, float& yaw) {
@@ -1605,7 +1571,6 @@ void SENtralIMU::update_angular_rates(axis_t & angular_rates) {
     angular_rates[YAW_AXIS] = gz;
     //digitalWrite(DEBUG_PIN, LOW);
 }
-
 
     /*
    -------------------------------------------------------------
