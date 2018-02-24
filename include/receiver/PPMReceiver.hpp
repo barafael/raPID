@@ -17,6 +17,8 @@ class PPMReceiver : Receiver {
         /* Per-channel trim */
         channels_t trims = { 0 };
 
+        channels_t ppm_translate = { 2, 0, 1, 3, 4, 5 };
+
     public:
         PPMReceiver(uint8_t _input_pin, channels_t offsets);
 
