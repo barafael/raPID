@@ -1,8 +1,8 @@
 #ifndef RECEIVER_H
 #define RECEIVER_H
 
-#include "settings.h"
-#include "util.h"
+#include "../settings.h"
+#include "../util.h"
 
 using channels_t = int16_t[NUM_CHANNELS];
 

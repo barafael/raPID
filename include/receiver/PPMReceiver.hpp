@@ -4,7 +4,7 @@
 #include "PulsePosition.h"
 
 #include "settings.h"
-#include "receiver/Receiver.hpp"
+#include "Receiver.hpp"
 
 class PPMReceiver : Receiver {
     private:
