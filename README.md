@@ -37,11 +37,10 @@ the setpoint to the next controller) and only using the rate controller.
 
 ## TODO
 - [x] Fix serial monitor ritual (current: remove tx, reboot, wait for sermon, connect tx)
-- [ ] Fix gyro vs. fused and rate vs. stbl issues (-15 factor)
+- [x] Fix gyro vs. fused and rate vs. stbl issues (-15 factor)
 - [ ] Receiver
   - [x] Per-channel offsets to set zero/mid-points and somehow work around special case for throttle, which needs 50% extra offset
-  - [ ] Higher resolution, use complete int16_t range for later fast calculation
-- [ ] Outputs
+- Outputs
   - [x] 400Hz PWM output test and fix
   - [ ] Rethink set_limits, general implementation of generic waveforms? Specialization in servo (endpoints, expo?, trimming, inversion). Maximum range must be at least standard max signal pulse width
 - [ ] Safety Enhancements
@@ -50,11 +49,12 @@ the setpoint to the next controller) and only using the rate controller.
   - [ ] Fix/Improve watchdog timer functionality. Is this even necessary? A software crash will likely lead to crash of vehicle, since the controller boots to disarmed mode. Check if wakeup from watchdog, then proceeding armed?
     * Currently, watchdog is disabled
 - [ ] Fix PPM receiver read
+- [x] Increase IMU sensor sampling rates
 
 ## Ideas
 - [ ] Live coefficient tweaking (standard tx or telemetry hardware)
   - [ ] RFM95 lora board for config data, telemetry
-- [ ] IMU solution overhaul: Ultimate SENtral or other; constant sampling rate simplifies PID and makes theory on time-discrete systems applicable
+- [x] IMU solution overhaul: Ultimate SENtral or other; constant sampling rate simplifies PID and makes theory on time-discrete systems applicable
   - [x] General IMU interface class to test different IMU implementations
 - [ ] Matrix multiplication for output coefficients (every output is some weighted sum of the inputs + PID response) Possibly use DSP instructions and SIMD - one microsecond for multiplying 8x12 and a 12 column vector is achievable
   - [ ] Weights in output matrix are only linear multiplication. Would it make sense to use a matrix of function pointers to support expo? Performance (inlining possible?)?
