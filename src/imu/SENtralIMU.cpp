@@ -1152,8 +1152,8 @@ SENtralIMU::SENtralIMU() {
     // Set accel/gyro/mage desired ODR rates
     writeByte(EM7180_ADDRESS, EM7180_QRateDivisor, 0x02); // 100 Hz
     writeByte(EM7180_ADDRESS, EM7180_MagRate, 0x64); // 100 Hz
-    writeByte(EM7180_ADDRESS, EM7180_AccelRate, 0x14); // 200/10 Hz
-    writeByte(EM7180_ADDRESS, EM7180_GyroRate, 0x14); // 200/10 Hz
+    writeByte(EM7180_ADDRESS, EM7180_AccelRate, 0x64); // frequency/10, 0x64 * 10 = 1000
+    writeByte(EM7180_ADDRESS, EM7180_GyroRate, 0x64); // frequency/10, 0x64 * 10 = 1000
     writeByte(EM7180_ADDRESS, EM7180_BaroRate, 0x80 | 0x32); // set enable bit and set Baro rate to 25 Hz
     // writeByte(EM7180_ADDRESS, EM7180_TempRate, 0x19);  // set enable bit and set rate to 25 Hz
 
