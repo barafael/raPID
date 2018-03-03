@@ -71,6 +71,10 @@ class PIDController {
         void set_i(const T _i_gain);
         void set_d(const T _d_gain);
 
+        T get_p();
+        T get_i();
+        T get_d();
+
         void set_params(const PIDParams<T> *params);
 
         void integral_reset();
@@ -79,7 +83,7 @@ class PIDController {
         void enable_derivative_filter(bool enable);
 };
 
-#include "../src/pid/PIDController.tpp"
+#include "../../src/pid/PIDController.tpp"
 
 #endif // PID_CONTROLLER_H
 

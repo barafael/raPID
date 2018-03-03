@@ -113,9 +113,9 @@ extern "C" int main(void) {
     channels_t offsets = { -1000, -1500, -1500, -1500, -1500, -1500 };
 
     PWMReceiver receiver(THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
-                        PITCH_INPUT_PIN,    YAW_INPUT_PIN,
-                        AUX1_INPUT_PIN,     AUX2_INPUT_PIN,
-                        offsets);
+                         PITCH_INPUT_PIN,    YAW_INPUT_PIN,
+                         AUX1_INPUT_PIN,     AUX2_INPUT_PIN,
+                         offsets);
   
     //PPMReceiver receiver(23, offsets);
 
@@ -130,7 +130,7 @@ extern "C" int main(void) {
     PIDParams<float> roll_param_rate ( 1.5 , 0.0 , 0.0 , 12.0 , 400.0);
 
     PIDParams<float> pitch_param_stbl( 0.75 , 0.0 , 0.0 , 12.0 , 400.0);
-    PIDParams<float> pitch_param_rate( 1.5 , 0.0 , 0.0 , 12.0 , 400.0);
+    PIDParams<float> pitch_param_rate( 2.6 , 0.0 , 0.0 , 12.0 , 400.0);
 
     PIDParams<float> yaw_param_rate  ( 1.5 , 0.0 , 0.0 , 12.0 , 400.0);
 
@@ -142,10 +142,10 @@ extern "C" int main(void) {
 
     PIDController<float> yaw_controller_rate(&yaw_param_rate);
 
-    FastPWMOutput back_left_out_mixer  (LEFT_SERVO_PIN  , 1.0 , -0.25 , -0.25 , 0.0);
-    FastPWMOutput back_right_out_mixer (RIGHT_SERVO_PIN , 1.0 , 0.25  , -0.25 , 0.0);
-    FastPWMOutput front_left_out_mixer (FRONT_SERVO_PIN , 1.0 , -0.25 , 0.25  , 0.0);
-    FastPWMOutput front_right_out_mixer(BACK_SERVO_PIN  , 1.0 , 0.25  , 0.25  , 0.0);
+    FastPWMOutput back_left_out_mixer  (LEFT_SERVO_PIN  , 1.0 , -1.0 , -1.0 , 0.0);
+    FastPWMOutput back_right_out_mixer (RIGHT_SERVO_PIN , 1.0 , 1.0  , -1.0 , 0.0);
+    FastPWMOutput front_left_out_mixer (FRONT_SERVO_PIN , 1.0 , -1.0 , 1.0  , 0.0);
+    FastPWMOutput front_right_out_mixer(BACK_SERVO_PIN  , 1.0 , 1.0  , 1.0  , 0.0);
 
     back_left_out_mixer  .shut_off();
     back_right_out_mixer .shut_off();

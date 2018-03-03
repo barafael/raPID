@@ -89,30 +89,29 @@ T PIDController<T>::compute(const T measured, const T setpoint) {
     T error = measured - setpoint;
 
     /* Give me some P! */
-    /* Proportional term */
     T p_term = this->p_gain * error;
 
     /* Give me some I! */
-    /* Integral term */
     this->integral += elapsed_time * error * this->i_gain;
-    /* Integral windup limit */
+    /* Integral windup clamp */
     clamp(integral, -integral_limit, integral_limit);
 
     /* Give me some D! */
     T d_term = 0;
     switch (d_type) {
+        /* Derivative term on error */
         case ERROR:
-            /* Derivative term on error */
             d_term = ((error - last_error) / elapsed_time) * d_gain;
+            //Serial.println(d_term);
             break;
 
+        /* Derivative term on setpoint */
         case SETPOINT:
-            /* Derivative term on setpoint */
             d_term = ((setpoint - last_setpoint) / elapsed_time) * d_gain;
             break;
 
+        /* Derivative term on measurement */
         case FEEDBACK:
-            /* Derivative term on measurement */
             d_term = ((measured - last_measured) / elapsed_time) * d_gain;
             break;
     }
@@ -148,6 +147,21 @@ void PIDController<T>::set_i(const T _i_gain) {
 template<typename T>
 void PIDController<T>::set_d(const T _d_gain) {
     this->d_gain = _d_gain;
+}
+
+template<typename T>
+T PIDController<T>::get_p() {
+    return this->p_gain;
+}
+
+template<typename T>
+T PIDController<T>::get_i() {
+    return this->i_gain;
+}
+
+template<typename T>
+T PIDController<T>::get_d() {
+    return this->d_gain;
 }
 
 template<typename T>
