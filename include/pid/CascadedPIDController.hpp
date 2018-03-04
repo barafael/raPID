@@ -16,7 +16,7 @@ class CascadedPIDController {
         PIDController<T> secondary;
 
     public:
-        CascadedPIDController(PIDParams<T> *primary_params, PIDParams<T> *secondary_params);
+        CascadedPIDController(PIDParams<T>& primary_params, PIDParams<T>& secondary_params);
 
         void set_mode(controller_mode mode);
 

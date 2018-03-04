@@ -1,9 +1,9 @@
 #include "../../include/imu/MahonyFilter.hpp"
 
 void MahonyFilter::update(float q[4]) {
-    rawIMU->update_gyroscope(angular_rates);
-    rawIMU->update_accelerometer(acceleration);
-    rawIMU->update_magnetometer(magnetization);
+    rawIMU.update_gyroscope(angular_rates);
+    rawIMU.update_accelerometer(acceleration);
+    rawIMU.update_magnetometer(magnetization);
 
     /* TODO: check if problems due to using float AND int16_t, and exchanging them */
 

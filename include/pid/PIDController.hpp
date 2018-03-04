@@ -58,9 +58,9 @@ class PIDController {
 
     public:
         PIDController() = default;
-        explicit PIDController(PIDParams<T> *params);
-        PIDController(PIDParams<T> *params, float lowpass_beta);
-        PIDController(PIDParams<T> *params, size_t mov_avg_size);
+        explicit PIDController(PIDParams<T>& params);
+        PIDController(PIDParams<T>& params, float lowpass_beta);
+        PIDController(PIDParams<T>& params, size_t mov_avg_size);
 
         /* En/Disable Passthrough of setpoint */
         void set_enabled(bool enable);
@@ -71,11 +71,11 @@ class PIDController {
         void set_i(const T _i_gain);
         void set_d(const T _d_gain);
 
+        void set_params(const PIDParams<T>& params);
+
         T get_p();
         T get_i();
         T get_d();
-
-        void set_params(const PIDParams<T> *params);
 
         void integral_reset();
 

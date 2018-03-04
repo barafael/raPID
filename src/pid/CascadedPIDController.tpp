@@ -1,7 +1,7 @@
 template<typename T>
 CascadedPIDController<T>::CascadedPIDController(
-        PIDParams<T> *primary_params,
-        PIDParams<T> *secondary_params)
+        PIDParams<T>& primary_params,
+        PIDParams<T>& secondary_params)
     : primary   { primary_params }
     , secondary { secondary_params } {}
 
@@ -17,6 +17,6 @@ T CascadedPIDController<T>::compute(
               const T    setpoint) {
     T primary_result   = primary  .compute(measured_angle, setpoint);
 
-    return secondary.compute(measured_velocity, /*-15 **/ primary_result);
+    return secondary.compute(measured_velocity, primary_result);
 }
 

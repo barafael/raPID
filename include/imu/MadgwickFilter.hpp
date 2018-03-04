@@ -22,7 +22,7 @@ class MadgwickFilter : public SoftwareIMU {
         axis_t magnetization;
 
     public:
-        MadgwickFilter(RawIMU *rawIMU, float gyroMeasErr, float gyroMeasDrift);
+        MadgwickFilter(RawIMU& rawIMU, float gyroMeasErr, float gyroMeasDrift);
 
         void update(float q[4]);
 };

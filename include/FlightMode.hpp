@@ -27,14 +27,14 @@ class FlightMode {
                 Mixer left_mixer,  Mixer right_mixer,
                 Mixer front_mixer, Mixer back_mixer);
 
-        void set_roll_stbl(PIDParams<float> *stbl);
-        void set_roll_rate(PIDParams<float> *rate);
+        void set_roll_stbl(PIDParams<float>& stbl);
+        void set_roll_rate(PIDParams<float>& rate);
 
-        void set_pitch_stbl(PIDParams<float> *stbl);
-        void set_pitch_rate(PIDParams<float> *rate);
+        void set_pitch_stbl(PIDParams<float>& stbl);
+        void set_pitch_rate(PIDParams<float>& rate);
 
-        void set_yaw_stbl(PIDParams<float> *stbl);
-        void set_yaw_rate(PIDParams<float> *rate);
+        void set_yaw_stbl(PIDParams<float>& stbl);
+        void set_yaw_rate(PIDParams<float>& rate);
 
         void set_left_mixer(float throttle_volume,
                 float roll_volume, float pitch_volume, float yaw_volume);

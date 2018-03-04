@@ -1,6 +1,6 @@
 #include "../../include/imu/MadgwickFilter.hpp"
 
-MadgwickFilter::MadgwickFilter(RawIMU *rawIMU, float gyroMeasError, float gyroMeasDrift)
+MadgwickFilter::MadgwickFilter(RawIMU& rawIMU, float gyroMeasError, float gyroMeasDrift)
     : SoftwareIMU(rawIMU) {
     beta = sqrt(3.0f / 4.0f) * gyroMeasError;
     // usually set to a small or zero value
@@ -20,9 +20,9 @@ MadgwickFilter::MadgwickFilter(RawIMU *rawIMU, float gyroMeasError, float gyroMe
  * operating at 8 MHz!
  */
 void MadgwickFilter::update(float q[4]) {
-    rawIMU->update_gyroscope(angular_rates);
-    rawIMU->update_accelerometer(acceleration);
-    rawIMU->update_magnetometer(magnetization);
+    rawIMU.update_gyroscope(angular_rates);
+    rawIMU.update_accelerometer(acceleration);
+    rawIMU.update_magnetometer(magnetization);
 
     /* TODO: check if problems due to using float AND int16_t, and exchanging them */
 

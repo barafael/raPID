@@ -1,6 +1,7 @@
 #include "../include/Watchdog.hpp"
 
 #define NO_WATCHDOG
+
 Watchdog::Watchdog(int prescale) {
 #ifdef NO_WATCHDOG
     return;

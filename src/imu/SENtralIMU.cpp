@@ -300,7 +300,7 @@ void EM7180_set_float_param (uint8_t param, float param_val) {
     writeByte(EM7180_ADDRESS, EM7180_AlgorithmControl, 0x00); // Re-start algorithm
 }
 
-void readSENtralQuatData(float * destination)
+void readSENtralQuatData(float *destination)
 {
     uint8_t rawData[16];  // x/y/z quaternion register data stored here
     readBytes(EM7180_ADDRESS, EM7180_QX, 16, &rawData[0]);       // Read the sixteen raw data registers into data array
@@ -311,7 +311,7 @@ void readSENtralQuatData(float * destination)
 
 }
 
-void readSENtralAccelData(int16_t * destination)
+void readSENtralAccelData(int16_t *destination)
 {
     uint8_t rawData[6];  // x/y/z accel register data stored here
     readBytes(EM7180_ADDRESS, EM7180_AX, 6, &rawData[0]);       // Read the six raw data registers into data array
@@ -320,7 +320,7 @@ void readSENtralAccelData(int16_t * destination)
     destination[2] = (int16_t) (((int16_t)rawData[5] << 8) | rawData[4]);
 }
 
-void readSENtralGyroData(int16_t * destination)
+void readSENtralGyroData(int16_t *destination)
 {
     uint8_t rawData[6];  // x/y/z gyro register data stored here
     readBytes(EM7180_ADDRESS, EM7180_GX, 6, &rawData[0]);  // Read the six raw data registers sequentially into data array
@@ -394,7 +394,7 @@ void getAres() {
     }
 }
 
-void readAccelData(int16_t * destination)
+void readAccelData(int16_t *destination)
 {
     uint8_t rawData[6];  // x/y/z accel register data stored here
     readBytes(MPU9250_ADDRESS, ACCEL_XOUT_H, 6, &rawData[0]);  // Read the six raw data registers into data array
@@ -403,7 +403,7 @@ void readAccelData(int16_t * destination)
     destination[2] = ((int16_t)rawData[4] << 8) | rawData[5] ;
 }
 
-void readGyroData(int16_t * destination)
+void readGyroData(int16_t *destination)
 {
     uint8_t rawData[6];  // x/y/z gyro register data stored here
     readBytes(MPU9250_ADDRESS, GYRO_XOUT_H, 6, &rawData[0]);  // Read the six raw data registers sequentially into data array
@@ -412,7 +412,7 @@ void readGyroData(int16_t * destination)
     destination[2] = ((int16_t)rawData[4] << 8) | rawData[5] ;
 }
 
-void readMagData(int16_t * destination)
+void readMagData(int16_t *destination)
 {
     uint8_t rawData[7];  // x/y/z gyro register data, ST2 register stored here, must read ST2 at end of data acquisition
     if(readByte(AK8963_ADDRESS, AK8963_ST1) & 0x01) { // wait for magnetometer data ready bit to be set
@@ -433,7 +433,7 @@ int16_t readTempData()
     return ((int16_t)rawData[0] << 8) | rawData[1] ;  // Turn the MSB and LSB into a 16-bit value
 }
 
-void initAK8963(float * destination)
+void initAK8963(float *destination)
 {
     // First extract the factory calibration for each magnetometer axis
     uint8_t rawData[3];  // x/y/z gyro calibration data stored here
@@ -515,7 +515,7 @@ void initMPU9250()
 
 // Function which accumulates gyro and accelerometer data after device initialization. It calculates the average
 // of the at-rest readings and then loads the resulting offsets into accelerometer and gyro bias registers.
-void accelgyrocalMPU9250(float * dest1, float * dest2)
+void accelgyrocalMPU9250(float *dest1, float *dest2)
 {
     uint8_t data[12]; // data array to hold accelerometer and gyro x, y, z, data
     uint16_t ii, packet_count, fifo_count;
@@ -665,7 +665,7 @@ void accelgyrocalMPU9250(float * dest1, float * dest2)
     dest2[2] = (float)accel_bias[2]/(float)accelsensitivity;
 }
 
-void magcalMPU9250(float * dest1, float * dest2)
+void magcalMPU9250(float *dest1, float *dest2)
 {
     uint16_t ii = 0, sample_count = 0;
     int32_t mag_bias[3] = {0, 0, 0}, mag_scale[3] = {0, 0, 0};
@@ -695,9 +695,9 @@ void magcalMPU9250(float * dest1, float * dest2)
     mag_bias[1]  = (mag_max[1] + mag_min[1])/2;  // get average y mag bias in counts
     mag_bias[2]  = (mag_max[2] + mag_min[2])/2;  // get average z mag bias in counts
 
-    dest1[0] = (float) mag_bias[0]*mRes*magCalibration[0];  // save mag biases in G for main program
-    dest1[1] = (float) mag_bias[1]*mRes*magCalibration[1];
-    dest1[2] = (float) mag_bias[2]*mRes*magCalibration[2];
+    dest1[0] = (float) mag_bias[0] * mRes * magCalibration[0]; // save mag biases in G for main program
+    dest1[1] = (float) mag_bias[1] * mRes * magCalibration[1];
+    dest1[2] = (float) mag_bias[2] * mRes * magCalibration[2];
 
     // Get soft iron correction estimate
     mag_scale[0]  = (mag_max[0] - mag_min[0])/2;  // get average x axis max chord length in counts
@@ -715,7 +715,7 @@ void magcalMPU9250(float * dest1, float * dest2)
 }
 
 // Accelerometer and gyroscope self test; check calibration wrt factory settings
-void MPU9250SelfTest(float * destination) // Should return percent deviation from factory trim values, +/- 14 or less deviation is a pass
+void MPU9250SelfTest(float *destination) // Should return percent deviation from factory trim values, +/- 14 or less deviation is a pass
 {
     uint8_t rawData[6] = {0, 0, 0, 0, 0, 0};
     uint8_t selfTest[6];
@@ -784,20 +784,19 @@ void MPU9250SelfTest(float * destination) // Should return percent deviation fro
     selfTest[5] = readByte(MPU9250_ADDRESS, SELF_TEST_Z_GYRO);  // Z-axis gyro self-test results
 
     // Retrieve factory self-test value from self-test code reads
-    factoryTrim[0] = (float)(2620/1<<FS)*(pow( 1.01 , ((float)selfTest[0] - 1.0) )); // FT[Xa] factory trim calculation
-    factoryTrim[1] = (float)(2620/1<<FS)*(pow( 1.01 , ((float)selfTest[1] - 1.0) )); // FT[Ya] factory trim calculation
-    factoryTrim[2] = (float)(2620/1<<FS)*(pow( 1.01 , ((float)selfTest[2] - 1.0) )); // FT[Za] factory trim calculation
-    factoryTrim[3] = (float)(2620/1<<FS)*(pow( 1.01 , ((float)selfTest[3] - 1.0) )); // FT[Xg] factory trim calculation
-    factoryTrim[4] = (float)(2620/1<<FS)*(pow( 1.01 , ((float)selfTest[4] - 1.0) )); // FT[Yg] factory trim calculation
-    factoryTrim[5] = (float)(2620/1<<FS)*(pow( 1.01 , ((float)selfTest[5] - 1.0) )); // FT[Zg] factory trim calculation
+    factoryTrim[0] = (float) (2620 / 1 << FS) * (pow(1.01, ((float) selfTest[0] - 1.0))); // FT[Xa] factory trim calculation
+    factoryTrim[1] = (float) (2620 / 1 << FS) * (pow(1.01, ((float) selfTest[1] - 1.0))); // FT[Ya] factory trim calculation
+    factoryTrim[2] = (float) (2620 / 1 << FS) * (pow(1.01, ((float) selfTest[2] - 1.0))); // FT[Za] factory trim calculation
+    factoryTrim[3] = (float) (2620 / 1 << FS) * (pow(1.01, ((float) selfTest[3] - 1.0))); // FT[Xg] factory trim calculation
+    factoryTrim[4] = (float) (2620 / 1 << FS) * (pow(1.01, ((float) selfTest[4] - 1.0))); // FT[Yg] factory trim calculation
+    factoryTrim[5] = (float) (2620 / 1 << FS) * (pow(1.01, ((float) selfTest[5] - 1.0))); // FT[Zg] factory trim calculation
 
-// Report results as a ratio of (STR - FT)/FT; the change from Factory Trim of the Self-Test Response
-// To get percent, must multiply by 100
+    // Report results as a ratio of (STR - FT)/FT; the change from Factory Trim of the Self-Test Response
+    // To get percent, must multiply by 100
     for (int i = 0; i < 3; i++) {
-        destination[i]   = 100.0*((float)(aSTAvg[i] - aAvg[i]))/factoryTrim[i];   // Report percent differences
-        destination[i+3] = 100.0*((float)(gSTAvg[i] - gAvg[i]))/factoryTrim[i+3]; // Report percent differences
+        destination[i]     = 100.0 * ((float) (aSTAvg[i] - aAvg[i])) / factoryTrim[i]; // Report percent differences
+        destination[i + 3] = 100.0 * ((float) (gSTAvg[i] - gAvg[i])) / factoryTrim[i + 3]; // Report percent differences
     }
-
 }
 
 int16_t readSENtralBaroData()
@@ -826,7 +825,7 @@ void M24512DFMwriteByte(uint8_t device_address, uint8_t data_address1, uint8_t d
     Wire.endTransmission();                   // Send the Tx buffer
 }
 
-void M24512DFMwriteBytes(uint8_t device_address, uint8_t data_address1, uint8_t data_address2, uint8_t count, uint8_t * dest)
+void M24512DFMwriteBytes(uint8_t device_address, uint8_t data_address1, uint8_t data_address2, uint8_t count, uint8_t *dest)
 {
     if(count > 128) {
         count = 128;
@@ -856,8 +855,7 @@ uint8_t M24512DFMreadByte(uint8_t device_address, uint8_t data_address1, uint8_t
     return data;                             // Return data read from slave register
 }
 
-void M24512DFMreadBytes(uint8_t device_address, uint8_t data_address1, uint8_t data_address2, uint8_t count, uint8_t * dest)
-{
+void M24512DFMreadBytes(uint8_t device_address, uint8_t data_address1, uint8_t data_address2, uint8_t count, uint8_t *dest) {
     Wire.beginTransmission(device_address);   // Initialize the Tx buffer
     Wire.write(data_address1);                     // Put slave register address in Tx buffer
     Wire.write(data_address2);                     // Put slave register address in Tx buffer
@@ -1006,7 +1004,7 @@ uint8_t readByte(uint8_t address, uint8_t subAddress)
     return data;                             // Return data read from slave register
 }
 
-void readBytes(uint8_t address, uint8_t subAddress, uint8_t count, uint8_t * dest)
+void readBytes(uint8_t address, uint8_t subAddress, uint8_t count, uint8_t *dest)
 {
     Wire.beginTransmission(address);   // Initialize the Tx buffer
     Wire.write(subAddress);            // Put slave register address in Tx buffer

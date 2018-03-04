@@ -1,40 +1,40 @@
 template<typename T>
-PIDController<T>::PIDController(PIDParams<T> *params)
+PIDController<T>::PIDController(PIDParams<T>& params)
     : enabled ( true )
 
-    , p_gain ( params->p_gain )
-    , i_gain ( params->i_gain )
-    , d_gain ( params->d_gain )
+    , p_gain ( params.p_gain )
+    , i_gain ( params.i_gain )
+    , d_gain ( params.d_gain )
 
     , integral       ( 0 )
-    , integral_limit ( params->integral_limit )
+    , integral_limit ( params.integral_limit )
 
     , derivative     ( 0 )
     , last_error     ( 0 )
     , last_setpoint  ( 0 )
     , last_measured  ( 0 )
 
-    , output_limit   ( params->output_limit )
+    , output_limit   ( params.output_limit )
 
     , last_time      ( 0 ) {}
 
 template<typename T>
-PIDController<T>::PIDController(PIDParams<T> *params, float lowpass_beta)
+PIDController<T>::PIDController(PIDParams<T>& params, float lowpass_beta)
     : enabled ( true )
 
-    , p_gain ( params->p_gain )
-    , i_gain ( params->i_gain )
-    , d_gain ( params->d_gain )
+    , p_gain ( params.p_gain )
+    , i_gain ( params.i_gain )
+    , d_gain ( params.d_gain )
 
     , integral       ( 0 )
-    , integral_limit ( params->integral_limit )
+    , integral_limit ( params.integral_limit )
 
     , derivative     ( 0 )
     , last_error     ( 0 )
     , last_setpoint  ( 0 )
     , last_measured  ( 0 )
 
-    , output_limit   ( params->output_limit )
+    , output_limit   ( params.output_limit )
 
     , last_time      ( 0 ) {
         this->lowpass_beta = lowpass_beta;
@@ -44,22 +44,22 @@ PIDController<T>::PIDController(PIDParams<T> *params, float lowpass_beta)
 }
 
 template<typename T>
-PIDController<T>::PIDController(PIDParams<T> *params, size_t mov_avg_size)
+PIDController<T>::PIDController(PIDParams<T>& params, size_t mov_avg_size)
     : enabled ( true )
 
-    , p_gain ( params->p_gain )
-    , i_gain ( params->i_gain )
-    , d_gain ( params->d_gain )
+    , p_gain ( params.p_gain )
+    , i_gain ( params.i_gain )
+    , d_gain ( params.d_gain )
 
     , integral       ( 0 )
-    , integral_limit ( params->integral_limit )
+    , integral_limit ( params.integral_limit )
 
     , derivative     ( 0 )
     , last_error     ( 0 )
     , last_setpoint  ( 0 )
     , last_measured  ( 0 )
 
-    , output_limit   ( params->output_limit )
+    , output_limit   ( params.output_limit )
 
     , last_time      ( 0 ) {
         this->mov_avg_size = mov_avg_size;
@@ -165,10 +165,10 @@ T PIDController<T>::get_d() {
 }
 
 template<typename T>
-void PIDController<T>::set_params(const PIDParams<T> *params) {
-    p_gain = params->p_gain;
-    i_gain = params->i_gain;
-    d_gain = params->d_gain;
+void PIDController<T>::set_params(const PIDParams<T>& params) {
+    p_gain = params.p_gain;
+    i_gain = params.i_gain;
+    d_gain = params.d_gain;
 }
 
 template<typename T>
