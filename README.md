@@ -40,16 +40,15 @@ the setpoint to the next controller) and only using the rate controller.
 - [x] Fix gyro vs. fused and rate vs. stbl issues (-15 factor)
 - [ ] Receiver
   - [x] Per-channel offsets to set zero/mid-points and somehow work around special case for throttle, which needs 50% extra offset
+  - [ ] Fix PPM receiver read
 - Outputs
   - [x] 400Hz PWM output test and fix
   - [ ] Rethink set_limits, general implementation of generic waveforms? Specialization in servo (endpoints, expo?, trimming, inversion). Maximum range must be at least standard max signal pulse width
 - [ ] Safety Enhancements
   - [x] Make sure arming functionality works and is reliable
   - [ ] Add safety mechanisms for receiver signal loss (detect RX failsafe output)
-  - [ ] Fix/Improve watchdog timer functionality. Is this even necessary? A software crash will likely lead to crash of vehicle, since the controller boots to disarmed mode. Check if wakeup from watchdog, then proceeding armed?
-    * Currently, watchdog is disabled
-- [ ] Fix PPM receiver read
-- [x] Increase IMU sensor sampling rates
+  - [ ] Fix/Improve watchdog timer functionality. Is this even necessary? A software crash will likely lead to crash of vehicle, since the controller boots to disarmed mode. Check if wakeup from watchdog, then proceeding armed? Currently, watchdog is disabled
+- [x] Increase IMU sensor sampling rates - 1kHz
 
 ## Ideas
 - [ ] Live coefficient tweaking (standard tx or telemetry hardware)
@@ -87,4 +86,3 @@ Blog-in-progress @ [https://barafael.github.io/Remote-Control-Vehicle-Balance-co
 
 * OpenAeroVTOL from the RCGroups forums, by HappySundays - awesome project.
 * Jeff Rowberg's MPU6050 library and example code.
->
