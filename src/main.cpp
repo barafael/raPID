@@ -128,11 +128,11 @@ extern "C" int main(void) {
 
     Serial.println(F("Receiver signal detected, continuing."));
 
-    PIDParams<float> roll_param_stbl ( 0.75 , 0.0 , 0.0 , 12.0 , 400.0);
-    PIDParams<float> roll_param_rate ( 1.5 , 0.0 , 0.0 , 12.0 , 400.0);
+    PIDParams<float> roll_param_stbl ( 2.0 , 0.0 , 0.0 , 12.0 , 400.0);
+    PIDParams<float> roll_param_rate ( 0.65 , 0.0 , 0.0 , 12.0 , 400.0);
 
-    PIDParams<float> pitch_param_stbl( 0.75 , 0.0 , 0.0 , 12.0 , 400.0);
-    PIDParams<float> pitch_param_rate( 2.6 , 0.0 , 0.0 , 12.0 , 400.0);
+    PIDParams<float> pitch_param_stbl( 2.0 , 0.0 , 0.0 , 12.0 , 400.0);
+    PIDParams<float> pitch_param_rate( 0.65 , 0.0 , 0.0 , 12.0 , 400.0);
 
     PIDParams<float> yaw_param_rate  ( 1.5 , 0.0 , 0.0 , 12.0 , 400.0);
 
@@ -154,10 +154,10 @@ extern "C" int main(void) {
     front_left_out_mixer .shut_off();
     front_right_out_mixer.shut_off();
 
-    roll_controller_stbl.set_enabled(false);
+    roll_controller_stbl.set_enabled(true);
     roll_controller_rate.set_enabled(true);
 
-    pitch_controller_stbl.set_enabled(false);
+    pitch_controller_stbl.set_enabled(true);
     pitch_controller_rate.set_enabled(true);
 
     SENtralIMU sentral;
@@ -169,7 +169,7 @@ extern "C" int main(void) {
     /* Flight loop */
     while (true) {
         receiver.update(channels);
-        print_channels(channels);
+        //print_channels(channels);
 
         sentral.update_attitude(attitude);
         //print_attitude(attitude);
@@ -179,23 +179,30 @@ extern "C" int main(void) {
 
         switch (arming_state.get_state()) {
             case ARMED:
-                pid_output_roll_stbl = roll_controller_stbl.  compute(attitude[ROLL_AXIS], channels[ROLL_CHANNEL]);
+                pid_output_roll_stbl = roll_controller_stbl.compute(attitude[ROLL_AXIS], channels[ROLL_CHANNEL] / 10);
 
-                pid_output_roll_rate = roll_controller_rate.  compute(angular_rates[ROLL_AXIS], pid_output_roll_stbl);
+                pid_output_roll_rate = roll_controller_rate.  compute(angular_rates[ROLL_AXIS], -pid_output_roll_stbl);
 
-                pid_output_pitch_stbl = pitch_controller_stbl.compute(attitude[PITCH_AXIS], channels[PITCH_CHANNEL]);
+                //pitch_controller_stbl.set_p((channels[ROLL_CHANNEL] + 500) * (15.0 / 1000));
+                //pitch_controller_stbl.set_i((channels[YAW_CHANNEL]  + 500) * (5.0  / 1000));
 
-                pid_output_pitch_rate = pitch_controller_rate.compute(angular_rates[PITCH_AXIS], pid_output_pitch_stbl);
+                //Serial.println(pitch_controller_stbl.get_p());
+                //Serial.print("\t");
+                //Serial.println(pitch_controller_stbl.get_d());
+
+                pid_output_pitch_stbl = pitch_controller_stbl.compute(attitude[PITCH_AXIS], channels[PITCH_CHANNEL] / 10);
+
+                pid_output_pitch_rate = pitch_controller_rate.compute(angular_rates[PITCH_AXIS], -pid_output_pitch_stbl);
 
                 /* Yaw needs rate only - yaw stick controls rate of rotation, there is no fixed reference */
-                pid_output_yaw_rate = yaw_controller_rate.    compute(angular_rates[YAW_AXIS], channels[YAW_CHANNEL]);
+                //pid_output_yaw_rate = yaw_controller_rate.    compute(angular_rates[YAW_AXIS], channels[YAW_CHANNEL]);
 
                 back_left_out_mixer  .apply(channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
                 back_right_out_mixer .apply(channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
                 front_left_out_mixer .apply(channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
                 front_right_out_mixer.apply(channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
 
-#define DEBUG_COL
+//#define DEBUG_COL
 #ifdef DEBUG_COL
                 Serial.print(F("setp:"));
                 Serial.print(channels[ROLL_CHANNEL]);
