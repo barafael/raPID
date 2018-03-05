@@ -11,12 +11,12 @@
 #include "../../include/pins.h"
 #include "../../include/settings.h"
 
-class SENtralIMU : HardwareIMU {
+class SENtralIMU/* : HardwareIMU */{
     private:
     public:
         SENtralIMU();
-        void update_angular_rates(axis_t& angular_rates) override;
-        void update_attitude(axis_t& attitude) override;
+        void update_angular_rates(float *angular_rates)/* override*/;
+        void update_attitude(float *attitude)/* override*/;
 };
 
 #endif // SENTRAL_IMU_H

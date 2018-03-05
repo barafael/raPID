@@ -1561,7 +1561,7 @@ void update_sensors() {
 */
 
     /* max..min [32767, -32768] */
-void SENtralIMU::update_angular_rates(axis_t & angular_rates) {
+void SENtralIMU::update_angular_rates(float angular_rates[3]) {
     //digitalWrite(DEBUG_PIN, HIGH);
     update_sensors();
     angular_rates[ROLL_AXIS]= gx;
@@ -1570,17 +1570,17 @@ void SENtralIMU::update_angular_rates(axis_t & angular_rates) {
     //digitalWrite(DEBUG_PIN, LOW);
 }
 
-    /*
+/*
    -------------------------------------------------------------
    ---             FETCH ABS ANGLES FROM IMU                 ---
    -------------------------------------------------------------
 */
 
-    void SENtralIMU::update_attitude(axis_t & attitude) {
-        //digitalWrite(DEBUG_PIN, HIGH);
-        update_sensors();
-        attitude[ROLL_AXIS] = Roll;
-        attitude[PITCH_AXIS] = Pitch;
-        attitude[YAW_AXIS] = Yaw;
-        //digitalWrite(DEBUG_PIN, LOW);
-    }
+void SENtralIMU::update_attitude(float attitude[3]) {
+    //digitalWrite(DEBUG_PIN, HIGH);
+    update_sensors();
+    attitude[ROLL_AXIS] = Roll;
+    attitude[PITCH_AXIS] = Pitch;
+    attitude[YAW_AXIS] = Yaw;
+    //digitalWrite(DEBUG_PIN, LOW);
+}

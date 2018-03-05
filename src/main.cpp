@@ -51,10 +51,12 @@
 state_t state = DISARMED;
 
 /* Scaled yaw_pitch_roll to [0, 1000] */
-axis_t attitude = { 0, 0, 0 };
+//axis_t attitude = { 0, 0, 0 };
+float attitude[3] = { 0 };
 
 /* Angular Rate */
-axis_t angular_rates = { 0, 0, 0 };
+//axis_t angular_rates = { 0, 0, 0 };
+float angular_rates[3] = { 0 };
 
 float pid_output_roll_stbl = 0.0;
 float pid_output_roll_rate = 0.0;
@@ -74,7 +76,7 @@ static void print_attitude(axis_t attitude) {
     Serial.println();
 }
 
-static void print_velocity(axis_t velocity) {
+static void print_velocity(float *velocity) {
     for (size_t index = 0; index < 3; index++) {
         Serial.print(velocity[index]);
         Serial.print(F("\t"));
