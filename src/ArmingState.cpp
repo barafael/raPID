@@ -3,11 +3,11 @@
 ArmingState *arming_state_instance = nullptr;
 
 static const bool state_transition_triggered(channels_t input) {
-    if (input[THROTTLE_CHANNEL] >   25) return false;
-    if (input[ROLL_CHANNEL]     <  475) return false;
+    if (input[THROTTLE_CHANNEL] >   55) return false;
+    if (input[ROLL_CHANNEL]     <  445) return false;
     /* No typo - roll is different from the other channels when not inverted */
-    if (input[PITCH_CHANNEL]    > -475) return false;
-    if (input[YAW_CHANNEL]      > -475) return false;
+    if (input[PITCH_CHANNEL]    > -445) return false;
+    if (input[YAW_CHANNEL]      > -445) return false;
     return true;
 }
 
