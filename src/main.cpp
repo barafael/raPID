@@ -144,10 +144,10 @@ extern "C" int main(void) {
 
     PIDController<float> yaw_controller_rate(yaw_param_rate);
 
-    FastPWMOutput back_left_out_mixer  (LEFT_SERVO_PIN  , 1.0 , -1.0 , -1.0 , 0.0);
-    FastPWMOutput back_right_out_mixer (RIGHT_SERVO_PIN , 1.0 , 1.0  , -1.0 , 0.0);
-    FastPWMOutput front_left_out_mixer (FRONT_SERVO_PIN , 1.0 , -1.0 , 1.0  , 0.0);
-    FastPWMOutput front_right_out_mixer(BACK_SERVO_PIN  , 1.0 , 1.0  , 1.0  , 0.0);
+    FastPWMOutput back_left_out_mixer  (LEFT_SERVO_PIN  , 1.0 , -1.0 , -1.0 , 1.0);
+    FastPWMOutput back_right_out_mixer (RIGHT_SERVO_PIN , 1.0 , 1.0  , -1.0 , -1.0);
+    FastPWMOutput front_left_out_mixer (FRONT_SERVO_PIN , 1.0 , -1.0 , 1.0  , -1.0);
+    FastPWMOutput front_right_out_mixer(BACK_SERVO_PIN  , 1.0 , 1.0  , 1.0  , 1.0);
 
     back_left_out_mixer  .shut_off();
     back_right_out_mixer .shut_off();
@@ -195,7 +195,7 @@ extern "C" int main(void) {
                 pid_output_pitch_rate = pitch_controller_rate.compute(angular_rates[PITCH_AXIS], -pid_output_pitch_stbl);
 
                 /* Yaw needs rate only - yaw stick controls rate of rotation, there is no fixed reference */
-                //pid_output_yaw_rate = yaw_controller_rate.    compute(angular_rates[YAW_AXIS], channels[YAW_CHANNEL]);
+                pid_output_yaw_rate = yaw_controller_rate.    compute(angular_rates[YAW_AXIS], channels[YAW_CHANNEL]);
 
                 back_left_out_mixer  .apply(channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
                 back_right_out_mixer .apply(channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
