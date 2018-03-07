@@ -9,12 +9,6 @@ class PWMReceiver : Receiver {
         /* TODO: maybe use static datastructure again */
         std::vector<uint8_t> pins;
 
-        /* Channel offsets and throttle zero-point */
-        channels_t offsets = { 0 };
-
-        /* Per-channel trim */
-        channels_t trims = { 0 };
-
         /* Interrupts write to this array and the update function reads
          * Note: disable interrupts when reading to avoid race conditions
          */
@@ -27,12 +21,14 @@ class PWMReceiver : Receiver {
 
     public:
         PWMReceiver(uint8_t throttle_pin, uint8_t roll_pin, uint8_t pitch_pin, uint8_t yaw_pin,
-                             uint8_t aux1_pin, uint8_t aux2_pin,
-                             channels_t offsets);
+                            uint8_t aux1_pin, uint8_t aux2_pin,
+                            channels_t offsets);
 
         const void update(channels_t channels) override;
 
+        void set_offsets(channels_t channels) override;
         void set_trims(channels_t channels) override;
+        void set_inversion(inversion_t inversion) override;
 
         const bool has_signal() override;
 
@@ -44,6 +40,9 @@ class PWMReceiver : Receiver {
         friend void update_aux2();
 };
 
+/* Since friend declarations are not forward declarations,
+ * we have to repeat the signatures here in their actual scope
+ */
 void update_throttle();
 void update_roll();
 void update_pitch();

@@ -11,12 +11,6 @@ class PPMReceiver : Receiver {
         uint8_t input_pin;
         PulsePositionInput ppm_rx;
 
-        /* Channel offsets and throttle zero-point */
-        channels_t offsets = { 0 };
-
-        /* Per-channel trim */
-        channels_t trims = { 0 };
-
         channels_t ppm_translate = { 2, 0, 1, 3, 4, 5 };
 
     public:
@@ -24,7 +18,9 @@ class PPMReceiver : Receiver {
 
         const void update(channels_t channels) override;
 
+        void set_offsets(channels_t channels) override;
         void set_trims(channels_t channels) override;
+        void set_inversion(inversion_t inversion) override;
 
         const bool has_signal() override;
 };

@@ -2,6 +2,7 @@
 
 PPMReceiver::PPMReceiver(uint8_t _input_pin, channels_t offsets) {
     switch (_input_pin) {
+        /* Filter pins that are ppm-capable */
         case 5:
         case 6:
         case 9:
@@ -32,7 +33,11 @@ const void PPMReceiver::update(channels_t channels) {
         for (size_t index = 0; index < NUM_CHANNELS; index++) {
             float val = ppm_rx.read(index + 1);
             clamp(val, 1000, 2000);
+            if (inversion[index]) {
+                val = 2000 - (val - 1000);
+            }
             val += offsets[index];
+            val += trims[index];
             channels[ppm_translate[index]] = (int16_t) val;
         }
     }
@@ -41,6 +46,12 @@ const void PPMReceiver::update(channels_t channels) {
 void PPMReceiver::set_trims(channels_t trims) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         this->trims[index] = trims[index];
+    }
+}
+
+void PPMReceiver::set_inversion(inversion_t inversion) {
+    for (size_t index = 0; index < NUM_CHANNELS; index++) {
+        this->inversion[index] = inversion[index];
     }
 }
 

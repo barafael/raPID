@@ -54,14 +54,29 @@ const void PWMReceiver::update(channels_t channels) {
 
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         clamp(channels[index], 1000, 2000);
+        if (inversion[index]) {
+            channels[index] = 2000 - (channels[index] - 1000);
+        }
         channels[index] += offsets[index];
         channels[index] += trims[index];
+    }
+}
+
+void PWMReceiver::set_offsets(channels_t offsets) {
+    for (size_t index = 0; index < NUM_CHANNELS; index++) {
+        this->offsets[index] = offsets[index];
     }
 }
 
 void PWMReceiver::set_trims(channels_t trims) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         this->trims[index] = trims[index];
+    }
+}
+
+void PWMReceiver::set_inversion(inversion_t inversion) {
+    for (size_t index = 0; index < NUM_CHANNELS; index++) {
+        this->inversion[index] = inversion[index];
     }
 }
 
