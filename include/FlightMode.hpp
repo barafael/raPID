@@ -6,14 +6,14 @@
 
 class FlightMode {
     private:
-        PIDParams<float> roll_stbl;
-        PIDParams<float> roll_rate;
+        PIDParams roll_stbl;
+        PIDParams roll_rate;
 
-        PIDParams<float> pitch_stbl;
-        PIDParams<float> pitch_rate;
+        PIDParams pitch_stbl;
+        PIDParams pitch_rate;
 
-        PIDParams<float> yaw_stbl;
-        PIDParams<float> yaw_rate;
+        PIDParams yaw_stbl;
+        PIDParams yaw_rate;
 
         Mixer left_mixer;
         Mixer right_mixer;
@@ -21,20 +21,20 @@ class FlightMode {
         Mixer back_mixer;
 
     public:
-        FlightMode(PIDParams<float> roll_params_stbl, PIDParams<float> roll_params_rate,
-                PIDParams<float> pitch_params_stbl,   PIDParams<float> pitch_params_rate,
-                PIDParams<float> yaw_params_stbl,     PIDParams<float> yaw_params_rate,
+        FlightMode(PIDParams roll_params_stbl, PIDParams roll_params_rate,
+                PIDParams pitch_params_stbl,   PIDParams pitch_params_rate,
+                PIDParams yaw_params_stbl,     PIDParams yaw_params_rate,
                 Mixer left_mixer,  Mixer right_mixer,
                 Mixer front_mixer, Mixer back_mixer);
 
-        void set_roll_stbl(PIDParams<float>& stbl);
-        void set_roll_rate(PIDParams<float>& rate);
+        void set_roll_stbl(PIDParams& stbl);
+        void set_roll_rate(PIDParams& rate);
 
-        void set_pitch_stbl(PIDParams<float>& stbl);
-        void set_pitch_rate(PIDParams<float>& rate);
+        void set_pitch_stbl(PIDParams& stbl);
+        void set_pitch_rate(PIDParams& rate);
 
-        void set_yaw_stbl(PIDParams<float>& stbl);
-        void set_yaw_rate(PIDParams<float>& rate);
+        void set_yaw_stbl(PIDParams& stbl);
+        void set_yaw_rate(PIDParams& rate);
 
         void set_left_mixer(float throttle_volume,
                 float roll_volume, float pitch_volume, float yaw_volume);

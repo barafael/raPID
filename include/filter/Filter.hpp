@@ -3,10 +3,9 @@
 
 #include <cstddef>
 
-template <typename T>
 class Filter {
     public:
-        virtual T next(T value) = 0;
+        virtual float next(float value) = 0;
 };
 
 #endif // FILTER_H

@@ -1,5 +1,6 @@
-template<typename T>
-PIDController<T>::PIDController(PIDParams<T>& params)
+#include "../../include/pid/PIDController.hpp"
+
+PIDController::PIDController(PIDParams& params)
     : enabled ( true )
 
     , p_gain ( params.p_gain )
@@ -18,8 +19,7 @@ PIDController<T>::PIDController(PIDParams<T>& params)
 
     , last_time      ( 0 ) {}
 
-template<typename T>
-PIDController<T>::PIDController(PIDParams<T>& params, float lowpass_beta)
+PIDController::PIDController(PIDParams& params, float lowpass_beta)
     : enabled ( true )
 
     , p_gain ( params.p_gain )
@@ -38,13 +38,12 @@ PIDController<T>::PIDController(PIDParams<T>& params, float lowpass_beta)
 
     , last_time      ( 0 ) {
         this->lowpass_beta = lowpass_beta;
-        lowpass_filter = Lowpass<T>(lowpass_beta);
+        lowpass_filter = Lowpass(lowpass_beta);
         deriv_filter = &lowpass_filter;
         derivative_filter_type = LOWPASS;
 }
 
-template<typename T>
-PIDController<T>::PIDController(PIDParams<T>& params, size_t mov_avg_size)
+PIDController::PIDController(PIDParams& params, size_t mov_avg_size)
     : enabled ( true )
 
     , p_gain ( params.p_gain )
@@ -63,18 +62,16 @@ PIDController<T>::PIDController(PIDParams<T>& params, size_t mov_avg_size)
 
     , last_time      ( 0 ) {
         this->mov_avg_size = mov_avg_size;
-        ma_filter = MovingAverage<T>(mov_avg_size);
+        ma_filter = MovingAverage(mov_avg_size);
         deriv_filter = &ma_filter;
         derivative_filter_type = MOVING_AVERAGE;
 }
 
-template<typename T>
-void PIDController<T>::set_enabled(bool enable) {
+void PIDController::set_enabled(bool enable) {
     enabled = enable;
 }
 
-template<typename T>
-T PIDController<T>::compute(const T measured, const T setpoint) {
+float PIDController::compute(const float measured, const float setpoint) {
     if (!enabled) {
         return setpoint;
     }
@@ -86,10 +83,10 @@ T PIDController<T>::compute(const T measured, const T setpoint) {
      */
     uint64_t elapsed_time = now - last_time;
 
-    T error = measured - setpoint;
+    float error = measured - setpoint;
 
     /* Give me some P! */
-    T p_term = this->p_gain * error;
+    float p_term = this->p_gain * error;
 
     /* Give me some I! */
     this->integral += elapsed_time * error * this->i_gain;
@@ -97,7 +94,7 @@ T PIDController<T>::compute(const T measured, const T setpoint) {
     clamp(integral, -integral_limit, integral_limit);
 
     /* Give me some D! */
-    T d_term = 0;
+    float d_term = 0;
     switch (d_type) {
         /* Derivative term on error */
         case ERROR:
@@ -126,7 +123,7 @@ T PIDController<T>::compute(const T measured, const T setpoint) {
     this->last_setpoint = setpoint;
     this->last_measured = measured;
 
-    T result = p_term + integral + d_term;
+    float result = p_term + integral + d_term;
 
     /* Output limit */
     clamp(result, -output_limit, output_limit);
@@ -134,44 +131,36 @@ T PIDController<T>::compute(const T measured, const T setpoint) {
     return result;
 }
 
-template<typename T>
-void PIDController<T>::set_p(const T _p_gain) {
+void PIDController::set_p(const float _p_gain) {
     this->p_gain = _p_gain;
 }
 
-template<typename T>
-void PIDController<T>::set_i(const T _i_gain) {
+void PIDController::set_i(const float _i_gain) {
     this->i_gain = _i_gain;
 }
 
-template<typename T>
-void PIDController<T>::set_d(const T _d_gain) {
+void PIDController::set_d(const float _d_gain) {
     this->d_gain = _d_gain;
 }
 
-template<typename T>
-T PIDController<T>::get_p() {
+float PIDController::get_p() {
     return this->p_gain;
 }
 
-template<typename T>
-T PIDController<T>::get_i() {
+float PIDController::get_i() {
     return this->i_gain;
 }
 
-template<typename T>
-T PIDController<T>::get_d() {
+float PIDController::get_d() {
     return this->d_gain;
 }
 
-template<typename T>
-void PIDController<T>::set_params(const PIDParams<T>& params) {
+void PIDController::set_params(const PIDParams& params) {
     p_gain = params.p_gain;
     i_gain = params.i_gain;
     d_gain = params.d_gain;
 }
 
-template<typename T>
-void PIDController<T>::integral_reset() {
+void PIDController::integral_reset() {
     integral = 0;
 }

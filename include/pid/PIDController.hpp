@@ -1,8 +1,6 @@
 #ifndef PID_CONTROLLER_H
 #define PID_CONTROLLER_H
 
-/* TODO implement explicit cascaded pid controller? */
-
 #include <stdint.h>
 
 #include "Arduino.h"
@@ -16,32 +14,31 @@
 typedef enum { ERROR, SETPOINT, FEEDBACK } derivative_type;
 typedef enum { NONE, MOVING_AVERAGE, LOWPASS } filter_type;
 
-template<typename T>
 class PIDController {
     private:
         bool enabled = true;
 
-        T p_gain;
-        T i_gain;
-        T d_gain;
+        float p_gain;
+        float i_gain;
+        float d_gain;
 
-        T integral;
-        T integral_limit;
+        float integral;
+        float integral_limit;
 
-        T derivative;
+        float derivative;
 
         derivative_type d_type = ERROR;
 
         /* For derivative-on-error */
-        T last_error;
+        float last_error;
 
         /* For derivative-on-setpoint */
-        T last_setpoint;
+        float last_setpoint;
 
         /* For derivative-on-measured */
-        T last_measured;
+        float last_measured;
 
-        T output_limit;
+        float output_limit;
 
         uint64_t last_time;
 
@@ -51,31 +48,31 @@ class PIDController {
         float lowpass_beta = 0.8;
         size_t mov_avg_size = 10;
 
-        Lowpass<T> lowpass_filter  = Lowpass<T>(lowpass_beta);
-        MovingAverage<T> ma_filter = MovingAverage<T>(mov_avg_size);
+        Lowpass lowpass_filter  = Lowpass(lowpass_beta);
+        MovingAverage ma_filter = MovingAverage(mov_avg_size);
 
-        Filter<T> *deriv_filter = nullptr;
+        Filter *deriv_filter = nullptr;
 
     public:
         PIDController() = default;
-        explicit PIDController(PIDParams<T>& params);
-        PIDController(PIDParams<T>& params, float lowpass_beta);
-        PIDController(PIDParams<T>& params, size_t mov_avg_size);
+        explicit PIDController(PIDParams& params);
+        PIDController(PIDParams& params, float lowpass_beta);
+        PIDController(PIDParams& params, size_t mov_avg_size);
 
         /* En/Disable Passthrough of setpoint */
         void set_enabled(bool enable);
 
-        T compute(const T measured, const T setpoint);
+        float compute(const float measured, const float setpoint);
 
-        void set_p(const T _p_gain);
-        void set_i(const T _i_gain);
-        void set_d(const T _d_gain);
+        void set_p(const float _p_gain);
+        void set_i(const float _i_gain);
+        void set_d(const float _d_gain);
 
-        void set_params(const PIDParams<T>& params);
+        void set_params(const PIDParams& params);
 
-        T get_p();
-        T get_i();
-        T get_d();
+        float get_p();
+        float get_i();
+        float get_d();
 
         void integral_reset();
 
@@ -83,7 +80,4 @@ class PIDController {
         void enable_derivative_filter(bool enable);
 };
 
-#include "../../src/pid/PIDController.tpp"
-
 #endif // PID_CONTROLLER_H
-
