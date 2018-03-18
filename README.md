@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/barafael/raPID.svg?branch=master)](https://travis-ci.org/barafael/raPID)
 
-This flight controller consists mostly of a teensy 3.2 and an MPU-6050. The
+This flight controller consists mostly of a teensy 3.2 and an EM-SENtral motion sensor board. The
 teensy can read up to 8 PWM or PPM channels from your standard RC receiver (see
 include/pins.h for input/output pin numbers). Each of the outputs can be driven
 by a weighted sum of the roll, pitch, yaw PID responses and the throttle
@@ -31,7 +31,6 @@ the setpoint to the next controller) and only using the rate controller.
 - [x] PID Improvements
   - [x] D noise filters: lowpass, moving average
   - [x] Derivative-on-{error, feedback, setpoint}
-  - [x] Implement cascaded PID in a more explicit way
   - [ ] Fixed point PID implementation
   - [ ] [not needed right now] Calculating error external from algorithm or pass an ```errorfunc(number, number) -> number``` function pointer (more general)
 
