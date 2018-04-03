@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <vector>
 
+#include <cstddef>
+
 #include "Filter.hpp"
 
 class MovingAverage : public Filter {
