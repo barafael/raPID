@@ -5,7 +5,7 @@
 
 class Watchdog {
     public:
-        Watchdog(int prescale = 4);
+        explicit Watchdog(int prescale = 4);
         void feed();
 };
 

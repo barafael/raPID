@@ -167,7 +167,7 @@ extern "C" int main(void) {
     ArmingState arming_state(channels);
 
     /* Flight loop */
-    while (true) {
+    while(true) {
         receiver.update(channels);
         //print_channels(channels);
 
@@ -179,7 +179,7 @@ extern "C" int main(void) {
 
         switch (arming_state.get_state()) {
             case ARMED:
-                pid_output_roll_stbl = roll_controller_stbl.compute(attitude[ROLL_AXIS], channels[ROLL_CHANNEL] / 10);
+                pid_output_roll_stbl = roll_controller_stbl.  compute(attitude[ROLL_AXIS], channels[ROLL_CHANNEL]);
 
                 pid_output_roll_rate = roll_controller_rate.  compute(angular_rates[ROLL_AXIS], -pid_output_roll_stbl);
 
@@ -202,7 +202,7 @@ extern "C" int main(void) {
                 front_left_out_mixer .apply(channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
                 front_right_out_mixer.apply(channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
 
-//#define DEBUG_COL
+                //#define DEBUG_COL
 #ifdef DEBUG_COL
                 Serial.print(F("setp:"));
                 Serial.print(channels[ROLL_CHANNEL]);

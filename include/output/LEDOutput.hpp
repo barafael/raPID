@@ -31,14 +31,14 @@ class LEDOutput : Output {
 
         bool low_throttle_cutoff_enabled = false;
 
-        void write(uint16_t _milli_throttle);
+        void write(uint16_t _brightness);
 
     public:
-        LEDOutput(const uint8_t pin,
+        LEDOutput(uint8_t pin,
                 float throttle_volume,
                 float roll_volume, float pitch_volume, float yaw_volume);
 
-        void apply(uint16_t _milli_throttle,
+        void apply(uint16_t _brightness,
                 float roll_stbl, float pitch_stbl, float yaw_stbl) override;
 
         void set_resolution(uint8_t res);
@@ -56,5 +56,5 @@ class LEDOutput : Output {
         void set_yaw_volume     (float volume) override;
 };
 
-#endif // FAST_PWM_OUTPUT
+#endif // LED_OUTPUT
 

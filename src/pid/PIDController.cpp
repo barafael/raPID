@@ -96,15 +96,15 @@ void PIDController::set_d(const float _d_gain) {
     this->d_gain = _d_gain;
 }
 
-float PIDController::get_p() {
+const float PIDController::get_p() {
     return this->p_gain;
 }
 
-float PIDController::get_i() {
+const float PIDController::get_i() {
     return this->i_gain;
 }
 
-float PIDController::get_d() {
+const float PIDController::get_d() {
     return this->d_gain;
 }
 

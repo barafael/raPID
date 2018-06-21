@@ -26,8 +26,8 @@ class PWMReceiver : Receiver {
 
         const void update(channels_t channels) override;
 
-        void set_offsets(channels_t channels) override;
-        void set_trims(channels_t channels) override;
+        void set_offsets(channels_t offsets) override;
+        void set_trims(channels_t trims) override;
         void set_inversion(inversion_t inversion) override;
 
         const bool has_signal() override;

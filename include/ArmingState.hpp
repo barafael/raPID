@@ -25,6 +25,6 @@ class ArmingState {
 
     public:
         explicit ArmingState(channels_t channels);
-        state_t get_state();
+        const state_t get_state();
 };
 #endif // ARMING_STATE_H

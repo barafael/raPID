@@ -13,7 +13,7 @@ static const bool state_transition_triggered(channels_t input) {
 
 static const bool arming_debug = true;
 
-//#define ARMING_DEBUG
+// #define ARMING_DEBUG
 
 void update_state() {
     bool triggered = state_transition_triggered(arming_state_instance->channels);
@@ -108,7 +108,7 @@ ArmingState::ArmingState(channels_t channels) : channels(channels) {
     }
 }
 
-state_t ArmingState::get_state() {
+const state_t ArmingState::get_state() {
     noInterrupts();
     switch (internal_state) {
         case ARMED:

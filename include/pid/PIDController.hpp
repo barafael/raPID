@@ -61,9 +61,9 @@ class PIDController {
 
         void set_params(const PIDParams& params);
 
-        float get_p();
-        float get_i();
-        float get_d();
+        const float get_p();
+        const float get_i();
+        const float get_d();
 
         void integral_reset();
 

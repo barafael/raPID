@@ -3,7 +3,7 @@
 
 #include "Arduino.h"
 
-#include <stdint.h>
+#include <cstdint>
 
 #include "Mixer.hpp"
 
@@ -13,14 +13,14 @@ class Output {
         Mixer mixer;
 
     public:
-        explicit Output(const uint8_t pin);
-        Output(const uint8_t pin,
+        explicit Output(uint8_t pin);
+        Output(uint8_t pin,
                 float throttle_volume,
                 float roll_volume, float pitch_volume, float yaw_volume);
 
         /* Pure virtual methods meant to be overridden in servo, esc, and anyPWM */
         virtual void apply(uint16_t value,
-                const float roll_stbl, const float pitch_stbl, const float yaw_stbl) = 0;
+                float roll_stbl, float pitch_stbl, float yaw_stbl) = 0;
 
         virtual void set_throttle_volume(float volume) = 0;
         virtual void set_roll_volume    (float volume) = 0;

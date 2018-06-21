@@ -11,7 +11,7 @@ void ServoOutput::write(uint16_t _value) {
 }
 
 void ServoOutput::apply(uint16_t _value,
-        float roll_stbl, float pitch_stbl, float yaw_stbl) {
+        const float roll_stbl, const float pitch_stbl, const float yaw_stbl) {
     /* intermediary int16_t to prevent overflow */
     int16_t value = _value;
 

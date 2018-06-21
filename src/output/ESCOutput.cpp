@@ -16,7 +16,7 @@ void ESCOutput::write(uint16_t _milli_throttle) {
 }
 
 void ESCOutput::apply(uint16_t _milli_throttle,
-        float roll_stbl, float pitch_stbl, float yaw_stbl) {
+        const float roll_stbl, const float pitch_stbl, const float yaw_stbl) {
     /* Throttle cutoff to avoid spinning props due to movement when throttle is
      * low but state is armed
      * Do it here, before the control values are added up
