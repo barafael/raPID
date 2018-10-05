@@ -1,6 +1,8 @@
-#include "Arduino.h"
+#include <Arduino.h>
 
 #include <stdint.h>
+
+//#define WATCHDOG
 
 #include "../include/output/ESCOutput.hpp"
 #include "../include/output/FastPWMOutput.hpp"
@@ -14,7 +16,10 @@
 #include "../include/pins.h"
 #include "../include/imu/SENtralIMU.hpp"
 #include "../include/settings.h"
-#include "../include/Watchdog.hpp"
+
+#ifdef WATCHDOG
+#include "../include/Watchdog.h"
+#endif
 
 #define TIMING_ANALYSIS
 #ifdef TIMING_ANALYSIS
@@ -47,7 +52,6 @@
    */
 
 /* Default start state */
-//state_t state = /*DIS*/ARMED;
 state_t state = DISARMED;
 
 /* Scaled yaw_pitch_roll to [0, 1000] */
@@ -162,7 +166,9 @@ extern "C" int main(void) {
 
     SENtralIMU sentral;
 
-    Watchdog dog;
+#ifdef WATCHDOG
+    watchdog_init();
+#endif
 
     ArmingState arming_state(channels);
 
@@ -233,6 +239,8 @@ extern "C" int main(void) {
         /* Blink LED to indicate activity */
         blink_state = !blink_state;
         digitalWrite(LED_PIN, blink_state);
-        dog.feed();
+#ifdef WATCHDOG
+        watchdog_feed();
+#endif
     }
 }

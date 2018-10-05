@@ -1,11 +1,6 @@
-#include "../include/Watchdog.hpp"
+#include "../include/Watchdog.h"
 
-#define NO_WATCHDOG
-
-Watchdog::Watchdog(int prescale) {
-#ifdef NO_WATCHDOG
-    return;
-#endif
+void watchdog_init() {
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
     delayMicroseconds(1);
@@ -25,10 +20,11 @@ Watchdog::Watchdog(int prescale) {
     WDOG_PRESC = 4;
 }
 
-void Watchdog::feed() {
-#ifdef NO_WATCHDOG
-    return;
-#endif
+void set_watchdog_prescale(int prescale) {
+    WDOG_PRESC = prescale;
+}
+
+void watchdog_feed() {
     noInterrupts();
     WDOG_REFRESH = 0xA602;
     WDOG_REFRESH = 0xB480;
