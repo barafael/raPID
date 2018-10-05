@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+//#define WATCHDOG
+
 #include "../include/output/ESCOutput.hpp"
 #include "../include/output/FastPWMOutput.hpp"
 #include "../include/output/LEDOutput.hpp"
@@ -14,7 +16,10 @@
 #include "../include/pins.h"
 #include "../include/imu/SENtralIMU.hpp"
 #include "../include/settings.h"
+
+#ifdef WATCHDOG
 #include "../include/Watchdog.hpp"
+#endif
 
 #define TIMING_ANALYSIS
 #ifdef TIMING_ANALYSIS
@@ -162,7 +167,9 @@ extern "C" int main(void) {
 
     SENtralIMU sentral;
 
+#ifdef WATCHDOG
     Watchdog dog;
+#endif
 
     ArmingState arming_state(channels);
 
@@ -233,6 +240,8 @@ extern "C" int main(void) {
         /* Blink LED to indicate activity */
         blink_state = !blink_state;
         digitalWrite(LED_PIN, blink_state);
+#ifdef WATCHDOG
         dog.feed();
+#endif
     }
 }
