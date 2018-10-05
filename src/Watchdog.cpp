@@ -19,7 +19,7 @@ Watchdog::Watchdog(int prescale) {
     /* This sets prescale clock so that the watchdog timer ticks at 100Hz.
      * Formula: 1kHZ/4 = 200 HZ
      */
-    WDOG_PRESC = 4;
+    WDOG_PRESC = prescale;
 }
 
 void Watchdog::feed() {
