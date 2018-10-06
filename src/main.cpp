@@ -91,7 +91,7 @@ static void print_velocity_max(axis_t velocity) {
     for (size_t index = 0; index < 3; index++) {
         if (velocity[index] > max_velocity || velocity[index] < -max_velocity) {
             max_velocity = velocity[index];
-            Serial.println((uint64_t) max_velocity);
+            Serial.println((long) max_velocity);
         }
     }
 }
