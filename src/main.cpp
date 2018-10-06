@@ -91,7 +91,7 @@ static void print_velocity_max(axis_t velocity) {
     for (size_t index = 0; index < 3; index++) {
         if (velocity[index] > max_velocity || velocity[index] < -max_velocity) {
             max_velocity = velocity[index];
-            Serial.println((long) max_velocity);
+            Serial.println((uint64_t) max_velocity);
         }
     }
 }
@@ -112,9 +112,9 @@ extern "C" int main(void) {
 
     FastPWMOutput_t temporary = fast_out_init(5  , 1.0 , -1.0 , -1.0 , 1.0 , false);
 
-    uint16_t counter =0;
+    uint16_t counter = 0;
     while (true) {
-        fast_out_apply(&temporary, counter, 0,0, 0);
+        fast_out_apply(&temporary, counter, 0, 0, 0);
         delay(500);
         counter++;
     }
@@ -129,8 +129,6 @@ extern "C" int main(void) {
                          PITCH_INPUT_PIN,    YAW_INPUT_PIN,
                          AUX1_INPUT_PIN,     AUX2_INPUT_PIN,
                          offsets);
-  
-    //PPMReceiver receiver(23, offsets);
 
     while (!receiver.has_signal()) {
         delay(500);

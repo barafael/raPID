@@ -45,8 +45,9 @@ void update_state() {
 #endif
                 if ((millis() - arming_state_instance->state_change_time) > arming_state_instance->DISARM_TIMEOUT_MS) {
                     arming_state_instance->internal_state = DISARMING_STANDBY;
-                } else
+                } else {
                     break;
+                }
             } else {
 #ifdef ARMING_DEBUG
                 Serial.println("Going back to armed");
@@ -72,8 +73,9 @@ void update_state() {
             if (triggered) {
                 if ((millis() - arming_state_instance->state_change_time) > arming_state_instance->ARM_TIMEOUT_MS) {
                     arming_state_instance->internal_state = ARMING_STANDBY;
-                } else
+                } else {
                     break;
+                }
             } else {
 #ifdef ARMING_DEBUG
                 Serial.println("Going back to disarmed");
