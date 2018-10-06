@@ -1,32 +1,41 @@
-#include "../../include/FlightMode.hpp"
-
-#include "../../include/pid/PIDParams.hpp"
-#include "../../include/output/Mixer.hpp"
+#include "../../include/FlightMode.h"
 
 /* TODO implement flight mode offset? */
 
-void FlightMode::set_roll_stbl(PIDParams& stbl) {
-    this->roll_stbl = stbl;
+void FlightMode::set_roll_stbl(pid_params_t *stbl) {
+    this->roll_stbl.p_gain = stbl->p_gain;
+    this->roll_stbl.i_gain = stbl->i_gain;
+    this->roll_stbl.d_gain = stbl->d_gain;
 }
 
-void FlightMode::set_roll_rate(PIDParams& rate) {
-    this->roll_rate = rate;
+void FlightMode::set_roll_rate(pid_params_t *rate) {
+    this->roll_rate.p_gain = rate->p_gain;
+    this->roll_rate.i_gain = rate->i_gain;
+    this->roll_rate.d_gain = rate->d_gain;
 }
 
-void FlightMode::set_pitch_stbl(PIDParams& stbl) {
-    this->pitch_stbl = stbl;
+void FlightMode::set_pitch_stbl(pid_params_t *stbl) {
+    this->pitch_stbl.p_gain = stbl->p_gain;
+    this->pitch_stbl.i_gain = stbl->i_gain;
+    this->pitch_stbl.d_gain = stbl->d_gain;
 }
 
-void FlightMode::set_pitch_rate(PIDParams& rate) {
-    this->pitch_rate = rate;
+void FlightMode::set_pitch_rate(pid_params_t *rate) {
+    this->pitch_rate.p_gain = rate->p_gain;
+    this->pitch_rate.i_gain = rate->i_gain;
+    this->pitch_rate.d_gain = rate->d_gain;
 }
 
-void FlightMode::set_yaw_stbl(PIDParams& stbl) {
-    this->yaw_stbl = stbl;
+void FlightMode::set_yaw_stbl(pid_params_t *stbl) {
+    this->yaw_stbl.p_gain = stbl->p_gain;
+    this->yaw_stbl.i_gain = stbl->i_gain;
+    this->yaw_stbl.d_gain = stbl->d_gain;
 }
 
-void FlightMode::set_yaw_rate(PIDParams& rate) {
-    this->yaw_rate = rate;
+void FlightMode::set_yaw_rate(pid_params_t *rate) {
+    this->yaw_rate.p_gain = rate->p_gain;
+    this->yaw_rate.i_gain = rate->i_gain;
+    this->yaw_rate.d_gain = rate->d_gain;
 }
 
 void FlightMode::set_left_mixer(float throttle_volume,

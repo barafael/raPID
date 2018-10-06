@@ -6,9 +6,9 @@
 
 #include "../include/output/FastPWMOutput.h"
 #include "../include/imu/axis.hpp"
-#include "../include/pid/PIDController.hpp"
+#include "../include/pid/PIDParams.h"
+#include "../include/pid/PIDController.h"
 #include "../include/receiver/PWMReceiver.hpp"
-#include "../include/receiver/PPMReceiver.hpp"
 #include "../include/ArmingState.hpp"
 #include "../include/error_blink.h"
 #include "../include/pins.h"
@@ -139,21 +139,13 @@ extern "C" int main(void) {
 
     Serial.println(F("Receiver signal detected, continuing."));
 
-    PIDParams roll_param_stbl ( 2.0 , 0.0 , 0.0 , 12.0 , 400.0);
-    PIDParams roll_param_rate ( 0.65 , 0.0 , 0.0 , 12.0 , 400.0);
+    pid_controller_t roll_controller_stbl = pid_controller_init( 2.0 , 0.0 , 0.0 , 12.0 , 400.0);
+    pid_controller_t roll_controller_rate = pid_controller_init( 0.65 , 0.0 , 0.0 , 12.0 , 400.0);
 
-    PIDParams pitch_param_stbl( 2.0 , 0.0 , 0.0 , 12.0 , 400.0);
-    PIDParams pitch_param_rate( 0.65 , 0.0 , 0.0 , 12.0 , 400.0);
+    pid_controller_t pitch_controller_stbl = pid_controller_init( 2.0 , 0.0 , 0.0 , 12.0 , 400.0);
+    pid_controller_t pitch_controller_rate = pid_controller_init( 0.65 , 0.0 , 0.0 , 12.0 , 400.0);
 
-    PIDParams yaw_param_rate  ( 1.5 , 0.0 , 0.0 , 12.0 , 400.0);
-
-    PIDController roll_controller_stbl(roll_param_stbl);
-    PIDController roll_controller_rate(roll_param_rate);
-
-    PIDController pitch_controller_stbl(pitch_param_stbl);
-    PIDController pitch_controller_rate(pitch_param_rate);
-
-    PIDController yaw_controller_rate(yaw_param_rate);
+    pid_controller_t yaw_controller_rate =   pid_controller_init( 1.5 , 0.0 , 0.0 , 12.0 , 400.0);
 
     FastPWMOutput_t back_left_out_mixer   = fast_out_init(LEFT_SERVO_PIN  , 1.0 , -1.0 , -1.0 , 1.0 , true);
     FastPWMOutput_t back_right_out_mixer  = fast_out_init(RIGHT_SERVO_PIN , 1.0 , 1.0  , -1.0 , -1.0, true);
@@ -165,11 +157,13 @@ extern "C" int main(void) {
     fast_out_shutoff(&front_left_out_mixer);
     fast_out_shutoff(&front_right_out_mixer);
 
-    roll_controller_stbl.set_enabled(true);
-    roll_controller_rate.set_enabled(true);
+    pid_set_enabled(&roll_controller_stbl, true);
+    pid_set_enabled(&roll_controller_rate, true);
 
-    pitch_controller_stbl.set_enabled(true);
-    pitch_controller_rate.set_enabled(true);
+    pid_set_enabled(&pitch_controller_stbl, true);
+    pid_set_enabled(&pitch_controller_rate, true);
+
+    pid_set_enabled(&yaw_controller_rate, true);
 
     SENtralIMU sentral;
 
@@ -192,23 +186,20 @@ extern "C" int main(void) {
 
         switch (arming_state.get_state()) {
             case ARMED:
-                pid_output_roll_stbl = roll_controller_stbl.  compute(attitude[ROLL_AXIS], channels[ROLL_CHANNEL]);
+                pid_output_roll_stbl = pid_compute(&roll_controller_stbl, attitude[ROLL_AXIS], channels[ROLL_CHANNEL]);
 
-                pid_output_roll_rate = roll_controller_rate.  compute(angular_rates[ROLL_AXIS], -pid_output_roll_stbl);
+                pid_output_roll_rate = pid_compute(&roll_controller_rate, angular_rates[ROLL_AXIS], -pid_output_roll_stbl);
 
                 //pitch_controller_stbl.set_p((channels[ROLL_CHANNEL] + 500) * (15.0 / 1000));
                 //pitch_controller_stbl.set_i((channels[YAW_CHANNEL]  + 500) * (5.0  / 1000));
 
-                //Serial.println(pitch_controller_stbl.get_p());
-                //Serial.print("\t");
-                //Serial.println(pitch_controller_stbl.get_d());
+                pid_output_pitch_stbl = pid_compute(&pitch_controller_stbl, attitude[PITCH_AXIS], channels[PITCH_CHANNEL] / 10);
 
-                pid_output_pitch_stbl = pitch_controller_stbl.compute(attitude[PITCH_AXIS], channels[PITCH_CHANNEL] / 10);
-
-                pid_output_pitch_rate = pitch_controller_rate.compute(angular_rates[PITCH_AXIS], -pid_output_pitch_stbl);
+                pid_output_pitch_rate = pid_compute(&pitch_controller_rate, angular_rates[PITCH_AXIS], -pid_output_pitch_stbl);
 
                 /* Yaw needs rate only - yaw stick controls rate of rotation, there is no fixed reference */
-                pid_output_yaw_rate = yaw_controller_rate.    compute(angular_rates[YAW_AXIS], channels[YAW_CHANNEL]);
+                pid_output_yaw_rate = pid_compute(&yaw_controller_rate, angular_rates[YAW_AXIS], channels[YAW_CHANNEL]);
+
 
                 fast_out_apply(&back_left_out_mixer,   channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
                 fast_out_apply(&back_right_out_mixer,  channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
