@@ -25,7 +25,7 @@ class ServoOutput : Output {
         void write(uint16_t _value);
 
     public:
-        ServoOutput(const uint8_t pin,
+        ServoOutput(uint8_t pin,
                 float throttle_volume,
                 float roll_volume, float pitch_volume, float yaw_volume)
             : Output(pin, throttle_volume, roll_volume, pitch_volume, yaw_volume) {
@@ -33,7 +33,7 @@ class ServoOutput : Output {
             }
 
         void apply(uint16_t _value,
-                const float roll_stbl, const float pitch_stbl, const float yaw_stbl) override;
+                float roll_stbl, float pitch_stbl, float yaw_stbl) override;
 
         const bool is_inverted();
         void invert(bool invert);

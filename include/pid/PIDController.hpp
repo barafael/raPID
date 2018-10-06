@@ -53,11 +53,11 @@ class PIDController {
         /* En/Disable Passthrough of setpoint */
         void set_enabled(bool enable);
 
-        float compute(const float measured, const float setpoint);
+        float compute(float measured, float setpoint);
 
-        void set_p(const float _p_gain);
-        void set_i(const float _i_gain);
-        void set_d(const float _d_gain);
+        void set_p(float _p_gain);
+        void set_i(float _i_gain);
+        void set_d(float _d_gain);
 
         void set_params(const PIDParams& params);
 
