@@ -34,7 +34,7 @@ class FastPWMOutput : Output {
         void write(uint16_t _milli_throttle);
 
     public:
-        FastPWMOutput(const uint8_t pin,
+        FastPWMOutput(uint8_t pin,
                 float throttle_volume,
                 float roll_volume, float pitch_volume, float yaw_volume);
 

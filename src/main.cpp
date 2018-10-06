@@ -4,9 +4,7 @@
 
 //#define WATCHDOG
 
-#include "../include/output/ESCOutput.hpp"
-#include "../include/output/FastPWMOutput.hpp"
-#include "../include/output/LEDOutput.hpp"
+#include "../include/output/FastPWMOutput.h"
 #include "../include/imu/axis.hpp"
 #include "../include/pid/PIDController.hpp"
 #include "../include/receiver/PWMReceiver.hpp"
@@ -112,6 +110,15 @@ extern "C" int main(void) {
     pinMode(LED_PIN, OUTPUT);
     pinMode(DEBUG_PIN, OUTPUT);
 
+    FastPWMOutput_t temporary = fast_out_init(5  , 1.0 , -1.0 , -1.0 , 1.0 , false);
+
+    uint16_t counter =0;
+    while (true) {
+        fast_out_apply(&temporary, counter, 0,0, 0);
+        delay(500);
+        counter++;
+    }
+
     static bool blink_state = false;
 
     delay(1000);
@@ -148,15 +155,15 @@ extern "C" int main(void) {
 
     PIDController yaw_controller_rate(yaw_param_rate);
 
-    FastPWMOutput back_left_out_mixer  (LEFT_SERVO_PIN  , 1.0 , -1.0 , -1.0 , 1.0);
-    FastPWMOutput back_right_out_mixer (RIGHT_SERVO_PIN , 1.0 , 1.0  , -1.0 , -1.0);
-    FastPWMOutput front_left_out_mixer (FRONT_SERVO_PIN , 1.0 , -1.0 , 1.0  , -1.0);
-    FastPWMOutput front_right_out_mixer(BACK_SERVO_PIN  , 1.0 , 1.0  , 1.0  , 1.0);
+    FastPWMOutput_t back_left_out_mixer   = fast_out_init(LEFT_SERVO_PIN  , 1.0 , -1.0 , -1.0 , 1.0 , true);
+    FastPWMOutput_t back_right_out_mixer  = fast_out_init(RIGHT_SERVO_PIN , 1.0 , 1.0  , -1.0 , -1.0, true);
+    FastPWMOutput_t front_left_out_mixer  = fast_out_init(FRONT_SERVO_PIN , 1.0 , -1.0 , 1.0  , -1.0, true);
+    FastPWMOutput_t front_right_out_mixer = fast_out_init(BACK_SERVO_PIN  , 1.0 , 1.0  , 1.0  , 1.0 , true);
 
-    back_left_out_mixer  .shut_off();
-    back_right_out_mixer .shut_off();
-    front_left_out_mixer .shut_off();
-    front_right_out_mixer.shut_off();
+    fast_out_shutoff(&back_left_out_mixer);
+    fast_out_shutoff(&back_right_out_mixer);
+    fast_out_shutoff(&front_left_out_mixer);
+    fast_out_shutoff(&front_right_out_mixer);
 
     roll_controller_stbl.set_enabled(true);
     roll_controller_rate.set_enabled(true);
@@ -203,10 +210,10 @@ extern "C" int main(void) {
                 /* Yaw needs rate only - yaw stick controls rate of rotation, there is no fixed reference */
                 pid_output_yaw_rate = yaw_controller_rate.    compute(angular_rates[YAW_AXIS], channels[YAW_CHANNEL]);
 
-                back_left_out_mixer  .apply(channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
-                back_right_out_mixer .apply(channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
-                front_left_out_mixer .apply(channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
-                front_right_out_mixer.apply(channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
+                fast_out_apply(&back_left_out_mixer,   channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
+                fast_out_apply(&back_right_out_mixer,  channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
+                fast_out_apply(&front_left_out_mixer,  channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
+                fast_out_apply(&front_right_out_mixer, channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
 
                 //#define DEBUG_COL
 #ifdef DEBUG_COL
@@ -223,11 +230,10 @@ extern "C" int main(void) {
                 break;
 
             case DISARMED:
-                back_left_out_mixer  .shut_off();
-                back_right_out_mixer .shut_off();
-                front_left_out_mixer .shut_off();
-                front_right_out_mixer.shut_off();
-
+                fast_out_shutoff(&back_left_out_mixer);
+                fast_out_shutoff(&back_right_out_mixer);
+                fast_out_shutoff(&front_left_out_mixer);
+                fast_out_shutoff(&front_right_out_mixer);
                 break;
 
             default:
