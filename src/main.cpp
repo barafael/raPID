@@ -52,7 +52,6 @@
    */
 
 /* Default start state */
-//state_t state = /*DIS*/ARMED;
 state_t state = DISARMED;
 
 /* Scaled yaw_pitch_roll to [0, 1000] */
@@ -108,10 +107,19 @@ static void print_channels(channels_t channels) {
 }
 
 extern "C" int main(void) {
-    Serial.begin(9600);
-
     pinMode(LED_PIN, OUTPUT);
     pinMode(DEBUG_PIN, OUTPUT);
+
+    Serial.begin(9600);
+    while(!Serial);
+
+    int counter = 10;
+    while(counter) {
+        Serial.println("Hello");
+        delay(500);
+        digitalWrite(LED_PIN, !digitalRead(LED_PIN));
+        counter--;
+    }
 
     static bool blink_state = false;
 
