@@ -7,7 +7,8 @@
 #include "receiver/Receiver.hpp"
 
 // TRANSITION PASS_THROUGH FAILSAFE, CONFIG
-typedef enum { DISARMED, ARMING, ARMING_STANDBY, ARMED, DISARMING, DISARMING_STANDBY } state_t;
+typedef enum { DISARMED, ARMED, DEBUG } state_t;
+typedef enum { INTERNAL_DISARMED, ARMING, ARMING_STANDBY, INTERNAL_ARMED, DISARMING, DISARMING_STANDBY, INTERNAL_DEBUG } internal_state_t;
 
 class ArmingState {
     private:
@@ -16,7 +17,7 @@ class ArmingState {
         /* find appropriate polling interval */
         const uint32_t INTERVAL_US = 500000;
 
-        state_t internal_state = DISARMED;
+        internal_state_t internal_state = INTERNAL_DISARMED;
         IntervalTimer state_change_timer;
         int16_t *channels;
         uint64_t state_change_time = 0;
@@ -25,6 +26,7 @@ class ArmingState {
 
     public:
         explicit ArmingState(channels_t channels);
+        void enter_debug_mode();
         const state_t get_state();
 };
 #endif // ARMING_STATE_H

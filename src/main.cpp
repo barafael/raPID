@@ -41,9 +41,11 @@
    See ../include/pins.h for pin definitions.  */
 
 /* Default start state */
-state_t state = DISARMED;
+//state_t state = DISARMED;
+state_t state = ARMED;
 
-const uint64_t SERIAL_WAIT_TIMEOUT = 3000;
+
+const uint64_t SERIAL_WAIT_TIMEOUT = 3000ul;
 
 /* Scaled yaw_pitch_roll to [0, 1000] */
 //axis_t attitude = { 0, 0, 0 };
@@ -90,7 +92,7 @@ static void print_channels(channels_t channels) {
 extern "C" int main(void) {
     Serial.begin(9600);
 
-    long serial_wait_start_time = millis();
+    uint64_t serial_wait_start_time = millis();
     while(!Serial) {
         if (millis() - serial_wait_start_time > SERIAL_WAIT_TIMEOUT) {
             break;

@@ -15,10 +15,14 @@ static const bool arming_debug = true;
 
 // #define ARMING_DEBUG
 
+void ArmingState::enter_debug_mode() {
+    arming_state_instance->internal_state = INTERNAL_DEBUG;
+}
+
 void update_state() {
     bool triggered = state_transition_triggered(arming_state_instance->channels);
     switch (arming_state_instance->internal_state) {
-        case ARMED:
+        case INTERNAL_ARMED:
 #ifdef ARMING_DEBUG
             Serial.println("Armed");
 #endif
@@ -28,7 +32,7 @@ void update_state() {
             }
             break;
 
-        case DISARMED:
+        case INTERNAL_DISARMED:
 #ifdef ARMING_DEBUG
             Serial.println("Disarmed");
 #endif
@@ -52,7 +56,7 @@ void update_state() {
 #ifdef ARMING_DEBUG
                 Serial.println("Going back to armed");
 #endif
-                arming_state_instance->internal_state = ARMED;
+                arming_state_instance->internal_state = INTERNAL_ARMED;
             }
             break;
 
@@ -62,7 +66,7 @@ void update_state() {
                 Serial.println("Release the hold to complete disarming!");
 #endif
             } else {
-                arming_state_instance->internal_state = DISARMED;
+                arming_state_instance->internal_state = INTERNAL_DISARMED;
             }
             break;
 
@@ -80,7 +84,7 @@ void update_state() {
 #ifdef ARMING_DEBUG
                 Serial.println("Going back to disarmed");
 #endif
-                arming_state_instance->internal_state = DISARMED;
+                arming_state_instance->internal_state = INTERNAL_DISARMED;
             }
             break;
 
@@ -90,16 +94,16 @@ void update_state() {
                 Serial.println("Release the hold to complete arming!");
 #endif
             } else {
-                arming_state_instance->internal_state = ARMED;
+                arming_state_instance->internal_state = INTERNAL_ARMED;
             }
             break;
 
             /* unimplemented state? */
         default:
 #ifdef ARMING_DEBUG
-            Serial.println("Unimpl. Disarmed now!");
+            Serial.println("Unimpl. State. Disarming!");
 #endif
-            arming_state_instance->internal_state = DISARMED;
+            arming_state_instance->internal_state = INTERNAL_DISARMED;
     }
 }
 
@@ -113,10 +117,11 @@ ArmingState::ArmingState(channels_t channels) : channels(channels) {
 const state_t ArmingState::get_state() {
     noInterrupts();
     switch (internal_state) {
-        case ARMED:
+        case INTERNAL_DEBUG:
+        case INTERNAL_ARMED:
         case DISARMING:
         case DISARMING_STANDBY: interrupts(); return ARMED;
-        case DISARMED:
+        case INTERNAL_DISARMED:
         case ARMING:
         case ARMING_STANDBY: interrupts(); return DISARMED;
     }
