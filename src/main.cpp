@@ -8,7 +8,7 @@
 #include "../include/imu/axis.hpp"
 #include "../include/pid/PIDParams.h"
 #include "../include/pid/PIDController.h"
-#include "../include/receiver/PWMReceiver.hpp"
+#include "../include/receiver/PWMReceiver.h"
 #include "../include/ArmingState.hpp"
 #include "../include/error_blink.h"
 #include "../include/pins.h"
@@ -44,7 +44,6 @@
 //state_t state = DISARMED;
 state_t state = ARMED;
 
-
 const uint64_t SERIAL_WAIT_TIMEOUT = 3000ul;
 
 /* Scaled yaw_pitch_roll to [0, 1000] */
@@ -63,6 +62,7 @@ float pid_output_pitch_rate = 0.0;
 
 float pid_output_yaw_rate = 0.0;
 
+PWMReceiver_t *receiver_instance = NULL;
 channels_t channels = { 0 };
 
 static void print_attitude() {
@@ -108,20 +108,20 @@ extern "C" int main(void) {
 
     channels_t offsets = { -1000, -1500, -1500, -1500, -1500, -1500 };
 
-    PWMReceiver receiver(THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
+    PWMReceiver_t receiver = PWMReceiver_init(THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
                          PITCH_INPUT_PIN,    YAW_INPUT_PIN,
                          AUX1_INPUT_PIN,     AUX2_INPUT_PIN,
                          offsets);
+    receiver_instance = &receiver;
 
     bool receiver_active = false;
     if (receiver_active) {
-        while (!receiver.has_signal()) {
+        while (!has_signal(&receiver)) {
             delay(500);
             Serial.println(F("No receiver signal! Waiting."));
         }
+        Serial.println(F("Receiver signal detected, continuing."));
     }
-
-    Serial.println(F("Receiver signal detected, continuing."));
 
     pid_controller_t roll_controller_stbl = pid_controller_init( 2.0 , 0.0 , 0.0 , 12.0 , 400.0);
     pid_controller_t roll_controller_rate = pid_controller_init( 0.65 , 0.0 , 0.0 , 12.0 , 400.0);
