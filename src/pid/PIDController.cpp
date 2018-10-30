@@ -1,5 +1,40 @@
 #include "../../include/pid/PIDController.h"
 
+/*@
+ requires integral_limit <= output_limit;
+ assigns \nothing;
+
+ ensures \result.enabled == 1;
+
+ ensures \result.p_gain == p_gain;
+ ensures \result.i_gain == i_gain;
+ ensures \result.d_gain == d_gain;
+
+ ensures \result.integral == 0;
+ ensures \result.integral_limit == integral_limit;
+
+ ensures \result.derivative == 0;
+
+ ensures \result.d_type == ERROR;
+
+ ensures \result.last_error == 0;
+
+ ensures \result.last_setpoint == 0;
+
+ ensures \result.last_measured == 0;
+
+ ensures \result.output_limit == output_limit;
+
+ ensures \result.output_limit == output_limit;
+
+ ensures \result.last_time == 0;
+
+ ensures \result.derivative_filter_type == NONE;
+
+ ensures \result.deriv_filter == 0;
+
+ ensures \result.deriv_filter_enabled == false;
+ */
 pid_controller_t pid_controller_init(float p_gain, float i_gain, float d_gain,
         float integral_limit, float output_limit) {
     pid_controller_t controller = {
@@ -39,10 +74,21 @@ pid_controller_t pid_controller_init(float p_gain, float i_gain, float d_gain,
 
 
 /* En/Disable Passthrough of setpoint */
+/*@
+ requires \valid(self);
+ ensures self->enabled == enable; */
 void pid_set_enabled(pid_controller_t *self, bool enable) {
     self->enabled = enable;
 }
 
+//requires \valid(self->deriv_filter);
+/*@
+ requires \valid(self);
+ assigns self->last_time;
+ assigns self->last_error;
+ assigns self->last_setpoint;
+ assigns self->last_measured;
+*/
 float pid_compute(pid_controller_t *self, float measured, float setpoint) {
     if (!self->enabled) {
         return setpoint;
@@ -81,7 +127,8 @@ float pid_compute(pid_controller_t *self, float measured, float setpoint) {
             break;
     }
 
-    if (self->deriv_filter_enabled && *(self->deriv_filter) != nullptr) {
+    //if (self->deriv_filter_enabled && *(self->deriv_filter) != nullptr) {
+    if (self->deriv_filter_enabled) {
         d_term = (self->deriv_filter)(d_term);
     }
 
@@ -110,6 +157,18 @@ void pid_set_i(pid_controller_t *self, float _i_gain) {
 void pid_set_d(pid_controller_t *self, float _d_gain) {
     self->d_gain = _d_gain;
 }
+
+/*@
+ requires integral_limit >= output_limit;
+ requires \valid(self);
+
+ ensures self->p_gain == p_gain;
+ ensures self->i_gain == i_gain;
+ ensures self->d_gain == d_gain;
+
+ ensures self->integral_limit == integral_limit;
+ ensures self->output_limit == output_limit;
+*/
 
 void pid_set_params(pid_controller_t *self,
         float p_gain, float i_gain, float d_gain,
