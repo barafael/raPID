@@ -83,18 +83,34 @@ void pid_set_enabled(pid_controller_t *self, bool enable) {
 
 //requires \valid(self->deriv_filter);
 /*@
- requires \valid(self);
- assigns self->last_time;
- assigns self->last_error;
- assigns self->last_setpoint;
- assigns self->last_measured;
+   requires \valid(self);
+   requires self->integral < self->output_limit;
+ behavior disabled:
+   assumes self->enabled == false;
+   assigns \nothing;
+   ensures \result == setpoint;
+
+ behavior enabled:
+   assumes self->enabled == true;
+   assigns self->last_time;
+   assigns self->last_error;
+   assigns self->last_setpoint;
+   assigns self->last_measured;
+   ensures \result <= self->output_limit;
+   ensures \old(self->last_time) < self->last_time; // this cannot work, frama-c does not see that micros() is monot. incr.
+ complete behaviors;
+ disjoint behaviors;
 */
 float pid_compute(pid_controller_t *self, float measured, float setpoint) {
     if (!self->enabled) {
         return setpoint;
     }
 
+#ifdef FRAMAC
+    uint64_t now = mock_micros();
+#else
     uint64_t now = micros();
+#endif
 
     /* If there is overflow, the elapsed time is still correct
      * The calculation overflows just like the timer

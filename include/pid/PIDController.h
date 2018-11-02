@@ -2,14 +2,9 @@
 #define PID_CONTROLLER_H
 
 #include <stdint.h>
-//#include <stdbool.h>
+#include <stdbool.h>
 
-#define FRAMAC
-#ifdef FRAMAC
-#include <ArduinoMock.h>
-#else
-#include "Arduino.h"
-#endif
+#include "../../include/ArduinoMock.h"
 
 #include "../util.h"
 
