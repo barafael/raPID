@@ -91,7 +91,7 @@ void pid_set_enabled(pid_controller_t *self, bool enable) {
    ensures \result == setpoint;
 
  behavior enabled:
-   assumes self->enabled == true;
+   assumes self->enabled;
    assigns self->last_time;
    assigns self->last_error;
    assigns self->last_setpoint;
@@ -113,8 +113,7 @@ float pid_compute(pid_controller_t *self, float measured, float setpoint) {
 #endif
 
     /* If there is overflow, the elapsed time is still correct
-     * The calculation overflows just like the timer
-     */
+     * The calculation overflows just like the timer */
     uint64_t elapsed_time = now - self->last_time;
 
     float error = measured - setpoint;
