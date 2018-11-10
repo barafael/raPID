@@ -33,13 +33,13 @@ void PWMReceiver_init(PWMReceiver_t *self, uint8_t throttle_pin, uint8_t roll_pi
         uint8_t aux1_pin, uint8_t aux2_pin,
         int16_t *offsets);
 
-const void update(PWMReceiver_t *self, int16_t *channels);
+const void receiver_update(PWMReceiver_t *self, int16_t *channels);
 
 void set_offsets(PWMReceiver_t *self, int16_t *offsets);
 void set_trims(PWMReceiver_t *self, int16_t *trims);
 void set_inversion(PWMReceiver_t *self, bool *inversion);
 
-bool has_signal(PWMReceiver_t *self);
+const bool has_signal(PWMReceiver_t *self);
 
 void update_throttle();
 void update_roll();

@@ -40,9 +40,11 @@
 
    See ../include/pins.h for pin definitions.  */
 
+int16_t channels[NUM_CHANNELS] = { 0 };
+int16_t offsets[NUM_CHANNELS] = { -1000, -1500, -1500, -1500, -1500, -1500 };
+
 /* Default start state */
-//state_t state = DISARMED;
-state_t state = ARMED;
+arming_state_t state = { INTERNAL_DISARMED, channels, 0 };
 
 const uint64_t SERIAL_WAIT_TIMEOUT = 3000ul;
 
@@ -62,9 +64,6 @@ float pid_output_pitch_rate = 0.0;
 
 float pid_output_yaw_rate = 0.0;
 
-PWMReceiver_t *receiver_instance = NULL;
-channels_t channels = { 0 };
-
 static void print_attitude() {
     for (size_t index = 0; index < 3; index++) {
         Serial.print(attitude[index]);
@@ -81,7 +80,7 @@ static void print_velocity(float *velocity) {
     Serial.println();
 }
 
-static void print_channels(channels_t channels) {
+static void print_channels(int16_t *channels) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         Serial.print(channels[index]);
         Serial.print(F("\t"));
@@ -102,17 +101,15 @@ extern "C" int main(void) {
     pinMode(LED_PIN, OUTPUT);
     pinMode(DEBUG_PIN, OUTPUT);
 
-    FastPWMOutput_t temporary = fast_out_init(5  , 1.0 , -1.0 , -1.0 , 1.0 , false);
+    init_arming_state(&state, channels);
 
     static bool blink_state = false;
 
-    channels_t offsets = { -1000, -1500, -1500, -1500, -1500, -1500 };
-
-    PWMReceiver_t receiver = PWMReceiver_init(THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
-                         PITCH_INPUT_PIN,    YAW_INPUT_PIN,
-                         AUX1_INPUT_PIN,     AUX2_INPUT_PIN,
+    PWMReceiver_t receiver;
+    PWMReceiver_init(&receiver, THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
+                         PITCH_INPUT_PIN, YAW_INPUT_PIN,
+                         AUX1_INPUT_PIN,  AUX2_INPUT_PIN,
                          offsets);
-    receiver_instance = &receiver;
 
     bool receiver_active = false;
     if (receiver_active) {
@@ -155,11 +152,9 @@ extern "C" int main(void) {
     watchdog_init();
 #endif
 
-    ArmingState arming_state(channels);
-
     /* Flight loop */
     while(true) {
-        //receiver.update(channels);
+        receiver_update(&receiver, channels);
         //print_channels(channels);
 
         sentral.update_attitude(attitude);
@@ -168,7 +163,9 @@ extern "C" int main(void) {
         sentral.update_angular_rates(angular_rates);
         //print_velocity(angular_rates);
 
-        switch (arming_state.get_state()) {
+        update_state();
+
+        switch (get_arming_state()) {
             case ARMED:
                 pid_output_roll_stbl = pid_compute(&roll_controller_stbl, attitude[ROLL_AXIS], channels[ROLL_CHANNEL]);
 
@@ -224,7 +221,7 @@ extern "C" int main(void) {
 
             default:
                 Serial.println(F("Unimplemented state! Will disarm."));
-                state = DISARMED;
+                state.internal_state = INTERNAL_DISARMED;
                 break;
         }
 

@@ -40,7 +40,7 @@ void PWMReceiver_init(PWMReceiver_t *self, uint8_t throttle_pin, uint8_t roll_pi
    ---------------------------------------------------------
 */
 
-const void update(PWMReceiver_t *self, int16_t *channels) {
+const void receiver_update(PWMReceiver_t *self, int16_t *channels) {
     noInterrupts();
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         channels[index] = self->channels_shared[index];
@@ -77,7 +77,7 @@ void set_inversion(PWMReceiver_t *self, int16_t *inversion) {
 
 // TODO copy has_signal logic from blinkenlights
 // Prove: interrupts always enabled after this function
-bool has_signal(PWMReceiver_t *self) {
+const bool has_signal(PWMReceiver_t *self) {
     noInterrupts();
     for (size_t index = 0; index < 4; index++) {
         if (self->channels_shared[index] == 0) {
