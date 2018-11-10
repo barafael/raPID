@@ -3,18 +3,16 @@
 #include "../../include/receiver/PWMReceiver.h"
 
 /* Access variable for ISRs */
-extern PWMReceiver_t *receiver_instance;
+static PWMReceiver_t *receiver_instance = NULL;
 
 /* Array of void functions without params, one for each input */
 static void (*interrupts[NUM_CHANNELS])() = {};
 
-PWMReceiver_t PWMReceiver_init(uint8_t throttle_pin, uint8_t roll_pin, uint8_t pitch_pin, uint8_t yaw_pin,
+void PWMReceiver_init(PWMReceiver_t *self, uint8_t throttle_pin, uint8_t roll_pin, uint8_t pitch_pin, uint8_t yaw_pin,
         uint8_t aux1_pin, uint8_t aux2_pin,
-        channels_t offsets) {
-    PWMReceiver_t self;
-
+        int16_t *offsets) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
-        self.offsets[index] = offsets[index];
+        self->offsets[index] = offsets[index];
     }
 
     interrupts[0] = update_throttle;
@@ -24,20 +22,17 @@ PWMReceiver_t PWMReceiver_init(uint8_t throttle_pin, uint8_t roll_pin, uint8_t p
     interrupts[4] = update_aux1;
     interrupts[5] = update_aux2;
 
-    self.pins[0] = throttle_pin;
-    self.pins[1] = roll_pin;
-    self.pins[2] = pitch_pin;
-    self.pins[3] = yaw_pin;
-    self.pins[4] = aux1_pin;
-    self.pins[5] = aux2_pin;
+    self->pins[0] = throttle_pin;
+    self->pins[1] = roll_pin;
+    self->pins[2] = pitch_pin;
+    self->pins[3] = yaw_pin;
+    self->pins[4] = aux1_pin;
+    self->pins[5] = aux2_pin;
 
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
-        attachInterrupt(self.pins[index], interrupts[index], CHANGE);
+        attachInterrupt(self->pins[index], interrupts[index], CHANGE);
     }
-
-    return self;
 }
-
 
 /*
    ---------------------------------------------------------
@@ -45,7 +40,7 @@ PWMReceiver_t PWMReceiver_init(uint8_t throttle_pin, uint8_t roll_pin, uint8_t p
    ---------------------------------------------------------
 */
 
-const void update(PWMReceiver_t *self, channels_t channels) {
+const void update(PWMReceiver_t *self, int16_t *channels) {
     noInterrupts();
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         channels[index] = self->channels_shared[index];
@@ -62,25 +57,27 @@ const void update(PWMReceiver_t *self, channels_t channels) {
     }
 }
 
-void set_offsets(PWMReceiver_t *self, channels_t offsets) {
+void set_offsets(PWMReceiver_t *self, int16_t *offsets) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         self->offsets[index] = offsets[index];
     }
 }
 
-void set_trims(PWMReceiver_t *self, channels_t trims) {
+void set_trims(PWMReceiver_t *self, int16_t *trims) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         self->trims[index] = trims[index];
     }
 }
 
-void set_inversion(PWMReceiver_t *self, inversion_t inversion) {
+void set_inversion(PWMReceiver_t *self, int16_t *inversion) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         self->inversion[index] = inversion[index];
     }
 }
 
-const bool has_signal(PWMReceiver_t *self) {
+// TODO copy has_signal logic from blinkenlights
+// Prove: interrupts always enabled after this function
+bool has_signal(PWMReceiver_t *self) {
     noInterrupts();
     for (size_t index = 0; index < 4; index++) {
         if (self->channels_shared[index] == 0) {
@@ -91,7 +88,6 @@ const bool has_signal(PWMReceiver_t *self) {
     interrupts();
     return true;
 }
-
 
 /*
    ----------------------------------------------------------------
