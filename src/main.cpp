@@ -61,6 +61,8 @@ float attitude[3] = { 0 };
 /* Angular Rate */
 //axis_t angular_rates = { 0, 0, 0 };
 float angular_rates[3] = { 0 };
+float acceleration[3]  = { 0 };
+float magnetization[3]  = { 0 };
 
 float pid_output_roll_stbl = 0.0;
 float pid_output_roll_rate = 0.0;
@@ -72,7 +74,7 @@ float pid_output_yaw_rate = 0.0;
 
 channels_t channels = { 0 };
 
-static void print_attitude(axis_t attitude) {
+static void print_attitude(float attitude[3]) {
     for (size_t index = 0; index < 3; index++) {
         Serial.print(attitude[index]);
         Serial.print(F("\t"));
@@ -80,7 +82,7 @@ static void print_attitude(axis_t attitude) {
     Serial.println();
 }
 
-static void print_velocity(float *velocity) {
+static void print_velocity(float velocity[3]) {
     for (size_t index = 0; index < 3; index++) {
         Serial.print(velocity[index]);
         Serial.print(F("\t"));
@@ -96,6 +98,26 @@ static void print_velocity_max(axis_t velocity) {
             Serial.println((long) max_velocity);
         }
     }
+}
+
+static void print_raw(float *acceleration, float *angular_rates, float *attitude, float *magnetization) {
+    for (size_t index = 0; index < 3; index++) {
+        Serial.print(acceleration[index]);
+        Serial.print(F("\t"));
+    }
+    for (size_t index = 0; index < 3; index++) {
+        Serial.print(angular_rates[index]);
+        Serial.print(F("\t"));
+    }
+    for (size_t index = 0; index < 3; index++) {
+        Serial.print(attitude[index]);
+        Serial.print(F("\t"));
+    }
+    for (size_t index = 0; index < 3; index++) {
+        Serial.print(magnetization[index]);
+        Serial.print(F("\t"));
+    }
+    Serial.println();
 }
 
 static void print_channels(channels_t channels) {
@@ -132,14 +154,14 @@ extern "C" int main(void) {
                          AUX1_INPUT_PIN,     AUX2_INPUT_PIN,
                          offsets);
   
-    //PPMReceiver receiver(23, offsets);
-
+//#define RECEIVER_ACTIVE
+#ifdef RECEIVER_ACTIVE
     while (!receiver.has_signal()) {
         delay(500);
         Serial.println(F("No receiver signal! Waiting."));
     }
-
     Serial.println(F("Receiver signal detected, continuing."));
+#endif
 
     PIDParams roll_param_stbl ( 2.0 , 0.0 , 0.0 , 12.0 , 400.0);
     PIDParams roll_param_rate ( 0.65 , 0.0 , 0.0 , 12.0 , 400.0);
@@ -183,14 +205,17 @@ extern "C" int main(void) {
 
     /* Flight loop */
     while(true) {
-        receiver.update(channels);
+        //receiver.update(channels);
         //print_channels(channels);
 
         sentral.update_attitude(attitude);
         //print_attitude(attitude);
 
         sentral.update_angular_rates(angular_rates);
-        //print_velocity(angular_rates);
+        sentral.update_acceleration(acceleration);
+        sentral.update_magnetometer(magnetization);
+        print_raw(acceleration, angular_rates, attitude, magnetization);
+        continue;
 
         switch (arming_state.get_state()) {
             case ARMED:

@@ -1389,6 +1389,7 @@ void update_sensors() {
         }
 
         // if no errors, see if new data is ready
+#define SENTRAL_COLLECT_ALL
 #ifdef SENTRAL_COLLECT_ALL
         if (eventStatus & 0x10) { // new acceleration data available
             readSENtralAccelData(accelCount);
@@ -1556,6 +1557,22 @@ void update_sensors() {
 
 /*
    ----------------------------------------------------------------
+   ---       FETCH ACCELEROMETER DATA FROM IMU                 ----
+   ----------------------------------------------------------------
+*/
+
+    /* max..min [32767, -32768] */
+void SENtralIMU::update_acceleration(float acceleration[3]) {
+    //digitalWrite(DEBUG_PIN, HIGH);
+    update_sensors();
+    acceleration[ROLL_AXIS]= ax;
+    acceleration[PITCH_AXIS] = ay;
+    acceleration[YAW_AXIS] = az;
+    //digitalWrite(DEBUG_PIN, LOW);
+}
+
+/*
+   ----------------------------------------------------------------
    ---       FETCH ANGULAR RATES FROM IMU                      ----
    ----------------------------------------------------------------
 */
@@ -1567,6 +1584,22 @@ void SENtralIMU::update_angular_rates(float angular_rates[3]) {
     angular_rates[ROLL_AXIS]= gx;
     angular_rates[PITCH_AXIS] = gy;
     angular_rates[YAW_AXIS] = gz;
+    //digitalWrite(DEBUG_PIN, LOW);
+}
+
+/*
+   ----------------------------------------------------------------
+   ---       FETCH MAGNETOMETER DATA FROM IMU                 ----
+   ----------------------------------------------------------------
+*/
+
+    /* max..min [32767, -32768] */
+void SENtralIMU::update_magnetometer(float magnetization[3]) {
+    //digitalWrite(DEBUG_PIN, HIGH);
+    update_sensors();
+    magnetization[ROLL_AXIS]= mx;
+    magnetization[PITCH_AXIS] = my;
+    magnetization[YAW_AXIS] = mz;
     //digitalWrite(DEBUG_PIN, LOW);
 }
 

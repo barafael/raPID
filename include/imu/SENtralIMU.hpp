@@ -15,8 +15,10 @@ class SENtralIMU/* : HardwareIMU */{
     private:
     public:
         SENtralIMU();
-        void update_angular_rates(float *angular_rates)/* override*/;
-        void update_attitude(float *attitude)/* override*/;
+        void update_angular_rates(float angular_rates[3])/* override*/;
+        void update_attitude(float attitude[3])/* override*/;
+        void update_acceleration(float acceleration[3]);
+        void update_magnetometer(float magnetization[3]);
 };
 
 #endif // SENTRAL_IMU_H
