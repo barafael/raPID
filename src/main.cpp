@@ -5,14 +5,14 @@
 //#define WATCHDOG
 
 #include "../include/output/FastPWMOutput.h"
-#include "../include/imu/axis.hpp"
+#include "../include/axis.hpp"
 #include "../include/pid/PIDParams.h"
 #include "../include/pid/PIDController.h"
 #include "../include/receiver/PWMReceiver.h"
-#include "../include/ArmingState.hpp"
+#include "../include/arming_state.h"
 #include "../include/error_blink.h"
 #include "../include/pins.h"
-#include "../include/imu/SENtralIMU.hpp"
+#include "../include/imu/sentral_imu.hpp"
 #include "../include/settings.h"
 
 #ifdef WATCHDOG
@@ -49,12 +49,11 @@ arming_state_t state = { INTERNAL_DISARMED, channels, 0 };
 const uint64_t SERIAL_WAIT_TIMEOUT = 3000ul;
 
 /* Scaled yaw_pitch_roll to [0, 1000] */
-//axis_t attitude = { 0, 0, 0 };
-float attitude[3] = { 0 };
+vec3_t attitude;
 
-/* Angular Rate */
-//axis_t angular_rates = { 0, 0, 0 };
-float angular_rates[3] = { 0 };
+vec3_t acceleration;
+vec3_t angular_velocity;
+vec3_t magnetization;
 
 float pid_output_roll_stbl = 0.0;
 float pid_output_roll_rate = 0.0;
@@ -65,22 +64,26 @@ float pid_output_pitch_rate = 0.0;
 float pid_output_yaw_rate = 0.0;
 
 static void print_attitude() {
-    for (size_t index = 0; index < 3; index++) {
-        Serial.print(attitude[index]);
-        Serial.print(F("\t"));
-    }
+    Serial.print(attitude.x);
+    Serial.print(F("\t"));
+    Serial.print(attitude.y);
+    Serial.print(F("\t"));
+    Serial.print(attitude.z);
+    Serial.print(F("\t"));
     Serial.println();
 }
 
-static void print_velocity(float *velocity) {
-    for (size_t index = 0; index < 3; index++) {
-        Serial.print(velocity[index]);
-        Serial.print(F("\t"));
-    }
+static void print_velocity() {
+    Serial.print(angular_velocity.x);
+    Serial.print(F("\t"));
+    Serial.print(angular_velocity.y);
+    Serial.print(F("\t"));
+    Serial.print(angular_velocity.z);
+    Serial.print(F("\t"));
     Serial.println();
 }
 
-static void print_channels(int16_t *channels) {
+static void print_channels(int16_t channels[NUM_CHANNELS]) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         Serial.print(channels[index]);
         Serial.print(F("\t"));
@@ -146,7 +149,7 @@ extern "C" int main(void) {
 
     pid_set_enabled(&yaw_controller_rate, true);
 
-    SENtralIMU sentral;
+    sentral_imu_t imu = init_sentral_imu();
 
 #ifdef WATCHDOG
     watchdog_init();
@@ -157,29 +160,31 @@ extern "C" int main(void) {
         receiver_update(&receiver, channels);
         //print_channels(channels);
 
-        sentral.update_attitude(attitude);
+        /* For outer control loop */
+        attitude = update_attitude(&imu);
         //print_attitude(attitude);
 
-        sentral.update_angular_rates(angular_rates);
+        /* For inner control loop */
+        angular_velocity = update_gyroscope(&imu);
         //print_velocity(angular_rates);
 
-        update_state();
+        update_arming_state();
 
-        switch (get_arming_state()) {
+        switch (get_arming_state(&state)) {
             case ARMED:
-                pid_output_roll_stbl = pid_compute(&roll_controller_stbl, attitude[ROLL_AXIS], channels[ROLL_CHANNEL]);
+                pid_output_roll_stbl = pid_compute(&roll_controller_stbl, attitude.x, channels[ROLL_CHANNEL]);
 
-                pid_output_roll_rate = pid_compute(&roll_controller_rate, angular_rates[ROLL_AXIS], -pid_output_roll_stbl);
+                pid_output_roll_rate = pid_compute(&roll_controller_rate, angular_velocity.x, -pid_output_roll_stbl);
 
                 //pitch_controller_stbl.set_p((channels[ROLL_CHANNEL] + 500) * (15.0 / 1000));
                 //pitch_controller_stbl.set_i((channels[YAW_CHANNEL]  + 500) * (5.0  / 1000));
 
-                pid_output_pitch_stbl = pid_compute(&pitch_controller_stbl, attitude[PITCH_AXIS], channels[PITCH_CHANNEL] / 10);
+                pid_output_pitch_stbl = pid_compute(&pitch_controller_stbl, attitude.y, channels[PITCH_CHANNEL] / 10);
 
-                pid_output_pitch_rate = pid_compute(&pitch_controller_rate, angular_rates[PITCH_AXIS], -pid_output_pitch_stbl);
+                pid_output_pitch_rate = pid_compute(&pitch_controller_rate, angular_velocity.y, -pid_output_pitch_stbl);
 
                 /* Yaw needs rate only - yaw stick controls rate of rotation, there is no fixed reference */
-                pid_output_yaw_rate = pid_compute(&yaw_controller_rate, angular_rates[YAW_AXIS], channels[YAW_CHANNEL]);
+                pid_output_yaw_rate = pid_compute(&yaw_controller_rate, angular_velocity.z, channels[YAW_CHANNEL]);
 
 
                 fast_out_apply(&back_left_out_mixer,   channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
@@ -187,36 +192,35 @@ extern "C" int main(void) {
                 fast_out_apply(&front_left_out_mixer,  channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
                 fast_out_apply(&front_right_out_mixer, channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
 
-                #define DEBUG_COL
+#define DEBUG_COL
 #ifdef DEBUG_COL
                 Serial.print(F("setp:"));
                 Serial.print(channels[ROLL_CHANNEL]);
                 Serial.print(F("\troll-angl:"));
-                Serial.print(attitude[ROLL_AXIS]);
+                Serial.print(attitude.x);
                 Serial.print(F("\tpid_output_roll_stbl:"));
                 Serial.print(pid_output_roll_stbl);
                 Serial.print(F("\tpid_output_roll_rate:"));
                 Serial.println(pid_output_roll_rate);
 #endif
-
                 break;
 
             case DISARMED:
-                #define DEBUG_COL
-#ifdef DEBUG_COL
-                Serial.print(F("setp:"));
-                Serial.print(channels[ROLL_CHANNEL]);
-                Serial.print(F("\troll-angl:"));
-                Serial.print(attitude[ROLL_AXIS]);
-                Serial.print(F("\tpid_output_roll_stbl:"));
-                Serial.print(pid_output_roll_stbl);
-                Serial.print(F("\tpid_output_roll_rate:"));
-                Serial.println(pid_output_roll_rate);
-#endif
                 fast_out_shutoff(&back_left_out_mixer);
                 fast_out_shutoff(&back_right_out_mixer);
                 fast_out_shutoff(&front_left_out_mixer);
                 fast_out_shutoff(&front_right_out_mixer);
+#define DEBUG_COL
+#ifdef DEBUG_COL
+                Serial.print(F("setp:"));
+                Serial.print(channels[ROLL_CHANNEL]);
+                Serial.print(F("\troll-angl:"));
+                Serial.print(attitude.x);
+                Serial.print(F("\tpid_output_roll_stbl:"));
+                Serial.print(pid_output_roll_stbl);
+                Serial.print(F("\tpid_output_roll_rate:"));
+                Serial.println(pid_output_roll_rate);
+#endif
                 break;
 
             default:

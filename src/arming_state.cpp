@@ -1,4 +1,4 @@
-#include "../include/ArmingState.hpp"
+#include "../include/arming_state.h"
 
 arming_state_t *arming_state_instance = NULL;
 
@@ -11,7 +11,7 @@ const bool state_transition_triggered(int16_t *input) {
     return true;
 }
 
-// #define ARMING_DEBUG
+//#define ARMING_DEBUG
 
 void enter_debug_mode() {
     arming_state_instance->internal_state = INTERNAL_DEBUG;
@@ -118,9 +118,9 @@ void init_arming_state(arming_state_t *state, int16_t *channels) {
 }
 
 /* Prove: Interrupts always enabled after this function exits */
-const state_t get_arming_state(arming_state_t *state) {
+const state_t get_arming_state(arming_state_t *self) {
     noInterrupts();
-    switch (state->internal_state) {
+    switch (self->internal_state) {
         case INTERNAL_DEBUG:
         case INTERNAL_ARMED:
         case DISARMING:

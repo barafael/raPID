@@ -30,8 +30,9 @@ const uint16_t ARM_TIMEOUT_MS = 1000;
 /* find appropriate polling interval */
 const uint32_t INTERVAL_US = 500000;
 
-void update_state();
+void update_arming_state();
+void enter_debug_mode();
 
-const state_t get_arming_state();
+const state_t get_arming_state(arming_state_t *self);
 
 #endif // ARMING_STATE_H

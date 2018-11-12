@@ -1,4 +1,4 @@
-#include "../../include/imu/SENtralIMU.hpp"
+#include "../../include/imu/sentral_imu.hpp"
 #include "SENtralRegisters.hpp"
 
 void     sentral_data_ready();
@@ -17,11 +17,9 @@ void     getMres();
 void     I2Cscan();
 void     initAK8963(float *destination);
 void     initMPU9250();
-void     M24512DFMreadBytes(uint8_t device_address, uint8_t data_address1, uint8_t data_address2, uint8_t count,
-                            uint8_t *dest);
+void     M24512DFMreadBytes(uint8_t device_address, uint8_t data_address1, uint8_t data_address2, uint8_t count, uint8_t *dest);
 uint8_t  M24512DFMreadByte(uint8_t device_address, uint8_t data_address1, uint8_t data_address2);
-void     M24512DFMwriteBytes(uint8_t device_address, uint8_t data_address1, uint8_t data_address2, uint8_t count,
-                             uint8_t *dest);
+void     M24512DFMwriteBytes(uint8_t device_address, uint8_t data_address1, uint8_t data_address2, uint8_t count, uint8_t *dest);
 void     M24512DFMwriteByte(uint8_t device_address, uint8_t data_address1, uint8_t data_address2, uint8_t data);
 void     magcalMPU9250(float *dest1, float *dest2);
 void     readAccelData(int16_t *destination);
@@ -160,15 +158,9 @@ float GyroMeasDrift = PI * (0.0f / 180.0f);
      * converges, usually at the expense of accuracy.  In any case, this is the
      * free parameter in the Madgwick filtering and fusion scheme.
      */
-float beta = sqrt(3.0f / 4.0f) * GyroMeasError;
+//float beta = sqrt(3.0f / 4.0f) * GyroMeasError;
 // compute zeta, the other free parameter in the Madgwick scheme usually set to a small or zero value
-float zeta = sqrt(3.0f / 4.0f) * GyroMeasDrift;
-
-// Free parameters for Mahony filter: Kp for proportional feedback, Ki for integral
-#define Kp 2.0f * 5.0f
-#define Ki 0.0f
-
-float eInt[3] = { 0.0f, 0.0f, 0.0f }; // vector to hold integral error for Mahony method
+//float zeta = sqrt(3.0f / 4.0f) * GyroMeasDrift;
 
 uint32_t delt_t = 0, count = 0, sumCount = 0;
 uint32_t Now        = 0;
@@ -1040,7 +1032,7 @@ void sentral_data_ready() {
    ---------------------------------------------------
 */
 
-SENtralIMU::SENtralIMU() {
+sentral_imu_t init_sentral_imu() {
     pinMode(SENTRAL_POWER, OUTPUT);
     pinMode(SENTRAL_GND, OUTPUT);
 
@@ -1132,8 +1124,9 @@ SENtralIMU::SENtralIMU() {
             Serial.println("EM7180 in initialized state!");
         if (readByte(EM7180_ADDRESS, EM7180_SentralStatus) & 0x10)
             Serial.println("No EEPROM detected!");
-        if (count > 10)
+        if (count > 10) {
             break;
+        }
     }
 
     if (!(readByte(EM7180_ADDRESS, EM7180_SentralStatus) & 0x04))
@@ -1337,9 +1330,11 @@ SENtralIMU::SENtralIMU() {
     //  Serial.print("Actual TempRate = "); Serial.print(readByte(EM7180_ADDRESS, EM7180_ActualTempRate)); Serial.println(" Hz");
 
     delay(10); // give some time to read the screen
+    sentral_imu_t self = { };
+    return self;
 }
 
-static void Quat2EulerAngle(const float Quat[4], float &roll, float &pitch, float &yaw) {
+/*static void Quat2EulerAngle(const float Quat[4], float &roll, float &pitch, float &yaw) {
     // roll (x-axis rotation)
     float sinr = +2.0 * (Quat[3] * Quat[0] + Quat[1] * Quat[2]);
     float cosr = +1.0 - 2.0 * (Quat[0] * Quat[0] + Quat[1] * Quat[1]);
@@ -1357,6 +1352,7 @@ static void Quat2EulerAngle(const float Quat[4], float &roll, float &pitch, floa
     float cosy = +1.0 - 2.0 * (Quat[1] * Quat[1] + Quat[2] * Quat[2]);
     yaw        = atan2(siny, cosy);
 }
+*/
 
 void update_sensors() {
     if (mpu_interrupt) {
@@ -1560,31 +1556,67 @@ void update_sensors() {
 
 /*
    ----------------------------------------------------------------
+   ---       FETCH ACCELERATION FROM IMU                       ----
+   ----------------------------------------------------------------
+*/
+vec3_t update_accelerometer(sentral_imu_t *self) {
+    //digitalWrite(DEBUG_PIN, HIGH);
+    update_sensors();
+    vec3_t acceleration;
+    acceleration.x = ax;
+    acceleration.y = ay;
+    acceleration.z = az;
+    //digitalWrite(DEBUG_PIN, LOW);
+    return acceleration;
+}
+
+/*
+   ----------------------------------------------------------------
    ---       FETCH ANGULAR RATES FROM IMU                      ----
    ----------------------------------------------------------------
 */
-
 /* max..min [32767, -32768] */
-void SENtralIMU::update_angular_rates(float angular_rates[3]) {
+vec3_t update_gyroscope(sentral_imu_t *self) {
     //digitalWrite(DEBUG_PIN, HIGH);
     update_sensors();
-    angular_rates[ROLL_AXIS]  = gx;
-    angular_rates[PITCH_AXIS] = gy;
-    angular_rates[YAW_AXIS]   = gz;
+    vec3_t angular_rates;
+    angular_rates.x = gx;
+    angular_rates.y = gy;
+    angular_rates.z = gz;
     //digitalWrite(DEBUG_PIN, LOW);
+    return angular_rates;
+}
+
+/*
+   ----------------------------------------------------------------
+   ---       FETCH MAGNETOMETER DATA FROM IMU                  ----
+   ----------------------------------------------------------------
+*/
+vec3_t update_magnetometer(sentral_imu_t *self) {
+    //digitalWrite(DEBUG_PIN, HIGH);
+    update_sensors();
+    vec3_t magnetization;
+    magnetization.x = mx;
+    magnetization.y = my;
+    magnetization.z = mz;
+    //digitalWrite(DEBUG_PIN, LOW);
+    return magnetization;
 }
 
 /*
    -------------------------------------------------------------
-   ---             FETCH ABS ANGLES FROM IMU                 ---
+   ---             FETCH FUSED ANGLES FROM IMU               ---
    -------------------------------------------------------------
 */
 
-void SENtralIMU::update_attitude(float attitude[3]) {
+vec3_t update_attitude(sentral_imu_t *self) {
     //digitalWrite(DEBUG_PIN, HIGH);
     update_sensors();
-    attitude[ROLL_AXIS]  = Roll;
-    attitude[PITCH_AXIS] = Pitch;
-    attitude[YAW_AXIS]   = Yaw;
+    vec3_t attitude;
+    attitude.x = Roll;
+    attitude.y = Pitch;
+    attitude.z = Yaw;
     //digitalWrite(DEBUG_PIN, LOW);
+    return attitude;
 }
+
