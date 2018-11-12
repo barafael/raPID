@@ -1,6 +1,6 @@
-#include "../include/Watchdog.h"
+#include "../include/watchdog.h"
 
-void watchdog_init() {
+void init_watchdog() {
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
     delayMicroseconds(1);
@@ -20,7 +20,7 @@ void watchdog_init() {
     WDOG_PRESC = 4;
 }
 
-void set_watchdog_prescale(int prescale) {
+void watchdog_set_prescale(int prescale) {
     WDOG_PRESC = prescale;
 }
 

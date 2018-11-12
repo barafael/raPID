@@ -3,8 +3,8 @@
 
 #include "Arduino.h"
 
-void watchdog_init();
-void set_watchdog_prescale(int prescale);
+void init_watchdog();
 void watchdog_feed();
+void watchdog_set_prescale(int prescale);
 
 #endif // WATCHDOG_H

@@ -16,7 +16,7 @@
 #include "../include/settings.h"
 
 #ifdef WATCHDOG
-#include "../include/Watchdog.h"
+#include "../include/watchdog.h"
 #endif
 
 #define TIMING_ANALYSIS
@@ -152,7 +152,7 @@ extern "C" int main(void) {
     sentral_imu_t imu = init_sentral_imu();
 
 #ifdef WATCHDOG
-    watchdog_init();
+    init_watchdog();
 #endif
 
     /* Flight loop */
