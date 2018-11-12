@@ -1,8 +1,8 @@
-#include "../include/Watchdog.hpp"
+#include "../include/watchdog.h"
 
 #ifdef WATCHDOG
 
-Watchdog::Watchdog(int prescale) {
+watchdog_t init_watchdog() {
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
     delayMicroseconds(1);
@@ -19,14 +19,18 @@ Watchdog::Watchdog(int prescale) {
     /* This sets prescale clock so that the watchdog timer ticks at 100Hz.
      * Formula: 1kHZ/4 = 200 HZ
      */
-    WDOG_PRESC = prescale;
+    WDOG_PRESC = 4;
 }
 
-void Watchdog::feed() {
+void watchdog_feed() {
     noInterrupts();
     WDOG_REFRESH = 0xA602;
     WDOG_REFRESH = 0xB480;
     interrupts();
+}
+
+void watchdog_set_prescale(watchdog_t *self, int prescaler) {
+    WDOG_PRESC = prescale;
 }
 
 #endif // WATCHDOG
