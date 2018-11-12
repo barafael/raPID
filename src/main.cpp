@@ -10,7 +10,7 @@
 #include "../include/imu/sentral_imu.hpp"
 #include "../include/output/FastPWMOutput.h"
 #include "../include/pid/PIDController.h"
-#include "../include/pid/PIDParams.h"
+#include "../include/pid/pid_param.h"
 #include "../include/pins.h"
 #include "../include/receiver/PWMReceiver.h"
 #include "../include/settings.h"

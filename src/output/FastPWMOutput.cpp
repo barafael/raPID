@@ -19,8 +19,8 @@ FastPWMOutput_t fast_out_init(const uint8_t pin, float throttle_volume,
 
     uint16_t range = upper_limit - lower_limit;
 
-    analogWriteResolution(resolution_bits);
     pinMode(pin, OUTPUT);
+    analogWriteResolution(resolution_bits);
     analogWriteFrequency(pin, frequency_hz);
 
     mixer_t mixer = mixer_init(throttle_volume, roll_volume, pitch_volume, yaw_volume);
