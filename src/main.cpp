@@ -9,7 +9,7 @@
 #include "../include/error_blink.h"
 #include "../include/imu/sentral_imu.hpp"
 #include "../include/output/FastPWMOutput.h"
-#include "../include/pid/PIDController.h"
+#include "../include/pid/pid_controller.h"
 #include "../include/pid/pid_param.h"
 #include "../include/pins.h"
 #include "../include/receiver/PWMReceiver.h"

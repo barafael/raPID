@@ -1,4 +1,4 @@
-#include "../../include/pid/PIDController.h"
+#include "../../include/pid/pid_controller.h"
 
 pid_controller_t pid_controller_init(float p_gain, float i_gain, float d_gain,
         float integral_limit, float output_limit) {

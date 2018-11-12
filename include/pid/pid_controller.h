@@ -76,5 +76,4 @@ void pid_set_output_limit(pid_controller_t *self, float limit);
 void pid_set_filter(pid_controller_t *self, filter_func filter);
 void pid_set_enable_derivative_filter(pid_controller_t *self, bool enable);
 
-
 #endif // PID_CONTROLLER_H
