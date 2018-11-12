@@ -3,10 +3,10 @@
 
 #include <math.h>
 
-#include"../axis.hpp"
-#include"quaternion.h"
+#include "../axis.hpp"
+#include "quaternion.h"
 
-#include<stdbool.h>
+#include <stdbool.h>
 
 typedef struct {
     //float beta = sqrt(3.0f / 4.0f) * GyroMeasError;

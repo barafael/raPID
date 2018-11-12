@@ -9,7 +9,7 @@ pid_controller_t pid_controller_init(float p_gain, float i_gain, float d_gain,
         .i_gain = i_gain,
         .d_gain = d_gain,
 
-        .integral = 0.0f,
+        .integral       = 0.0f,
         .integral_limit = integral_limit,
 
         .derivative = 0.0f,
@@ -31,7 +31,7 @@ pid_controller_t pid_controller_init(float p_gain, float i_gain, float d_gain,
 
         .derivative_filter_type = NONE,
 
-        .deriv_filter = nullptr,
+        .deriv_filter         = nullptr,
         .deriv_filter_enabled = false,
     };
     return controller;
@@ -85,7 +85,7 @@ float pid_compute(pid_controller_t *self, float measured, float setpoint) {
         d_term = (self->deriv_filter)(d_term);
     }
 
-    self->last_time     = now;
+    self->last_time = now;
 
     self->last_error    = error;
     self->last_setpoint = setpoint;
@@ -119,7 +119,7 @@ void pid_set_params(pid_controller_t *self,
     self->d_gain = d_gain;
 
     self->integral_limit = integral_limit;
-    self->output_limit = output_limit;
+    self->output_limit   = output_limit;
 }
 
 float pid_get_p(pid_controller_t *self) {

@@ -1,7 +1,7 @@
 #ifndef PWMRECEIVER_H
 #define PWMRECEIVER_H
 
-#include<stdbool.h>
+#include <stdbool.h>
 
 #include "../settings.h"
 #include "../util.h"

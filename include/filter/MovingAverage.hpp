@@ -10,13 +10,13 @@
 
 class MovingAverage : public Filter {
     private:
-        std::vector<float> values;
-        size_t marker = 0;
-        size_t n = 0;
+    std::vector<float> values;
+    size_t             marker = 0;
+    size_t             n      = 0;
 
     public:
-        explicit MovingAverage(size_t n);
-        float next(float value) override;
+    explicit MovingAverage(size_t n);
+    float next(float value) override;
 };
 
 #endif // MOVING_AVERAGE_H

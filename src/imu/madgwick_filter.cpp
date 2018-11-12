@@ -10,12 +10,12 @@ void set_deltat(madgwick_filter_t *self, float deltat) {
 
 madgwick_filter_t init_madgwick_filter(float deltat) {
     madgwick_filter_t self;
-    self.beta = 8.384266471f;
-    self.deltat = deltat;
+    self.beta            = 8.384266471f;
+    self.deltat          = deltat;
     self.gyro_meas_error = 6.981317008f;
     self.gyro_meas_drift = 0.0f;
-    quaternion_t quat = { 1.0, 0.0, 0.0, 0.0 };
-    self.quat = quat;
+    quaternion_t quat    = { 1.0, 0.0, 0.0, 0.0 };
+    self.quat            = quat;
     return self;
 }
 

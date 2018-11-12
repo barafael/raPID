@@ -1,8 +1,8 @@
 #ifndef QUATERNION_H
 #define QUATERNION_H
 
-#include<math.h>
-#include"../axis.hpp"
+#include "../axis.hpp"
+#include <math.h>
 
 typedef struct {
     float a;

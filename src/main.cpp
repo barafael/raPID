@@ -4,15 +4,15 @@
 
 //#define WATCHDOG
 
-#include "../include/output/FastPWMOutput.h"
-#include "../include/axis.hpp"
-#include "../include/pid/PIDParams.h"
-#include "../include/pid/PIDController.h"
-#include "../include/receiver/PWMReceiver.h"
 #include "../include/arming_state.h"
+#include "../include/axis.hpp"
 #include "../include/error_blink.h"
-#include "../include/pins.h"
 #include "../include/imu/sentral_imu.hpp"
+#include "../include/output/FastPWMOutput.h"
+#include "../include/pid/PIDController.h"
+#include "../include/pid/PIDParams.h"
+#include "../include/pins.h"
+#include "../include/receiver/PWMReceiver.h"
 #include "../include/settings.h"
 
 #ifdef WATCHDOG
@@ -41,7 +41,7 @@
    See ../include/pins.h for pin definitions.  */
 
 int16_t channels[NUM_CHANNELS] = { 0 };
-int16_t offsets[NUM_CHANNELS] = { -1000, -1500, -1500, -1500, -1500, -1500 };
+int16_t offsets[NUM_CHANNELS]  = { -1000, -1500, -1500, -1500, -1500, -1500 };
 
 /* Default start state */
 arming_state_t state = { INTERNAL_DISARMED, channels, 0 };
@@ -95,7 +95,7 @@ extern "C" int main(void) {
     Serial.begin(9600);
 
     uint64_t serial_wait_start_time = millis();
-    while(!Serial) {
+    while (!Serial) {
         if (millis() - serial_wait_start_time > SERIAL_WAIT_TIMEOUT) {
             break;
         }
@@ -123,18 +123,18 @@ extern "C" int main(void) {
         Serial.println(F("Receiver signal detected, continuing."));
     }
 
-    pid_controller_t roll_controller_stbl = pid_controller_init( 2.0 , 0.0 , 0.0 , 12.0 , 400.0);
-    pid_controller_t roll_controller_rate = pid_controller_init( 0.65 , 0.0 , 0.0 , 12.0 , 400.0);
+    pid_controller_t roll_controller_stbl = pid_controller_init(2.0, 0.0, 0.0, 12.0, 400.0);
+    pid_controller_t roll_controller_rate = pid_controller_init(0.65, 0.0, 0.0, 12.0, 400.0);
 
-    pid_controller_t pitch_controller_stbl = pid_controller_init( 2.0 , 0.0 , 0.0 , 12.0 , 400.0);
-    pid_controller_t pitch_controller_rate = pid_controller_init( 0.65 , 0.0 , 0.0 , 12.0 , 400.0);
+    pid_controller_t pitch_controller_stbl = pid_controller_init(2.0, 0.0, 0.0, 12.0, 400.0);
+    pid_controller_t pitch_controller_rate = pid_controller_init(0.65, 0.0, 0.0, 12.0, 400.0);
 
-    pid_controller_t yaw_controller_rate =   pid_controller_init( 1.5 , 0.0 , 0.0 , 12.0 , 400.0);
+    pid_controller_t yaw_controller_rate = pid_controller_init(1.5, 0.0, 0.0, 12.0, 400.0);
 
-    FastPWMOutput_t back_left_out_mixer   = fast_out_init(LEFT_SERVO_PIN  , 1.0 , -1.0 , -1.0 , 1.0 , true);
-    FastPWMOutput_t back_right_out_mixer  = fast_out_init(RIGHT_SERVO_PIN , 1.0 , 1.0  , -1.0 , -1.0, true);
-    FastPWMOutput_t front_left_out_mixer  = fast_out_init(FRONT_SERVO_PIN , 1.0 , -1.0 , 1.0  , -1.0, true);
-    FastPWMOutput_t front_right_out_mixer = fast_out_init(BACK_SERVO_PIN  , 1.0 , 1.0  , 1.0  , 1.0 , true);
+    FastPWMOutput_t back_left_out_mixer   = fast_out_init(LEFT_SERVO_PIN, 1.0, -1.0, -1.0, 1.0, true);
+    FastPWMOutput_t back_right_out_mixer  = fast_out_init(RIGHT_SERVO_PIN, 1.0, 1.0, -1.0, -1.0, true);
+    FastPWMOutput_t front_left_out_mixer  = fast_out_init(FRONT_SERVO_PIN, 1.0, -1.0, 1.0, -1.0, true);
+    FastPWMOutput_t front_right_out_mixer = fast_out_init(BACK_SERVO_PIN, 1.0, 1.0, 1.0, 1.0, true);
 
     fast_out_shutoff(&back_left_out_mixer);
     fast_out_shutoff(&back_right_out_mixer);
@@ -156,7 +156,7 @@ extern "C" int main(void) {
 #endif
 
     /* Flight loop */
-    while(true) {
+    while (true) {
         receiver_update(&receiver, channels);
         //print_channels(channels);
 

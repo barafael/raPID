@@ -1,14 +1,14 @@
 #ifndef PPMRECEIVER_H
 #define PPMRECEIVER_H
 
-#include<stdbool.h>
+#include <stdbool.h>
 
-#include "PulsePosition.h"
 #include "../settings.h"
 #include "../util.h"
+#include "PulsePosition.h"
 
 typedef struct {
-    uint8_t input_pin;
+    uint8_t            input_pin;
     PulsePositionInput ppm_rx;
 
     int16_t ppm_translate[NUM_CHANNELS] = { 2, 0, 1, 3, 4, 5 };

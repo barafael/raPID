@@ -1330,7 +1330,7 @@ sentral_imu_t init_sentral_imu() {
     //  Serial.print("Actual TempRate = "); Serial.print(readByte(EM7180_ADDRESS, EM7180_ActualTempRate)); Serial.println(" Hz");
 
     delay(10); // give some time to read the screen
-    sentral_imu_t self = { };
+    sentral_imu_t self = {};
     return self;
 }
 
@@ -1619,4 +1619,3 @@ vec3_t update_attitude(sentral_imu_t *self) {
     //digitalWrite(DEBUG_PIN, LOW);
     return attitude;
 }
-

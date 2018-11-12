@@ -2,18 +2,17 @@
 
 #include "../../include/output/FastPWMOutput.h"
 
-FastPWMOutput_t fast_out_init(const uint8_t pin,
-        float throttle_volume, float roll_volume, float pitch_volume, float yaw_volume,
-        bool is_throttle) {
+FastPWMOutput_t fast_out_init(const uint8_t pin, float throttle_volume,
+        float roll_volume, float pitch_volume, float yaw_volume, bool is_throttle) {
     uint8_t resolution_bits = 16;
-    float frequency_hz = 400.0f;
-    float wavelength_sec = 1.0f/frequency_hz;
+    float   frequency_hz    = 400.0f;
+    float   wavelength_sec  = 1.0f / frequency_hz;
 
     float min_pulse_width_sec = 0.001f;
     float max_pulse_width_sec = 0.002f;
 
-    uint8_t min_dutycycle_percent = (min_pulse_width_sec/wavelength_sec) * 100.0f;
-    uint8_t max_dutycycle_percent = (max_pulse_width_sec/wavelength_sec) * 100.0f;
+    uint8_t min_dutycycle_percent = (min_pulse_width_sec / wavelength_sec) * 100.0f;
+    uint8_t max_dutycycle_percent = (max_pulse_width_sec / wavelength_sec) * 100.0f;
 
     uint16_t lower_limit = (1u << resolution_bits) * (min_dutycycle_percent / 100.0f);
     uint16_t upper_limit = (1u << resolution_bits) * (max_dutycycle_percent / 100.0f);
@@ -27,14 +26,14 @@ FastPWMOutput_t fast_out_init(const uint8_t pin,
     mixer_t mixer = mixer_init(throttle_volume, roll_volume, pitch_volume, yaw_volume);
 
     FastPWMOutput_t result = {
-        .pin = pin,
-        .mixer = mixer,
-        .milli_throttle = 0,
-        .lower_limit = lower_limit,
-        .upper_limit = upper_limit,
-        .range = range,
+        .pin                         = pin,
+        .mixer                       = mixer,
+        .milli_throttle              = 0,
+        .lower_limit                 = lower_limit,
+        .upper_limit                 = upper_limit,
+        .range                       = range,
         .low_throttle_cutoff_enabled = is_throttle,
-        .throttle_low_cutoff = 25
+        .throttle_low_cutoff         = 25
     };
     return result;
 }
@@ -71,7 +70,7 @@ void fast_out_shutoff(FastPWMOutput_t *self) {
     fast_out_write(self, 0);
 }
 
-void fast_out_set_limits(FastPWMOutput_t* self, uint16_t lower, uint16_t upper) {
+void fast_out_set_limits(FastPWMOutput_t *self, uint16_t lower, uint16_t upper) {
     if (upper < lower) {
         //Serial.print(F("Dubious limits given to output on pin "));
         //Serial.println(self->pin);

@@ -2,19 +2,18 @@
 
 #include "../../include/output/SimplePWMOutput.h"
 
-SimplePWMOutput_t simple_out_init(const uint8_t pin,
-        float throttle_volume, float roll_volume, float pitch_volume, float yaw_volume,
-        bool is_throttle) {
+SimplePWMOutput_t simple_out_init(const uint8_t pin, float throttle_volume, float roll_volume, float pitch_volume,
+                                  float yaw_volume, bool is_throttle) {
     pinMode(pin, OUTPUT);
 
     mixer_t mixer = mixer_init(throttle_volume, roll_volume, pitch_volume, yaw_volume);
 
     SimplePWMOutput_t result;
-    result.pin = pin;
-    result.mixer = mixer;
-    result.milli_throttle = 0;
+    result.pin                         = pin;
+    result.mixer                       = mixer;
+    result.milli_throttle              = 0;
     result.low_throttle_cutoff_enabled = is_throttle;
-    result.throttle_low_cutoff = 25;
+    result.throttle_low_cutoff         = 25;
     return result;
 }
 

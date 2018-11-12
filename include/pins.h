@@ -7,7 +7,7 @@ static const uint8_t DEBUG_PIN = 15;
 
 static const uint8_t LED_PIN = 2;
 
-static const uint8_t SENTRAL_GND = 13;
+static const uint8_t SENTRAL_GND   = 13;
 static const uint8_t SENTRAL_POWER = 14;
 
 static const uint8_t SENTRAL_INTERRUPT_PIN = 18;

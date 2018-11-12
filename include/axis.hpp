@@ -1,8 +1,8 @@
 #ifndef AXIS_H
 #define AXIS_H
 
-#include<math.h>
-#include<stdbool.h>
+#include <math.h>
+#include <stdbool.h>
 
 typedef struct {
     float x;

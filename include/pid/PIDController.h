@@ -1,8 +1,8 @@
 #ifndef PID_CONTROLLER_H
 #define PID_CONTROLLER_H
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "Arduino.h"
 
@@ -14,36 +14,36 @@ typedef enum { NONE, MOVING_AVERAGE, LOWPASS } filter_type;
 typedef float (*filter_func)(float param);
 
 typedef struct {
-        bool enabled;
+    bool enabled;
 
-        float p_gain;
-        float i_gain;
-        float d_gain;
+    float p_gain;
+    float i_gain;
+    float d_gain;
 
-        float integral;
-        float integral_limit;
+    float integral;
+    float integral_limit;
 
-        float derivative;
+    float derivative;
 
-        derivative_type d_type;
+    derivative_type d_type;
 
-        /* For derivative-on-error */
-        float last_error;
+    /* For derivative-on-error */
+    float last_error;
 
-        /* For derivative-on-setpoint */
-        float last_setpoint;
+    /* For derivative-on-setpoint */
+    float last_setpoint;
 
-        /* For derivative-on-measured */
-        float last_measured;
+    /* For derivative-on-measured */
+    float last_measured;
 
-        float output_limit;
+    float output_limit;
 
-        uint64_t last_time;
+    uint64_t last_time;
 
-        filter_type derivative_filter_type;
+    filter_type derivative_filter_type;
 
-        filter_func deriv_filter;
-        bool deriv_filter_enabled;
+    filter_func deriv_filter;
+    bool        deriv_filter_enabled;
 } pid_controller_t;
 
 pid_controller_t pid_controller_init(float p_gain, float i_gain, float d_gain,

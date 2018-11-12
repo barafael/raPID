@@ -1,5 +1,5 @@
-#include"../include/axis.hpp"
- 
+#include "../include/axis.hpp"
+
 bool normalize_vec3(vec3_t *vector) {
     float norm = sqrtf(vector->x * vector->x + vector->y * vector->y + vector->z * vector->z);
     if (norm == 0.0f) {

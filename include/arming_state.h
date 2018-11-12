@@ -4,7 +4,7 @@
 #include "Arduino.h"
 //#include "IntervalTimer.h"
 
-#include<stdbool.h>
+#include <stdbool.h>
 
 #include "settings.h"
 
@@ -14,7 +14,15 @@ const bool state_transition_triggered(int16_t *input);
 
 // TRANSITION PASS_THROUGH FAILSAFE, CONFIG
 typedef enum { DISARMED, ARMED, DEBUG } state_t;
-typedef enum { INTERNAL_DISARMED, ARMING, ARMING_STANDBY, INTERNAL_ARMED, DISARMING, DISARMING_STANDBY, INTERNAL_DEBUG } internal_state_t;
+typedef enum {
+    INTERNAL_DISARMED,
+    ARMING,
+    ARMING_STANDBY,
+    INTERNAL_ARMED,
+    DISARMING,
+    DISARMING_STANDBY,
+    INTERNAL_DEBUG
+} internal_state_t;
 
 typedef struct {
     internal_state_t internal_state;
@@ -26,7 +34,7 @@ typedef struct {
 void init_arming_state(arming_state_t *state, int16_t *channels);
 
 const uint16_t DISARM_TIMEOUT_MS = 2500;
-const uint16_t ARM_TIMEOUT_MS = 1000;
+const uint16_t ARM_TIMEOUT_MS    = 1000;
 /* find appropriate polling interval */
 const uint32_t INTERVAL_US = 500000;
 

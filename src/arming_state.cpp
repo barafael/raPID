@@ -108,7 +108,7 @@ void update_arming_state() {
 
 void init_arming_state(arming_state_t *state, int16_t *channels) {
     arming_state_instance = state;
-    state->channels = channels;
+    state->channels       = channels;
     // TODO re-enable timer; until then, use main loop
     /*
     if (!state->state_change_timer.begin(update_arming_state, INTERVAL_US)) {

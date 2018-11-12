@@ -18,4 +18,3 @@ vec3_t update_magnetometer(sentral_imu_t *self);
 vec3_t update_attitude(sentral_imu_t *self);
 
 #endif // SENTRAL_IMU_H
-

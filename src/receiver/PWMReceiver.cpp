@@ -8,9 +8,9 @@ static PWMReceiver_t *receiver_instance = NULL;
 /* Array of void functions without params, one for each input */
 static void (*interrupts[NUM_CHANNELS])() = {};
 
-void PWMReceiver_init(PWMReceiver_t *self, uint8_t throttle_pin, uint8_t roll_pin, uint8_t pitch_pin, uint8_t yaw_pin,
-        uint8_t aux1_pin, uint8_t aux2_pin,
-        int16_t *offsets) {
+void PWMReceiver_init(PWMReceiver_t *self, uint8_t throttle_pin,
+        uint8_t roll_pin, uint8_t pitch_pin, uint8_t yaw_pin,
+        uint8_t aux1_pin, uint8_t aux2_pin, int16_t *offsets) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         self->offsets[index] = offsets[index];
     }

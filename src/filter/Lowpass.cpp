@@ -20,4 +20,3 @@ void Lowpass::set_beta(float beta) {
     this->beta = beta;
     this->ateb = 1.0 - beta;
 }
-
