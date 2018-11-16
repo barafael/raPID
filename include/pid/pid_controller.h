@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "Arduino.h"
+#include "../../include/ArduinoMock.h"
 
 #include "../util.h"
 

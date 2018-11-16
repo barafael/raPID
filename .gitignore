@@ -33,3 +33,4 @@
 *.hex
 .pioenvs
 .piolibdeps
+tags
