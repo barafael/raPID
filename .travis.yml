@@ -6,7 +6,6 @@ install:
 - pip install -U platformio
 script:
 - platformio run
-- sonar-scanner
 deploy:
   skip_cleanup: true
   provider: releases
