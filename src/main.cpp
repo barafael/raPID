@@ -1,4 +1,4 @@
-#include <Arduino.h>
+#define FRAMAC
 
 #include <stdint.h>
 
@@ -64,6 +64,7 @@ float pid_output_pitch_rate = 0.0;
 float pid_output_yaw_rate = 0.0;
 
 static void print_attitude() {
+#ifdef USE_SERIAL
     Serial.print(attitude.x);
     Serial.print(F("\t"));
     Serial.print(attitude.y);
@@ -71,9 +72,11 @@ static void print_attitude() {
     Serial.print(attitude.z);
     Serial.print(F("\t"));
     Serial.println();
+#endif
 }
 
 static void print_velocity() {
+#ifdef USE_SERIAL
     Serial.print(angular_velocity.x);
     Serial.print(F("\t"));
     Serial.print(angular_velocity.y);
@@ -81,25 +84,34 @@ static void print_velocity() {
     Serial.print(angular_velocity.z);
     Serial.print(F("\t"));
     Serial.println();
+#endif
 }
 
 static void print_channels(int16_t channels[NUM_CHANNELS]) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
+#ifdef USE_SERIAL
         Serial.print(channels[index]);
         Serial.print(F("\t"));
+#endif
     }
+#ifdef USE_SERIAL
     Serial.println();
+#endif
 }
 
 extern "C" int main(void) {
+#ifdef USE_SERIAL
     Serial.begin(9600);
+#endif
 
     uint64_t serial_wait_start_time = millis();
+#ifdef USE_SERIAL
     while (!Serial) {
         if (millis() - serial_wait_start_time > SERIAL_WAIT_TIMEOUT) {
             break;
         }
     }
+#endif
 
     pinMode(LED_PIN, OUTPUT);
     pinMode(DEBUG_PIN, OUTPUT);
@@ -118,9 +130,13 @@ extern "C" int main(void) {
     if (receiver_active) {
         while (!has_signal(&receiver)) {
             delay(500);
+#ifdef USE_SERIAL
             Serial.println(F("No receiver signal! Waiting."));
+#endif
         }
+#ifdef USE_SERIAL
         Serial.println(F("Receiver signal detected, continuing."));
+#endif
     }
 
     pid_controller_t roll_controller_stbl = pid_controller_init(2.0, 0.0, 0.0, 12.0, 400.0);
@@ -194,6 +210,7 @@ extern "C" int main(void) {
 
 #define DEBUG_COL
 #ifdef DEBUG_COL
+#ifdef USE_SERIAL
                 Serial.print(F("setp:"));
                 Serial.print(channels[ROLL_CHANNEL]);
                 Serial.print(F("\troll-angl:"));
@@ -202,6 +219,7 @@ extern "C" int main(void) {
                 Serial.print(pid_output_roll_stbl);
                 Serial.print(F("\tpid_output_roll_rate:"));
                 Serial.println(pid_output_roll_rate);
+#endif
 #endif
                 break;
 
@@ -212,6 +230,7 @@ extern "C" int main(void) {
                 fast_out_shutoff(&front_right_out_mixer);
 #define DEBUG_COL
 #ifdef DEBUG_COL
+#ifdef USE_SERIAL
                 Serial.print(F("setp:"));
                 Serial.print(channels[ROLL_CHANNEL]);
                 Serial.print(F("\troll-angl:"));
@@ -221,10 +240,13 @@ extern "C" int main(void) {
                 Serial.print(F("\tpid_output_roll_rate:"));
                 Serial.println(pid_output_roll_rate);
 #endif
+#endif
                 break;
 
             default:
+#ifdef USE_SERIAL
                 Serial.println(F("Unimplemented state! Will disarm."));
+#endif
                 state.internal_state = INTERNAL_DISARMED;
                 break;
         }

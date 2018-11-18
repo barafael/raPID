@@ -1,7 +1,7 @@
 #ifndef SIMPLE_PWM_OUTPUT
 #define SIMPLE_PWM_OUTPUT
 
-#include <Arduino.h>
+#include "ArduinoMock.h"
 
 #include "../util.h"
 

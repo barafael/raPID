@@ -1,5 +1,3 @@
-#include "Arduino.h"
-
 #include "../../include/receiver/PWMReceiver.h"
 
 /* Access variable for ISRs */

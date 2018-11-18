@@ -107,7 +107,7 @@ float pid_compute(pid_controller_t *self, float measured, float setpoint) {
     }
 
 #ifdef FRAMAC
-    uint64_t now = mock_micros();
+    uint64_t now = micros();
 #else
     uint64_t now = micros();
 #endif

@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 
+#include "../ArduinoMock.h"
 #include "../settings.h"
 #include "../util.h"
 

@@ -1,7 +1,7 @@
 #ifndef MISRAC_FAST_PWM_OUTPUT
 #define MISRAC_FAST_PWM_OUTPUT
 
-#include <Arduino.h>
+#include "../ArduinoMock.h"
 
 #include "../util.h"
 

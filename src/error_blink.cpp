@@ -15,7 +15,9 @@ void blink_pattern(const char *pattern) {
                     delay(BLINK_PERIOD);
                     break;
                 default:
+#ifdef USE_SERIAL
                     Serial.println(F("Invalid pattern string!"));
+#endif
                     return;
             }
         }
@@ -23,7 +25,9 @@ void blink_pattern(const char *pattern) {
 }
 
 void error_blink(error_type error, const char *message) {
+#ifdef USE_SERIAL
     Serial.println(message);
+#endif
     switch (error) {
         case DMP_INIT_MEM_LOAD_FAILED:  blink_pattern("1100");      break;
         case DMP_CONF_UPDATES_FAILED:   blink_pattern("1010");      break;

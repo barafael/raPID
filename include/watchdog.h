@@ -1,7 +1,7 @@
 #ifndef WATCHDOG_H
 #define WATCHDOG_H
 
-#include "Arduino.h"
+#include "wdog_fake_registers.h"
 
 void init_watchdog();
 void watchdog_feed();

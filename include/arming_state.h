@@ -1,13 +1,13 @@
 #ifndef ARMING_STATE_H
 #define ARMING_STATE_H
 
-#include "Arduino.h"
 //#include "IntervalTimer.h"
 
 #include <stdbool.h>
 
 #include "settings.h"
 
+#include "ArduinoMock.h"
 #include "error_blink.h"
 
 const bool state_transition_triggered(int16_t *input);
