@@ -66,7 +66,7 @@ pid_controller_t pid_controller_init(float p_gain, float i_gain, float d_gain,
 
         .derivative_filter_type = NONE,
 
-        .deriv_filter         = nullptr,
+        .deriv_filter         = 0,
         .deriv_filter_enabled = false,
     };
     return controller;
@@ -106,11 +106,7 @@ float pid_compute(pid_controller_t *self, float measured, float setpoint) {
         return setpoint;
     }
 
-#ifdef FRAMAC
-    uint64_t now = micros();
-#else
-    uint64_t now = micros();
-#endif
+    uint64_t now = mock_micros();
 
     /* If there is overflow, the elapsed time is still correct
      * The calculation overflows just like the timer */

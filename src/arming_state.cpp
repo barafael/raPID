@@ -1,8 +1,28 @@
 #include "../include/arming_state.h"
 
-arming_state_t *arming_state_instance = NULL;
+#undef USE_SERIAL
 
-const bool state_transition_triggered(int16_t *input) {
+static arming_state_t *arming_state_instance = NULL;
+
+/*@ requires \valid(input + (0 .. NUM_CHANNELS − 1));
+    assigns \nothing;
+    behavior not_triggered:
+      assumes input[THROTTLE_CHANNEL] >   55 ||
+              input[ROLL_CHANNEL]     <  445 ||
+              input[PITCH_CHANNEL]    > -445 ||
+              input[YAW_CHANNEL]      > -445;
+      ensures \result == false;
+    behavior triggered:
+      assumes input[THROTTLE_CHANNEL] <=   55 &&
+              input[ROLL_CHANNEL]     >=  445 &&
+              input[PITCH_CHANNEL]    <= -445 &&
+              input[YAW_CHANNEL]      <= -445;
+      ensures \result == true;
+
+    complete behaviors triggered, not_triggered;
+    disjoint behaviors triggered, not_triggered;
+*/
+const bool state_transition_triggered(const int16_t input[NUM_CHANNELS]) {
     if (input[THROTTLE_CHANNEL] >   55) return false;
     if (input[ROLL_CHANNEL]     <  445) return false;
     /* No typo - roll is different from the other channels when not inverted */
@@ -13,11 +33,18 @@ const bool state_transition_triggered(int16_t *input) {
 
 //#define ARMING_DEBUG
 
+/*@
+    requires \valid(arming_state_instance); */
 void enter_debug_mode() {
     arming_state_instance->internal_state = INTERNAL_DEBUG;
 }
 
-/* Call periodically! */
+/*@
+    requires \valid(arming_state_instance);
+    requires \valid(arming_state_instance->channels);
+    requires \valid((arming_state_instance->channels) + (0..NUM_CHANNELS-1));
+    assigns \nothing;
+*/
 void update_arming_state() {
     bool triggered = state_transition_triggered(arming_state_instance->channels);
     switch (arming_state_instance->internal_state) {
@@ -29,7 +56,7 @@ void update_arming_state() {
 #endif
             if (triggered) {
                 arming_state_instance->internal_state    = DISARMING;
-                arming_state_instance->state_change_time = millis();
+                arming_state_instance->state_change_time = mock_millis();
             }
             break;
 
@@ -41,7 +68,7 @@ void update_arming_state() {
 #endif
             if (triggered) {
                 arming_state_instance->internal_state    = ARMING;
-                arming_state_instance->state_change_time = millis();
+                arming_state_instance->state_change_time = mock_millis();
             }
             break;
 
@@ -52,7 +79,7 @@ void update_arming_state() {
                 Serial.println("Disarming");
 #endif
 #endif
-                if ((millis() - arming_state_instance->state_change_time) > DISARM_TIMEOUT_MS) {
+                if ((mock_millis() - arming_state_instance->state_change_time) > DISARM_TIMEOUT_MS) {
                     arming_state_instance->internal_state = DISARMING_STANDBY;
                 } else {
                     break;
@@ -86,7 +113,7 @@ void update_arming_state() {
 #endif
 #endif
             if (triggered) {
-                if ((millis() - arming_state_instance->state_change_time) > ARM_TIMEOUT_MS) {
+                if ((mock_millis() - arming_state_instance->state_change_time) > ARM_TIMEOUT_MS) {
                     arming_state_instance->internal_state = ARMING_STANDBY;
                 } else {
                     break;
@@ -124,10 +151,20 @@ void update_arming_state() {
     }
 }
 
-void init_arming_state(arming_state_t *state, int16_t *channels) {
+/*@ requires \valid(state);
+    requires \valid(channels);
+    ensures arming_state_instance == state;
+    ensures state->channels == channels;
+    assigns *state;
+    assigns *state->channels;
+    assigns arming_state_instance;
+    assigns arming_state_initialized;
+*/
+void init_arming_state(arming_state_t *state, int16_t channels[NUM_CHANNELS]) {
+    //@ ghost arming_state_initialized = ARMING_ON;
     arming_state_instance = state;
     state->channels       = channels;
-    // TODO re-enable timer; until then, use main loop
+    // TODO re-enable timer; until then, call update_arming_state periodically from main loop
     /*
     if (!state->state_change_timer.begin(update_arming_state, INTERVAL_US)) {
         error_blink(STATE_TIMER_HARDWARE_BUSY, "Could not set up interval timer for arming state update!");
@@ -135,28 +172,25 @@ void init_arming_state(arming_state_t *state, int16_t *channels) {
     */
 }
 
-/*@ ghost bool interrupts_enabled = 1;
- *  ensures interrupts_enabled = 1; */
-/* Prove: Interrupts always enabled after this function exits */
+/*@ requires \valid(self);
+    requires arming_state_initialized == ARMING_ON;
+    assigns \nothing;
+    ensures interrupt_status == INTERRUPTS_ON; */
 const state_t get_arming_state(arming_state_t *self) {
-    noInterrupts();
-    // @ ghost interrupts_enabled = 0;
+    mock_noInterrupts();
     switch (self->internal_state) {
         case INTERNAL_DEBUG:
         case INTERNAL_ARMED:
         case DISARMING:
         case DISARMING_STANDBY: 
-            interrupts();
-            //@interrupts_enabled = 1;
+            mock_interrupts();
             return ARMED;
         case INTERNAL_DISARMED:
         case ARMING:
         case ARMING_STANDBY:
-            interrupts();
-            //@interrupts_enabled = 1;
+            mock_interrupts();
             return DISARMED;
     }
-    interrupts();
-    //@interrupts_enabled = 1;
+    mock_interrupts();
     return DISARMED;
 }

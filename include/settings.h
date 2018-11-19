@@ -1,12 +1,12 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
+#include <stddef.h>
 #include <stdint.h>
-//#include <cstddef>
 
-static const int NUM_CHANNELS = 6;
+static const size_t NUM_CHANNELS = 6;
 
-static const uint16_t THROTTLE_LOW_CUTOFF = 25;
+const uint16_t THROTTLE_LOW_CUTOFF = 25;
 
 typedef enum {
     THROTTLE_CHANNEL = 0,

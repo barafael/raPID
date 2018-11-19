@@ -8,9 +8,12 @@
 #include "settings.h"
 
 #include "ArduinoMock.h"
-#include "error_blink.h"
 
-const bool state_transition_triggered(int16_t *input);
+#define ARMING_OFF 0
+#define ARMING_ON 1
+//@ ghost int arming_state_initialized = ARMING_OFF;
+
+const bool state_transition_triggered(const int16_t input[NUM_CHANNELS]);
 
 // TRANSITION PASS_THROUGH FAILSAFE, CONFIG
 typedef enum { DISARMED, ARMED, DEBUG } state_t;

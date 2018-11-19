@@ -7,6 +7,11 @@
 #include "../settings.h"
 #include "../util.h"
 
+#define PWM_RECEIVER_NOT_INITIALIZED 0
+#define PWM_RECEIVER_INITIALIZED 1
+//@ ghost int pwmreceiver_status = PWM_RECEIVER_NOT_INITIALIZED;
+
+#define NUM_CHANNELS 6
 typedef struct {
     int16_t pins[NUM_CHANNELS];
 
@@ -32,13 +37,13 @@ typedef struct {
 
 void PWMReceiver_init(PWMReceiver_t *self, uint8_t throttle_pin, uint8_t roll_pin, uint8_t pitch_pin, uint8_t yaw_pin,
         uint8_t aux1_pin, uint8_t aux2_pin,
-        int16_t *offsets);
+        const int16_t offsets[NUM_CHANNELS]);
 
-const void receiver_update(PWMReceiver_t *self, int16_t *channels);
+const void receiver_update(PWMReceiver_t *self, int16_t channels[NUM_CHANNELS]);
 
 void set_offsets(PWMReceiver_t *self, int16_t *offsets);
-void set_trims(PWMReceiver_t *self, int16_t *trims);
-void set_inversion(PWMReceiver_t *self, bool *inversion);
+void set_trims(PWMReceiver_t *self, int16_t trims[NUM_CHANNELS]);
+void set_inversion(PWMReceiver_t *self, bool inversion[NUM_CHANNELS]);
 
 const bool has_signal(PWMReceiver_t *self);
 

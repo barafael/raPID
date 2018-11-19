@@ -1,9 +1,9 @@
-#define FRAMAC
-
 #include <stdint.h>
+#include <stddef.h>
 
 //#define WATCHDOG
 
+#include "../include/ArduinoMock.h"
 #include "../include/arming_state.h"
 #include "../include/axis.hpp"
 #include "../include/error_blink.h"
@@ -32,7 +32,6 @@
 #endif
 
 #define notime(f) f
-
 
 /* ----------------------------------------------
    ---             HARDWARE SETUP             ---

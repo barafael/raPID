@@ -1,34 +1,32 @@
 #ifndef ARDUINO_MOCK_H
 #define ARDUINO_MOCK_H
 
-#ifndef FRAMAC
-#include "Arduino.h"
-#else
+#include <stdint.h>
+#include <stddef.h>
 
-#define nullptr (0)
+int64_t mock_millis(void);
 
-#define LOW 0
+int64_t mock_micros(void);
+
+#define INTERRUPTS_OFF 0
+#define INTERRUPTS_ON  1
+
+// Interrupts are on at boot
+//@ ghost int interrupt_status = INTERRUPTS_ON;
+
+void mock_interrupts();
+void mock_noInterrupts();
+
+void mock_digitalWrite(int pin, int state);
+int mock_digitalRead(int pin);
+void mock_delay(int millis);
+void mock_delayMicroseconds(uint64_t micros);
+void mock_pinMode(int pin, int mode);
+
 #define HIGH 1
+#define LOW 0
 
-#define OUTPUT 0
-#define INPUT 1
+#define CHANGE 0
+void attachInterrupt(int pin, void f(), int mode);
 
-#include"stdint.h"
-#include"stddef.h"
-
-uint64_t millis(void);
-
-uint64_t micros(void);
-
-void interrupts();
-void noInterrupts();
-
-void digitalWrite(int pin, int state);
-void delay(int millis);
-void pinMode(int pin, int mode);
-
-#ifndef F
-#define F(a) a
-#endif
-#endif
 #endif // ARDUINO_MOCK_H

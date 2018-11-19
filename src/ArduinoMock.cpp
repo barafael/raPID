@@ -1,66 +1,95 @@
 #include "../include/ArduinoMock.h"
 
-#ifdef FRAMAC
+static int64_t milliseconds = 0;
+static int64_t microseconds = 0;
 
+/*@ assigns milliseconds;
 
-static uint64_t microseconds;
+    behavior normal:
+      assumes milliseconds < INT64_MAX;
+      ensures \result == \old(milliseconds) + 1;
+      ensures milliseconds == \old(milliseconds) + 1;
+    behavior overflow:
+      assumes milliseconds == INT64_MAX;
+      ensures \result == 0;
+      ensures milliseconds == 0;
 
-static uint64_t milliseconds = 0;
-/*@ ensures \result > \old(milliseconds);
-    ensures milliseconds > \old(milliseconds);
-    assigns milliseconds;
+    complete behaviors normal, overflow;
+    disjoint behaviors normal, overflow;
 */
-uint64_t millis() {
-    milliseconds++;
+int64_t mock_millis() {
+    if (milliseconds < INT64_MAX) {
+        milliseconds++;
+    } else {
+        milliseconds = 0;
+    }
     return milliseconds;
 }
 
-uint64_t micros() {
-    microseconds++;
+/*@ assigns microseconds;
+
+    behavior normal:
+      assumes microseconds < INT64_MAX;
+      ensures \result == \old(microseconds) + 1;
+      ensures microseconds == \old(microseconds) + 1;
+    behavior overflow:
+      assumes microseconds == INT64_MAX;
+      ensures \result == 0;
+      ensures microseconds == 0;
+
+    complete behaviors normal, overflow;
+    disjoint behaviors normal, overflow;
+*/
+int64_t mock_micros() {
+    if (microseconds < INT64_MAX) {
+        microseconds++;
+    } else {
+        microseconds = 0;
+    }
     return microseconds;
 }
 
-void interrupts() {
+// assigning a ghost variable is not assigning \nothing
+/*@ ensures interrupt_status == INTERRUPTS_ON;
+    assigns interrupt_status; */
+void mock_interrupts() {
+    //@ ghost interrupt_status = INTERRUPTS_ON;
+}
+
+/*@ ensures interrupt_status == INTERRUPTS_OFF;
+    assigns interrupt_status; */
+void mock_noInterrupts() {
+    //@ ghost interrupt_status = INTERRUPTS_OFF;
+}
+
+//@ assigns \nothing;
+void mock_digitalWrite(int pin, int state) {
 
 }
 
-void noInterrupts() {
+/*@ assigns \nothing;
+    ensures \result == HIGH || \result == LOW;
+*/
+int mock_digitalRead(int pin) {
+    return HIGH;
+}
+
+//@ assigns \nothing;
+void mock_delay(int millis) {
 
 }
 
-#undef DOESNOTWORK
-#ifdef DOESNOTWORK
+//@ assigns \nothing;
+void mock_delayMicroseconds(uint64_t micros) {
 
-/*@ ghost set<integer> ticks_millis = \empty; */
-static unsigned long long milliseconds;
-
-/*@ ghost set<integer> ticks_micros = \empty; */
-static unsigned long long microseconds;
-
-/* @ assigns ticks_millis;
-   ensures ! \subset(\result, \old(\ticks_millis))
-     && \result \in ticks_millis
-     && \subset(\old(ticks_millis), ticks_millis);
- */
-unsigned long long millis() {
-    /* global invariant I: \forall integer k;
-         k \in ticks_millis ==> milliseconds > k; */
-    milliseconds++;
-    //@ ghost ticks_millis = \union(milliseconds, ticks_millis);
-    return milliseconds;
 }
 
-/* @ assigns ticks_micros;
-   ensures ! \subset(\result, \old(\ticks_micros))
-     && \result \in ticks_micros
-     && \subset(\old(ticks_micros), ticks_micros);
- */
-unsigned long long micros() {
-    /* global invariant I: \forall integer k;
-         k \in ticks_micros ==> microseconds > k; */
-    microseconds++;
-    //@ ghost ticks_micros = \union(microseconds, ticks_micros);
-    return microseconds;
+//@ assigns \nothing;
+void mock_pinMode(int pin, int mode) {
+
 }
-#endif
-#endif // FRAMAC
+
+//@ assigns \nothing;
+void attachInterrupt(int pin, void f(), int mode) {
+
+}
