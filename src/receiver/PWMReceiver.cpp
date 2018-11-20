@@ -69,7 +69,7 @@ void set_trims(PWMReceiver_t *self, int16_t *trims) {
     }
 }
 
-void set_inversion(PWMReceiver_t *self, int16_t *inversion) {
+void set_inversion(PWMReceiver_t *self, bool inversion[NUM_CHANNELS]) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         self->inversion[index] = inversion[index];
     }

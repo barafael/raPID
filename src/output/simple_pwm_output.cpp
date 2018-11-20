@@ -1,5 +1,3 @@
-#include <stdbool.h>
-
 #include "../../include/output/simple_pwm_output.h"
 
 simple_pwm_output_t simple_out_init(const uint8_t pin, float throttle_volume, float roll_volume, float pitch_volume,
@@ -17,7 +15,7 @@ simple_pwm_output_t simple_out_init(const uint8_t pin, float throttle_volume, fl
     return result;
 }
 
-void simple_out_write(simple_pwm_output_t *self, uint16_t _milli_throttle) {
+static void simple_out_write(simple_pwm_output_t *self, uint16_t _milli_throttle) {
     self->milli_throttle = _milli_throttle > 255 ? 255 : _milli_throttle;
     // reusing _millithrottle could result in error if clamp was necessary
     analogWrite(self->pin, _milli_throttle);
@@ -33,7 +31,7 @@ void simple_out_apply(simple_pwm_output_t *self, uint16_t _milli_throttle,
     }
 
     /* intermediary int16_t to prevent overflow */
-    int16_t throttle_tmp = (int16_t) (_milli_throttle * self->mixer.throttle_volume);
+    int16_t throttle_tmp = (int16_t) _milli_throttle * (int16_t) self->mixer.throttle_volume;
 
     throttle_tmp += (int16_t) (roll_stbl  * self->mixer.roll_volume);
     throttle_tmp += (int16_t) (pitch_stbl * self->mixer.pitch_volume);

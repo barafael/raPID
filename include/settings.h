@@ -4,7 +4,7 @@
 #include <stdint.h>
 //#include <cstddef>
 
-static const int NUM_CHANNELS = 6;
+const int NUM_CHANNELS = 6;
 
 static const uint16_t THROTTLE_LOW_CUTOFF = 25;
 

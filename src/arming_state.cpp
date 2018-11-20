@@ -1,6 +1,6 @@
 #include "../include/arming_state.h"
 
-arming_state_t *arming_state_instance = NULL;
+static arming_state_t *arming_state_instance = NULL;
 
 const bool state_transition_triggered(int16_t *input) {
     if (input[THROTTLE_CHANNEL] >   55) return false;
