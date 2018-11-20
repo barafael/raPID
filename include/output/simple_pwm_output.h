@@ -1,11 +1,17 @@
 #ifndef SIMPLE_PWM_OUTPUT
 #define SIMPLE_PWM_OUTPUT
 
-#include "ArduinoMock.h"
+#include <stdbool.h>
+
+#include "../ArduinoMock.h"
 
 #include "../util.h"
 
-#include "mixer.h"
+#include "./mixer.h"
+
+#define MOTOR_OFF 0
+#define MOTOR_ON  1
+//@ ghost int motor_status = MOTOR_OFF;
 
 typedef struct {
     uint8_t pin;
@@ -21,7 +27,6 @@ typedef struct {
 
     bool low_throttle_cutoff_enabled;
     uint16_t throttle_low_cutoff;
-
 } simple_pwm_output_t;
 
 simple_pwm_output_t simple_out_init(uint8_t pin,
@@ -29,7 +34,7 @@ simple_pwm_output_t simple_out_init(uint8_t pin,
         float roll_volume, float pitch_volume, float yaw_volume,
         bool is_throttle);
 
-void simple_out_write(simple_pwm_output_t *self, uint16_t _milli_throttle);
+static void simple_out_write(simple_pwm_output_t *self, uint16_t _milli_throttle);
 
 void simple_out_apply(simple_pwm_output_t *self, uint16_t _milli_throttle,
         float roll_stbl, float pitch_stbl, float yaw_stbl);

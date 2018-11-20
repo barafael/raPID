@@ -19,12 +19,19 @@ void mock_noInterrupts();
 
 void mock_digitalWrite(int pin, int state);
 int mock_digitalRead(int pin);
+
+void mock_analogWrite(int pin, int state);
+int mock_analogRead(int pin);
+
 void mock_delay(int millis);
 void mock_delayMicroseconds(uint64_t micros);
 void mock_pinMode(int pin, int mode);
 
 #define HIGH 1
 #define LOW 0
+
+#define OUTPUT 0
+#define INPUT 1
 
 #define CHANGE 0
 void attachInterrupt(int pin, void f(), int mode);
