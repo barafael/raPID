@@ -50,6 +50,7 @@ the setpoint to the next controller) and only using the rate controller.
 - [x] Increase IMU sensor sampling rates - 1kHz
 
 ## Ideas
+- [ ] Airspeed-adjustable gains
 - [ ] Live coefficient tweaking (standard tx or telemetry hardware)
   - [ ] RFM95 lora board for config data, telemetry
 - [x] IMU solution overhaul: Ultimate SENtral or other; constant sampling rate simplifies PID and makes theory on time-discrete systems applicable
