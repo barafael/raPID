@@ -1,21 +1,20 @@
 #ifndef ARMING_STATE_H
 #define ARMING_STATE_H
 
-//#include "IntervalTimer.h"
-
 #include <stdbool.h>
 
-#include "settings.h"
+#include "../include/settings.h"
 
 #include "ArduinoMock.h"
 
 #define ARMING_OFF 0
 #define ARMING_ON 1
+
 //@ ghost int arming_state_initialized = ARMING_OFF;
 
 const bool state_transition_triggered(const int16_t input[NUM_CHANNELS]);
 
-// TRANSITION PASS_THROUGH FAILSAFE, CONFIG
+// TRANSITION, PASS_THROUGH, FAILSAFE, CONFIG
 typedef enum { DISARMED, ARMED, DEBUG } state_t;
 typedef enum {
     INTERNAL_DISARMED,
@@ -29,12 +28,18 @@ typedef enum {
 
 typedef struct {
     internal_state_t internal_state;
-    //IntervalTimer state_change_timer;
     int16_t *channels;
     uint64_t state_change_time;
 } arming_state_t;
 
-void init_arming_state(arming_state_t *state, int16_t *channels);
+/*@ requires \valid(state);
+    requires \valid(channels);
+    ensures state->channels == channels;
+    assigns *state;
+    assigns *state->channels;
+    assigns arming_state_initialized;
+*/
+void init_arming_state(arming_state_t *state, int16_t channels[NUM_CHANNELS]);
 
 const uint16_t DISARM_TIMEOUT_MS = 2500;
 const uint16_t ARM_TIMEOUT_MS    = 1000;

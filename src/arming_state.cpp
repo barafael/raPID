@@ -42,7 +42,7 @@ void enter_debug_mode() {
 /*@
     requires \valid(arming_state_instance);
     requires \valid(arming_state_instance->channels);
-    requires \valid((arming_state_instance->channels) + (0..NUM_CHANNELS-1));
+    requires \valid((arming_state_instance->channels) + (0 .. NUM_CHANNELS-1));
     assigns \nothing;
 */
 void update_arming_state() {
@@ -151,14 +151,9 @@ void update_arming_state() {
     }
 }
 
-/*@ requires \valid(state);
-    requires \valid(channels);
-    ensures arming_state_instance == state;
-    ensures state->channels == channels;
-    assigns *state;
-    assigns *state->channels;
+/*@ ensures arming_state_instance == state;
     assigns arming_state_instance;
-    assigns arming_state_initialized;
+    ensures arming_state_initialized == ARMING_ON;
 */
 void init_arming_state(arming_state_t *state, int16_t channels[NUM_CHANNELS]) {
     //@ ghost arming_state_initialized = ARMING_ON;
