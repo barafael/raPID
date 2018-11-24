@@ -11,20 +11,8 @@
 #define PWM_RECEIVER_INITIALIZED 1
 //@ ghost int pwmreceiver_status = PWM_RECEIVER_NOT_INITIALIZED;
 
-#define NUM_CHANNELS 6
+#define PWM_NUM_CHANNELS NUM_CHANNELS
 typedef struct {
-    int16_t pins[NUM_CHANNELS];
-
-    /* Interrupts write to this array and the update function reads
-     * Note: disable interrupts when reading to avoid race conditions
-     */
-    volatile int16_t channels_shared[NUM_CHANNELS];
-
-    /* Written by interrupt on rising edge, read on falling edge
-     * No synchronization necessary if an interrupt only touches one array member.
-     */
-    volatile uint64_t pwm_pulse_start_time[NUM_CHANNELS];
-
     /* Channel offsets and throttle zero-point */
     int16_t offsets[NUM_CHANNELS];
 

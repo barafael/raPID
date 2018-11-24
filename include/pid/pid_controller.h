@@ -6,12 +6,16 @@
 
 #include "../../include/ArduinoMock.h"
 
+#include "../../include/filter/complementary_filter.h"
+#include "../../include/filter/moving_average_filter.h"
+
 #include "../util.h"
 
-typedef enum { ERROR, SETPOINT, FEEDBACK } derivative_type;
-typedef enum { NONE, MOVING_AVERAGE, LOWPASS } filter_type;
+#define THROTTLE_LOW_CUTOFF 25
 
-typedef float (*filter_func)(float param);
+typedef enum { ERROR, SETPOINT, FEEDBACK } derivative_type;
+//typedef enum { NONE, MOVING_AVERAGE, COMPLEMENTARY } filter_type;
+#define FILTER_TYPE NONE
 
 typedef struct {
     bool enabled;
@@ -22,8 +26,6 @@ typedef struct {
 
     float integral;
     float integral_limit;
-
-    float derivative;
 
     derivative_type d_type;
 
@@ -40,10 +42,22 @@ typedef struct {
 
     uint64_t last_time;
 
-    filter_type derivative_filter_type;
+#ifndef FILTER_TYPE
+#else
+#if FILTER_TYPE == NONE
+#else
+#if FILTER_TYPE == MOVING_AVERAGE
+    moving_average_t moving_average_filter;
+#else
+#if FILTER_TYPE == COMPLEMENTARY
+    complementary_filter_t complementary_filter;
+#else
+#error "Undefined filter type!"
+#endif
+#endif
+#endif
+#endif
 
-    filter_func deriv_filter;
-    bool        deriv_filter_enabled;
 } pid_controller_t;
 
 pid_controller_t pid_controller_init(float p_gain, float i_gain, float d_gain,
@@ -72,8 +86,5 @@ void pid_set_derivative_type(pid_controller_t *self, derivative_type type);
 
 void pid_set_integral_limit(pid_controller_t *self, float limit);
 void pid_set_output_limit(pid_controller_t *self, float limit);
-
-void pid_set_filter(pid_controller_t *self, filter_func filter);
-void pid_set_enable_derivative_filter(pid_controller_t *self, bool enable);
 
 #endif // PID_CONTROLLER_H

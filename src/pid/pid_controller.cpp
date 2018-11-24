@@ -1,42 +1,49 @@
 #include "../../include/pid/pid_controller.h"
 
-/*@
- requires integral_limit <= output_limit;
- assigns \nothing;
+/*@ requires \abs(integral_limit) < \abs(output_limit);
+    assigns \nothing;
 
- ensures \result.enabled == 1;
+    ensures \result.enabled == 1;
 
- ensures \result.p_gain == p_gain;
- ensures \result.i_gain == i_gain;
- ensures \result.d_gain == d_gain;
+    ensures \result.p_gain == p_gain;
+    ensures \result.i_gain == i_gain;
+    ensures \result.d_gain == d_gain;
 
- ensures \result.integral == 0;
- ensures \result.integral_limit == integral_limit;
+    ensures \result.integral == 0;
 
- ensures \result.derivative == 0;
+    ensures \result.d_type == ERROR;
 
- ensures \result.d_type == ERROR;
+    ensures \result.last_error == 0;
 
- ensures \result.last_error == 0;
+    ensures \result.last_setpoint == 0;
 
- ensures \result.last_setpoint == 0;
+    ensures \result.last_measured == 0;
 
- ensures \result.last_measured == 0;
+    ensures \result.integral_limit == \abs(integral_limit);
+    ensures \result.output_limit == \abs(output_limit);
 
- ensures \result.output_limit == output_limit;
+    ensures \result.last_time == 0;
 
- ensures \result.output_limit == output_limit;
-
- ensures \result.last_time == 0;
-
- ensures \result.derivative_filter_type == NONE;
-
- ensures \result.deriv_filter == 0;
-
- ensures \result.deriv_filter_enabled == false;
- */
+    ensures 0.0f <= \result.integral_limit < \result.output_limit;
+*/
 pid_controller_t pid_controller_init(float p_gain, float i_gain, float d_gain,
         float integral_limit, float output_limit) {
+#ifndef FILTER_TYPE
+#else
+#if FILTER_TYPE == NONE
+#else
+#if FILTER_TYPE == MOVING_AVERAGE
+    moving_average_t mavg_filter = init_moving_average_filter();
+#else
+#if FILTER_TYPE == COMPLEMENTARY
+    complementary_filter_t comp_filter = init_complementary_filter(0.5);
+#else
+#error "Undefined filter type!"
+#endif
+#endif
+#endif
+#endif
+
     pid_controller_t controller = {
         .enabled = true,
 
@@ -45,9 +52,7 @@ pid_controller_t pid_controller_init(float p_gain, float i_gain, float d_gain,
         .d_gain = d_gain,
 
         .integral       = 0.0f,
-        .integral_limit = integral_limit,
-
-        .derivative = 0.0f,
+        .integral_limit = abs(integral_limit),
 
         .d_type = ERROR,
 
@@ -60,18 +65,27 @@ pid_controller_t pid_controller_init(float p_gain, float i_gain, float d_gain,
         /* For derivative-on-measured */
         .last_measured = 0.0f,
 
-        .output_limit = output_limit,
+        .output_limit = abs(output_limit),
 
         .last_time = 0,
-
-        .derivative_filter_type = NONE,
-
-        .deriv_filter         = 0,
-        .deriv_filter_enabled = false,
+#ifndef FILTER_TYPE
+#else
+#if FILTER_TYPE == NONE
+#else
+#if FILTER_TYPE == MOVING_AVERAGE
+        .moving_average_filter = mavg_filter,
+#else
+#if FILTER_TYPE == COMPLEMENTARY
+        .complementary_filter = comp_filter,
+#else
+#error "Undefined filter type!"
+#endif
+#endif
+#endif
+#endif
     };
     return controller;
 }
-
 
 /* En/Disable Passthrough of setpoint */
 /*@
@@ -82,30 +96,31 @@ void pid_set_enabled(pid_controller_t *self, bool enable) {
     self->enabled = enable;
 }
 
-//requires \valid(self->deriv_filter);
 /*@
    requires \valid(self);
-   requires self->integral < self->output_limit;
+   requires self->output_limit > 0.0f;
 
    assigns self->last_time;
    assigns self->last_error;
    assigns self->last_setpoint;
    assigns self->last_measured;
 
- behavior disabled:
-   assumes self->enabled == false;
-   ensures self->last_time == \old(self->last_time);
-   ensures self->last_error == \old(self->last_error);
-   ensures self->last_setpoint == \old(self->last_setpoint);
-   ensures self->last_measured == \old(self->last_measured);
-   ensures \result == setpoint;
+   ensures \valid(\old(self)) ==> \valid(self);
 
- behavior enabled:
-   assumes self->enabled;
-   ensures \result <= self->output_limit;
-   ensures \old(self->last_time) < self->last_time;
- complete behaviors;
- disjoint behaviors;
+   behavior disabled:
+     assumes self->enabled == false;
+     ensures self->last_time == \old(self->last_time);
+     ensures self->last_error == \old(self->last_error);
+     ensures self->last_setpoint == \old(self->last_setpoint);
+     ensures self->last_measured == \old(self->last_measured);
+     ensures \result == setpoint;
+
+   behavior enabled:
+     assumes self->enabled;
+     ensures \result <= self->output_limit;
+     ensures \old(self->last_time) < self->last_time;
+   complete behaviors;
+   disjoint behaviors;
 */
 float pid_compute(pid_controller_t *self, float measured, float setpoint) {
     if (!self->enabled) {
@@ -145,9 +160,21 @@ float pid_compute(pid_controller_t *self, float measured, float setpoint) {
     }
 
     //if (self->deriv_filter_enabled && *(self->deriv_filter) != nullptr) {
-    if (self->deriv_filter_enabled) {
-        d_term = (self->deriv_filter)(d_term);
-    }
+#ifndef FILTER_TYPE
+#else
+#if FILTER_TYPE == NONE
+#else
+#if FILTER_TYPE == MOVING_AVERAGE
+    d_term = moving_average_next(&self->moving_average_filter, d_term);
+#else
+#if FILTER_TYPE == COMPLEMENTARY
+    d_term = complementary_next(&self->complementary_filter, d_term);
+#else
+#error "Undefined filter type!"
+#endif
+#endif
+#endif
+#endif
 
     self->last_time = now;
 
@@ -265,24 +292,6 @@ void pid_set_integral_limit(pid_controller_t *self, float limit) {
 */
 void pid_set_output_limit(pid_controller_t *self, float limit) {
     self->output_limit = limit;
-}
-
-/*@
- requires \valid(self);
- ensures \valid(\old(self)) ==> \valid(self);
- ensures self->deriv_filter == filter;
-*/
-void pid_set_filter(pid_controller_t *self, filter_func filter) {
-    self->deriv_filter = filter;
-}
-
-/*@
- requires \valid(self);
- ensures \valid(\old(self)) ==> \valid(self);
- ensures self->deriv_filter_enabled == enable;
-*/
-void pid_set_enable_derivative_filter(pid_controller_t *self, bool enable) {
-    self->deriv_filter_enabled = enable;
 }
 
 /*@
