@@ -76,6 +76,7 @@ pid_controller_t pid_controller_init(float p_gain, float i_gain, float d_gain,
 /* En/Disable Passthrough of setpoint */
 /*@
  requires \valid(self);
+ ensures \valid(\old(self)) ==> \valid(self);
  ensures self->enabled == enable; */
 void pid_set_enabled(pid_controller_t *self, bool enable) {
     self->enabled = enable;
@@ -85,19 +86,24 @@ void pid_set_enabled(pid_controller_t *self, bool enable) {
 /*@
    requires \valid(self);
    requires self->integral < self->output_limit;
- behavior disabled:
-   assumes self->enabled == false;
-   assigns \nothing;
-   ensures \result == setpoint;
 
- behavior enabled:
-   assumes self->enabled;
    assigns self->last_time;
    assigns self->last_error;
    assigns self->last_setpoint;
    assigns self->last_measured;
+
+ behavior disabled:
+   assumes self->enabled == false;
+   ensures self->last_time == \old(self->last_time);
+   ensures self->last_error == \old(self->last_error);
+   ensures self->last_setpoint == \old(self->last_setpoint);
+   ensures self->last_measured == \old(self->last_measured);
+   ensures \result == setpoint;
+
+ behavior enabled:
+   assumes self->enabled;
    ensures \result <= self->output_limit;
-   ensures \old(self->last_time) < self->last_time; // this cannot work, frama-c does not see that micros() is monot. incr.
+   ensures \old(self->last_time) < self->last_time;
  complete behaviors;
  disjoint behaviors;
 */
@@ -157,14 +163,29 @@ float pid_compute(pid_controller_t *self, float measured, float setpoint) {
     return result;
 }
 
+/*@
+ requires \valid(self);
+ ensures \valid(\old(self)) ==> \valid(self);
+ ensures self->p_gain == _p_gain;
+*/
 void pid_set_p(pid_controller_t *self, float _p_gain) {
     self->p_gain = _p_gain;
 }
 
+/*@
+ requires \valid(self);
+ ensures \valid(\old(self)) ==> \valid(self);
+ ensures self->i_gain == _i_gain;
+*/
 void pid_set_i(pid_controller_t *self, float _i_gain) {
     self->i_gain = _i_gain;
 }
 
+/*@
+ requires \valid(self);
+ ensures \valid(\old(self)) ==> \valid(self);
+ ensures self->d_gain == _d_gain;
+*/
 void pid_set_d(pid_controller_t *self, float _d_gain) {
     self->d_gain = _d_gain;
 }
@@ -192,38 +213,83 @@ void pid_set_params(pid_controller_t *self,
     self->output_limit   = output_limit;
 }
 
+/*@
+ requires \valid(self);
+ ensures \valid(\old(self)) ==> \valid(self);
+ ensures \result == self->p_gain;
+*/
 float pid_get_p(pid_controller_t *self) {
     return self->p_gain;
 }
 
+/*@
+ requires \valid(self);
+ ensures \valid(\old(self)) ==> \valid(self);
+ ensures \result == self->i_gain;
+*/
 float pid_get_i(pid_controller_t *self) {
     return self->i_gain;
 }
 
+/*@
+ requires \valid(self);
+ ensures \valid(\old(self)) ==> \valid(self);
+ ensures \result == self->d_gain;
+*/
 float pid_get_d(pid_controller_t *self) {
     return self->d_gain;
 }
 
+/*@
+ requires \valid(self);
+ ensures \valid(\old(self)) ==> \valid(self);
+ ensures self->integral == 0.0;
+*/
 void pid_integral_reset(pid_controller_t *self) {
     self->integral = 0.0f;
 }
 
+/*@
+ requires \valid(self);
+ ensures \valid(\old(self)) ==> \valid(self);
+ ensures self->integral_limit == limit;
+*/
 void pid_set_integral_limit(pid_controller_t *self, float limit) {
     self->integral_limit = limit;
 }
 
+/*@
+ requires \valid(self);
+ ensures \valid(\old(self)) ==> \valid(self);
+ ensures self->output_limit == limit;
+*/
 void pid_set_output_limit(pid_controller_t *self, float limit) {
     self->output_limit = limit;
 }
 
+/*@
+ requires \valid(self);
+ ensures \valid(\old(self)) ==> \valid(self);
+ ensures self->deriv_filter == filter;
+*/
 void pid_set_filter(pid_controller_t *self, filter_func filter) {
     self->deriv_filter = filter;
 }
 
+/*@
+ requires \valid(self);
+ ensures \valid(\old(self)) ==> \valid(self);
+ ensures self->deriv_filter_enabled == enable;
+*/
 void pid_set_enable_derivative_filter(pid_controller_t *self, bool enable) {
     self->deriv_filter_enabled = enable;
 }
 
+/*@
+ requires \valid(self);
+ ensures \valid(\old(self)) ==> \valid(self);
+ ensures self->d_type == type;
+*/
 void pid_set_derivative_type(pid_controller_t *self, derivative_type type) {
     self->d_type = type;
 }
