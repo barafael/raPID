@@ -33,7 +33,7 @@ void set_offsets(PWMReceiver_t *self, int16_t *offsets);
 void set_trims(PWMReceiver_t *self, int16_t trims[NUM_CHANNELS]);
 void set_inversion(PWMReceiver_t *self, bool inversion[NUM_CHANNELS]);
 
-const bool has_signal(PWMReceiver_t *self);
+const bool has_signal();
 
 void update_throttle();
 void update_roll();
