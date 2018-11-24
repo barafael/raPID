@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "../../include/util.h"
+
 typedef struct {
     float prev_output;
     float beta;
