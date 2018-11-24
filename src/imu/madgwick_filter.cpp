@@ -1,21 +1,46 @@
 #include "../../include/imu/madgwick_filter.h"
 
+#define DEFAULT_BETA 8.384266471f
+#define DEFAULT_GYRO_ERROR 6.981317008f
+#define DEFAULT_GYRO_DRIFT 0.0f
+
+/*@ requires \valid(self);
+    requires \is_finite(beta);
+    ensures \valid(\old(self)) ==> \valid(self);
+    ensures self->beta == beta;
+*/
 void set_beta(madgwick_filter_t *self, float beta) {
     self->beta = beta;
 }
 
+/*@ requires \valid(self);
+    requires \is_finite(deltat);
+    ensures \valid(\old(self)) ==> \valid(self);
+    ensures self->deltat == deltat;
+*/
 void set_deltat(madgwick_filter_t *self, float deltat) {
     self->deltat = deltat;
 }
 
+/*@ requires \is_finite(deltat);
+    ensures \result.beta == DEFAULT_BETA;
+    ensures \result.deltat == deltat;
+    ensures \result.gyro_meas_error == DEFAULT_GYRO_ERROR;
+    ensures \result.gyro_meas_drift == DEFAULT_GYRO_DRIFT;
+    ensures \result.quat[0] == 1.0;
+    ensures \result.quat[1] == 0.0;
+    ensures \result.quat[2] == 0.0;
+    ensures \result.quat[3] == 0.0;
+*/
 madgwick_filter_t init_madgwick_filter(float deltat) {
-    madgwick_filter_t self;
-    self.beta            = 8.384266471f;
-    self.deltat          = deltat;
-    self.gyro_meas_error = 6.981317008f;
-    self.gyro_meas_drift = 0.0f;
     quaternion_t quat    = { 1.0, 0.0, 0.0, 0.0 };
-    self.quat            = quat;
+    madgwick_filter_t self = {
+        .beta            = DEFAULT_BETA,
+        .deltat          = deltat,
+        .gyro_meas_error = DEFAULT_GYRO_ERROR,
+        .gyro_meas_drift = DEFAULT_GYRO_DRIFT,
+        .quat            = quat
+    };
     return self;
 }
 
