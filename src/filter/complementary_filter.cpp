@@ -1,14 +1,12 @@
 #include "../../include/filter/complementary_filter.h"
 
 /*@ requires \is_finite(beta);
-    ensures \result.beta <= 1.0 && \result.beta >= 0;
-    ensures \result.ateb <= 1.0 && \result.ateb >= 0;
+    ensures 0.0 <= \result.beta <= 1.0;
+    ensures 0.0 <= \result.ateb <= 1.0;
     ensures \result.beta + \result.ateb == 1.0;
 */
 complementary_filter_t init_complementary_filter(float beta) {
-    if (beta < 0.0f || beta > 1.0f) {
-        beta = 1.0f;
-    }
+    clamp(beta, 0.0f, 1.0f);
     float ateb = 1.0f - beta;
     complementary_filter_t self;
     self.beta = beta;
@@ -27,11 +25,22 @@ float complementary_next(complementary_filter_t *self, float value) {
 }
 
 /*@ requires \valid(self);
+    requires \is_finite(beta);
     assigns self->beta;
     assigns self->ateb;
-    ensures self->beta <= 1.0 && self->beta >= 0.0;
-    ensures self->ateb <= 1.0 && self->ateb >= 0.0;
-    ensures self->beta  + self->ateb == 1.0;
+    behavior valid_beta:
+      assumes 0.0f <= beta <= 1.0f;
+      ensures 0.0 <= self->beta <= 1.0;
+      ensures 0.0 <= self->ateb <= 1.0;
+      ensures self->ateb == 1.0 - beta;
+      ensures self->beta + self->ateb == 1.0;
+    behavior invalid_beta:
+      assumes beta < 0.0f || beta > 1.0f;
+      ensures \old(self->beta) == self->beta;
+      ensures \old(self->ateb) == self->ateb;
+
+    complete behaviors valid_beta, invalid_beta;
+    disjoint behaviors valid_beta, invalid_beta;
 */
 void complementary_filter_set_beta(complementary_filter_t *self, float beta) {
     if (beta < 0.0f || beta > 1.0f) {

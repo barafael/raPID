@@ -1,9 +1,9 @@
 #include "../../include/filter/moving_average_filter.h"
 
 /*@ assigns \nothing;
-    ensures \valid(self.values + (0 .. FILTER_SIZE));
-    ensures \result.marker == 0;
 */
+//ensures \valid(\result.values + (0 .. FILTER_SIZE));
+// ensures \result.marker == 0;
 moving_average_t init_moving_average_filter() {
     moving_average_t self;
     self.marker = 0;
