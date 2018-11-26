@@ -27,10 +27,10 @@ void set_deltat(madgwick_filter_t *self, float deltat) {
     ensures \result.deltat == deltat;
     ensures \result.gyro_meas_error == DEFAULT_GYRO_ERROR;
     ensures \result.gyro_meas_drift == DEFAULT_GYRO_DRIFT;
-    ensures \result.quat[0] == 1.0;
-    ensures \result.quat[1] == 0.0;
-    ensures \result.quat[2] == 0.0;
-    ensures \result.quat[3] == 0.0;
+    ensures \result.quat.a == 1.0;
+    ensures \result.quat.b == 0.0;
+    ensures \result.quat.c == 0.0;
+    ensures \result.quat.d == 0.0;
 */
 madgwick_filter_t init_madgwick_filter(float deltat) {
     quaternion_t quat    = { 1.0, 0.0, 0.0, 0.0 };
@@ -44,6 +44,18 @@ madgwick_filter_t init_madgwick_filter(float deltat) {
     return self;
 }
 
+/*@ requires \valid(self);
+    requires \is_finite(acc.x);
+    requires \is_finite(acc.y);
+    requires \is_finite(acc.z);
+    requires \is_finite(gyro.x);
+    requires \is_finite(gyro.y);
+    requires \is_finite(gyro.z);
+    requires \is_finite(mag.x);
+    requires \is_finite(mag.y);
+    requires \is_finite(mag.z);
+    ensures \valid(\old(self)) ==> \valid(self);
+*/
 quaternion_t madgwick_update(madgwick_filter_t *self, vec3_t acc, vec3_t gyro, vec3_t mag) {
     float hx, hy, _2bx, _2bz;
 

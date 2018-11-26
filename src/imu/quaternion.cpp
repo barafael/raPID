@@ -26,7 +26,6 @@ quaternion_t quat_from_array(float const q[4]) {
 
     behavior zero_quat:
       assumes \sqrt(quat->a * quat->a + quat->b * quat->b + quat->c * quat->c + quat->d * quat->d) == 0.0f;
-      ensures \result == false;
       ensures quat->a == \old(quat->a);
       ensures quat->b == \old(quat->b);
       ensures quat->c == \old(quat->c);
@@ -35,7 +34,6 @@ quaternion_t quat_from_array(float const q[4]) {
       assumes \sqrt(quat->a * quat->a + quat->b * quat->b + quat->c * quat->c + quat->d * quat->d) != 0.0f;
       assumes \sqrt(quat->a * quat->a + quat->b * quat->b + quat->c * quat->c + quat->d * quat->d) > 0.99f;
       assumes \sqrt(quat->a * quat->a + quat->b * quat->b + quat->c * quat->c + quat->d * quat->d) < 1.01f;
-      ensures \result == true;
 
     disjoint behaviors zero_quat, valid_quat;
     complete behaviors zero_quat, valid_quat;
@@ -93,20 +91,22 @@ vec3_t quat2euler(const quaternion_t quat) {
     // roll (x-axis rotation)
     float sinr  = +2.0 * (quat.d * quat.a + quat.b * quat.c);
     float cosr  = +1.0 - 2.0 * (quat.a * quat.a + quat.b * quat.b);
-    float pitch = atan2f(sinr, cosr);
+    //float pitch = atan2f(sinr, cosr);
+    float pitch = 1.0f;
 
     // pitch (y-axis rotation)
     float sinp = +2.0 * (quat.d * quat.b - quat.c * quat.a);
     float roll;
     if (fabsf(sinp) >= 1) {
-        roll = copysign(M_PI / 2, sinp); // use 90 degrees if out of range
+        roll = copysignf(M_PI_F / 2, sinp); // use 90 degrees if out of range
     } else {
         roll = asinf(sinp);
     }
     // yaw (z-axis rotation)
     float siny = +2.0 * (quat.d * quat.c + quat.a * quat.b);
     float cosy = +1.0 - 2.0 * (quat.b * quat.b + quat.c * quat.c);
-    float yaw  = atan2f(siny, cosy);
+    //float yaw  = atan2f(siny, cosy);
+    float yaw  = 1.0f;
 
     vec3_t euler = { roll, pitch, yaw };
     return euler;

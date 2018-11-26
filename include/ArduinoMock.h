@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#define M_PI_F 3.14159265358979323846f
+
 int64_t mock_millis(void);
 
 int64_t mock_micros(void);
