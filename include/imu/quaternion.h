@@ -17,7 +17,7 @@ quaternion_t quat_from_array(float const q[4]);
 
 void normalize_quat(quaternion_t *quat);
 
-void scalar_quat(float f, quaternion_t *quat);
+void scalar_quat(quaternion_t *quat, float scalar);
 
 quaternion_t add_quat(quaternion_t q1, quaternion_t q2);
 

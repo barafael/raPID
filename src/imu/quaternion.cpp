@@ -17,8 +17,6 @@ quaternion_t quat_from_array(float const q[4]) {
     requires \is_finite(quat->c);
     requires \is_finite(quat->d);
 
-    ensures \valid(\old(quat)) ==> \valid(quat);
-
     assigns quat->a;
     assigns quat->b;
     assigns quat->c;
@@ -45,23 +43,25 @@ void normalize_quat(quaternion_t *quat) {
     quat->b *= norm;
     quat->c *= norm;
     quat->d *= norm;
+    //@ assert \at(quat, Here) == \at(quat, Pre);
 }
 
 /*@ requires \valid(quat);
-    requires \is_finite(f);
+    requires \is_finite(scalar);
 
     ensures \valid(\old(quat)) ==> \valid(quat);
 
-    ensures quat->a == f * \old(quat->a);
-    ensures quat->b == f * \old(quat->b);
-    ensures quat->c == f * \old(quat->c);
-    ensures quat->d == f * \old(quat->d);
+    ensures quat->a == scalar * \old(quat->a);
+    ensures quat->b == scalar * \old(quat->b);
+    ensures quat->c == scalar * \old(quat->c);
+    ensures quat->d == scalar * \old(quat->d);
 */
-void scalar_quat(float f, quaternion_t *quat) {
-    quat->a *= f;
-    quat->b *= f;
-    quat->c *= f;
-    quat->d *= f;
+void scalar_quat(quaternion_t *quat, float scalar) {
+    quat->a *= scalar;
+    quat->b *= scalar;
+    quat->c *= scalar;
+    quat->d *= scalar;
+    //@ assert \at(quat, Here) == \at(quat, Pre);
 }
 
 /*@ ensures \result.a == q1.a + q2.a;

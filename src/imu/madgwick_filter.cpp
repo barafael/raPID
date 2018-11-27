@@ -55,6 +55,21 @@ madgwick_filter_t init_madgwick_filter(float deltat) {
     requires \is_finite(mag.y);
     requires \is_finite(mag.z);
     ensures \valid(\old(self)) ==> \valid(self);
+
+    assigns *self;
+
+*/
+/* behavior acc_null:
+        assumes !normalize_vec3(&acc);
+        ensures \old(self) == self;
+    behavior mag_null:
+        assumes !normalize_vec3(&mag);
+        ensures \old(self) == self;
+    behavior ok:
+        assumes normalize_vec3(&acc) && normalize_vec3(&mag);
+
+    complete behaviors acc_null, mag_null, ok;
+    disjoint behaviors acc_null, mag_null, ok;
 */
 quaternion_t madgwick_update(madgwick_filter_t *self, vec3_t acc, vec3_t gyro, vec3_t mag) {
     float hx, hy, _2bx, _2bz;
@@ -132,7 +147,7 @@ quaternion_t madgwick_update(madgwick_filter_t *self, vec3_t acc, vec3_t gyro, v
     quaternion_t qdot = differentiate_quat(self->beta, gyro, &(self->quat), &s);
 
     // Integrate to yield quaternion
-    scalar_quat(self->deltat, &qdot);
+    scalar_quat(&qdot, self->deltat);
 
     self->quat = add_quat(self->quat, qdot);
 

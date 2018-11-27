@@ -7,10 +7,18 @@
 */
 complementary_filter_t init_complementary_filter(float beta) {
     clamp(beta, 0.0f, 1.0f);
-    float ateb = 1.0f - beta;
-    complementary_filter_t self;
-    self.beta = beta;
-    self.ateb = ateb;
+    //@ assert 0.0f <= beta <= 1.0f;
+    float ateb = -beta;
+    //@ assert ateb == -beta;
+    //@ assert -1.0f <= ateb <= 0.0f;
+    ++ateb;
+    //@ assert 0.0f <= ateb <= 1.0f;
+    //@ assert beta + ateb == 1.0f;
+    ateb = 1.0f - beta;
+    complementary_filter_t self = {
+        .beta = beta,
+        .ateb = ateb,
+    };
     return self;
 }
 

@@ -4,6 +4,9 @@
     requires \is_finite(vector->x);
     requires \is_finite(vector->y);
     requires \is_finite(vector->z);
+
+    ensures \at(vector, Post) == \at(vector, Pre);
+
     behavior zero_vec:
       assumes \sqrt(vector->x * vector->x + vector->y * vector->y + vector->z * vector->z) == 0.0f;
       ensures \result == false;
