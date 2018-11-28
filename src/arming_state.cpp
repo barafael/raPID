@@ -4,7 +4,7 @@
 
 static arming_state_t *arming_state_instance = NULL;
 
-/*@ requires \valid(input + (0 .. NUM_CHANNELS − 1));
+/*@ requires \valid_read(input + (0 .. NUM_CHANNELS − 1));
     assigns \nothing;
     behavior not_triggered:
       assumes input[THROTTLE_CHANNEL] >   55 ||
@@ -41,9 +41,37 @@ void enter_debug_mode() {
 
 /*@
     requires \valid(arming_state_instance);
-    requires \valid(arming_state_instance->channels);
-    requires \valid((arming_state_instance->channels) + (0 .. NUM_CHANNELS-1));
+    requires \valid_read(arming_state_instance->channels);
+    requires \valid_read((arming_state_instance->channels) + (0 .. NUM_CHANNELS-1));
     assigns \nothing;
+    ensures arming_state_instance->internal_state == INTERNAL_ARMED ||
+            arming_state_instance->internal_state == INTERNAL_DISARMED ||
+            arming_state_instance->internal_state == ARMING ||
+            arming_state_instance->internal_state == DISARMING ||
+            arming_state_instance->internal_state == ARMING_STANDBY ||
+            arming_state_instance->internal_state == DISARMING_STANDBY;
+    ensures \old(arming_state_instance->internal_state) == INTERNAL_ARMED ==>
+        \at(arming_state_instance->internal_state, Post) == INTERNAL_ARMED ||
+        \at(arming_state_instance->internal_state, Post) == DISARMING;
+    ensures \old(arming_state_instance->internal_state) == INTERNAL_DISARMED ==>
+        \at(arming_state_instance->internal_state, Post) == INTERNAL_DISARMED ||
+        \at(arming_state_instance->internal_state, Post) == ARMING;
+
+    ensures \old(arming_state_instance->internal_state) == DISARMING ==>
+        \at(arming_state_instance->internal_state, Post) == DISARMING ||
+        \at(arming_state_instance->internal_state, Post) == INTERNAL_ARMED ||
+        \at(arming_state_instance->internal_state, Post) == DISARMING_STANDBY;
+    ensures \old(arming_state_instance->internal_state) == ARMING ==>
+        \at(arming_state_instance->internal_state, Post) == ARMING ||
+        \at(arming_state_instance->internal_state, Post) == INTERNAL_DISARMED ||
+        \at(arming_state_instance->internal_state, Post) == ARMING_STANDBY;
+
+    ensures \old(arming_state_instance->internal_state) == ARMING_STANDBY ==>
+        \at(arming_state_instance->internal_state, Post) == ARMING_STANDBY ||
+        \at(arming_state_instance->internal_state, Post) == INTERNAL_ARMED;
+    ensures \old(arming_state_instance->internal_state) == DISARMING_STANDBY ==>
+        \at(arming_state_instance->internal_state, Post) == DISARMING_STANDBY ||
+        \at(arming_state_instance->internal_state, Post) == INTERNAL_DISARMED;
 */
 void update_arming_state() {
     bool triggered = state_transition_triggered(arming_state_instance->channels);
