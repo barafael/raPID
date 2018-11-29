@@ -118,7 +118,7 @@ void pid_set_enabled(pid_controller_t *self, bool enable) {
    behavior enabled:
      assumes self->enabled;
      ensures \result <= self->output_limit;
-     ensures \old(self->last_time) < self->last_time;
+     ensures \old(self->last_time) < \at(self->last_time, Post);
    complete behaviors;
    disjoint behaviors;
 */
@@ -132,6 +132,7 @@ float pid_compute(pid_controller_t *self, float measured, float setpoint) {
     /* If there is overflow, the elapsed time is still correct
      * The calculation overflows just like the timer */
     uint64_t elapsed_time = now - self->last_time;
+    //@ assert elapsed_time > 0;
 
     float error = measured - setpoint;
 
@@ -140,6 +141,7 @@ float pid_compute(pid_controller_t *self, float measured, float setpoint) {
     self->integral += elapsed_time * error * self->i_gain;
     /* Integral windup clamp */
     clamp(self->integral, -self->integral_limit, self->integral_limit);
+    //@ assert -self->integral_limit <= self->integral <= self->integral_limit;
 
     float d_term = 0.0f;
     switch (self->d_type) {
@@ -158,8 +160,8 @@ float pid_compute(pid_controller_t *self, float measured, float setpoint) {
             d_term = ((measured - self->last_measured) / elapsed_time) * self->d_gain;
             break;
     }
+    //@ assert \is_finite(d_term);
 
-    //if (self->deriv_filter_enabled && *(self->deriv_filter) != nullptr) {
 #ifndef FILTER_TYPE
 #else
 #if FILTER_TYPE == NONE
@@ -186,6 +188,7 @@ float pid_compute(pid_controller_t *self, float measured, float setpoint) {
 
     /* Output limit */
     clamp(result, -self->output_limit, self->output_limit);
+    //@ assert -self->output_limit <= result <= self->output_limit;
 
     return result;
 }
@@ -218,8 +221,9 @@ void pid_set_d(pid_controller_t *self, float _d_gain) {
 }
 
 /*@
- requires integral_limit >= output_limit;
  requires \valid(self);
+ // bug in spec and still proven! > instead of <
+ requires integral_limit <= output_limit;
 
  ensures self->p_gain == p_gain;
  ensures self->i_gain == i_gain;
@@ -242,7 +246,7 @@ void pid_set_params(pid_controller_t *self,
 
 /*@
  requires \valid(self);
- ensures \valid(\old(self)) ==> \valid(self);
+ //ensures \valid(\old(self)) ==> \valid(self);
  ensures \result == self->p_gain;
 */
 float pid_get_p(pid_controller_t *self) {
@@ -251,7 +255,7 @@ float pid_get_p(pid_controller_t *self) {
 
 /*@
  requires \valid(self);
- ensures \valid(\old(self)) ==> \valid(self);
+ //ensures \valid(\old(self)) ==> \valid(self);
  ensures \result == self->i_gain;
 */
 float pid_get_i(pid_controller_t *self) {
@@ -260,7 +264,7 @@ float pid_get_i(pid_controller_t *self) {
 
 /*@
  requires \valid(self);
- ensures \valid(\old(self)) ==> \valid(self);
+ //ensures \valid(\old(self)) ==> \valid(self);
  ensures \result == self->d_gain;
 */
 float pid_get_d(pid_controller_t *self) {
@@ -269,7 +273,7 @@ float pid_get_d(pid_controller_t *self) {
 
 /*@
  requires \valid(self);
- ensures \valid(\old(self)) ==> \valid(self);
+ //ensures \valid(\old(self)) ==> \valid(self);
  ensures self->integral == 0.0;
 */
 void pid_integral_reset(pid_controller_t *self) {
@@ -278,7 +282,7 @@ void pid_integral_reset(pid_controller_t *self) {
 
 /*@
  requires \valid(self);
- ensures \valid(\old(self)) ==> \valid(self);
+ //ensures \valid(\old(self)) ==> \valid(self);
  ensures self->integral_limit == limit;
 */
 void pid_set_integral_limit(pid_controller_t *self, float limit) {
@@ -287,7 +291,7 @@ void pid_set_integral_limit(pid_controller_t *self, float limit) {
 
 /*@
  requires \valid(self);
- ensures \valid(\old(self)) ==> \valid(self);
+ //ensures \valid(\old(self)) ==> \valid(self);
  ensures self->output_limit == limit;
 */
 void pid_set_output_limit(pid_controller_t *self, float limit) {
@@ -296,7 +300,7 @@ void pid_set_output_limit(pid_controller_t *self, float limit) {
 
 /*@
  requires \valid(self);
- ensures \valid(\old(self)) ==> \valid(self);
+ //ensures \valid(\old(self)) ==> \valid(self);
  ensures self->d_type == type;
 */
 void pid_set_derivative_type(pid_controller_t *self, derivative_type type) {
