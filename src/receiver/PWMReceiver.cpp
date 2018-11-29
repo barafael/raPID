@@ -50,7 +50,7 @@ void PWMReceiver_init(PWMReceiver_t *self, uint8_t _throttle_pin,
    requires \valid(channels);
    assigns \nothing;
    ensures \valid(\old(self)) ==> \valid(self);
-   ensures interrupt_status == INTERRUPTS_ON;
+   ensures ghost_interrupt_status == INTERRUPTS_ON;
 */
 const void receiver_update(PWMReceiver_t *self, int16_t channels[NUM_CHANNELS]) {
     mock_noInterrupts();
@@ -92,7 +92,7 @@ void set_inversion(PWMReceiver_t *self, bool inversion[NUM_CHANNELS]) {
    requires \valid(self);
    assigns \nothing;
    ensures \valid(\old(self)) ==> \valid(self);
-   ensures interrupt_status == INTERRUPTS_ON;
+   ensures ghost_interrupt_status == INTERRUPTS_ON;
 */
 const bool has_signal() {
     mock_noInterrupts();
@@ -113,7 +113,7 @@ const bool has_signal() {
 */
 
 // is this sufficient to denote that this function cannot be called when interrupts are off?
-/*@ requires interrupt_status == INTERRUPTS_ON;
+/*@ requires ghost_interrupt_status == INTERRUPTS_ON;
 */
 void update_throttle() {
     if (mock_digitalRead(throttle_pin) == HIGH) {

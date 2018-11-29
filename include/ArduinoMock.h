@@ -14,7 +14,7 @@ int64_t mock_micros(void);
 #define INTERRUPTS_ON  1
 
 // Interrupts are on at boot
-//@ ghost int interrupt_status = INTERRUPTS_ON;
+//@ ghost int ghost_interrupt_status = INTERRUPTS_ON;
 
 void mock_interrupts();
 void mock_noInterrupts();

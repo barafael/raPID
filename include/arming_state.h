@@ -10,7 +10,7 @@
 #define ARMING_OFF 0
 #define ARMING_ON 1
 
-//@ ghost int arming_state_initialized = ARMING_OFF;
+//@ ghost int ghost_arming_state_initialized = ARMING_OFF;
 
 const bool state_transition_triggered(const int16_t input[NUM_CHANNELS]);
 

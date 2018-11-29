@@ -4,7 +4,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+//const size_t NUM_CHANNELS = 6;
 #define NUM_CHANNELS 6
+
+//const uint16_t THROTTLE_LOW_CUTOFF = 25;
 
 #define THROTTLE_CHANNEL 0
 #define ROLL_CHANNEL     1

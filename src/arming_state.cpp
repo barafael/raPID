@@ -43,7 +43,8 @@ void enter_debug_mode() {
     requires \valid(arming_state_instance);
     requires \valid_read(arming_state_instance->channels);
     requires \valid_read((arming_state_instance->channels) + (0 .. NUM_CHANNELS-1));
-    assigns \nothing;
+    //assigns \nothing;
+    assigns ghost_interrupt_status;
     ensures arming_state_instance->internal_state == INTERNAL_ARMED ||
             arming_state_instance->internal_state == INTERNAL_DISARMED ||
             arming_state_instance->internal_state == ARMING ||
@@ -184,7 +185,7 @@ void update_arming_state() {
     ensures arming_state_initialized == ARMING_ON;
 */
 void init_arming_state(arming_state_t *state, int16_t channels[NUM_CHANNELS]) {
-    //@ ghost arming_state_initialized = ARMING_ON;
+    //@ ghost ghost_arming_state_initialized = ARMING_ON;
     arming_state_instance = state;
     state->channels       = channels;
     // TODO re-enable timer; until then, call update_arming_state periodically from main loop
@@ -197,8 +198,9 @@ void init_arming_state(arming_state_t *state, int16_t channels[NUM_CHANNELS]) {
 
 /*@ requires \valid(self);
     requires arming_state_initialized == ARMING_ON;
-    assigns \nothing;
-    ensures interrupt_status == INTERRUPTS_ON; */
+    //assigns \nothing;
+    assigns ghost_interrupt_status;
+    ensures ghost_interrupt_status == INTERRUPTS_ON; */
 const state_t get_arming_state(arming_state_t *self) {
     mock_noInterrupts();
     switch (self->internal_state) {
