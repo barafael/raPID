@@ -37,7 +37,7 @@ typedef struct {
     ensures state->channels == channels;
     assigns *state;
     assigns *state->channels;
-    assigns arming_state_initialized;
+    assigns ghost_arming_state_initialized;
 */
 void init_arming_state(arming_state_t *state, int16_t channels[NUM_CHANNELS]);
 

@@ -182,10 +182,10 @@ void update_arming_state() {
 
 /*@ ensures arming_state_instance == state;
     assigns arming_state_instance;
-    ensures arming_state_initialized == ARMING_ON;
+    ensures ghost_arming_state_initialized == ARMING_INITIALIZED;
 */
 void init_arming_state(arming_state_t *state, int16_t channels[NUM_CHANNELS]) {
-    //@ ghost ghost_arming_state_initialized = ARMING_ON;
+    //@ ghost arming_state_initialized = ARMING_INITIALIZED;
     arming_state_instance = state;
     state->channels       = channels;
     // TODO re-enable timer; until then, call update_arming_state periodically from main loop
@@ -197,10 +197,6 @@ void init_arming_state(arming_state_t *state, int16_t channels[NUM_CHANNELS]) {
 }
 
 /*@ requires \valid(self);
-    requires arming_state_initialized == ARMING_ON;
-    //assigns \nothing;
-    assigns ghost_interrupt_status;
-    ensures ghost_interrupt_status == INTERRUPTS_ON; */
 const state_t get_arming_state(arming_state_t *self) {
     mock_noInterrupts();
     switch (self->internal_state) {
