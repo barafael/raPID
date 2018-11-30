@@ -1,8 +1,5 @@
 #include "../include/ArduinoMock.h"
 
-static int64_t milliseconds = 0;
-static int64_t microseconds = 0;
-
 /*@ assigns milliseconds;
 
     behavior normal:

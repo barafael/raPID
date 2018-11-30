@@ -84,13 +84,16 @@ pid_controller_t pid_controller_init(float p_gain, float i_gain, float d_gain,
 #endif
 #endif
     };
+    //@ assert controller.output_limit >= 0.0f;
+    //@ assert controller.integral_limit >= 0.0f;
+    //@ assert controller.integral_limit <= controller.output_limit;
     return controller;
 }
 
 /* En/Disable Passthrough of setpoint */
 /*@
  requires \valid(self);
- ensures \valid(\old(self)) ==> \valid(self);
+ //ensures \valid(\old(self)) ==> \valid(self);
  ensures self->enabled == enable; */
 void pid_set_enabled(pid_controller_t *self, bool enable) {
     self->enabled = enable;
@@ -98,14 +101,17 @@ void pid_set_enabled(pid_controller_t *self, bool enable) {
 
 /*@
    requires \valid(self);
-   requires self->output_limit > 0.0f;
+   requires 0 <= self->integral_limit <= self->output_limit;
+   requires \is_finite(measured);
+   requires \is_finite(setpoint);
 
    assigns self->last_time;
    assigns self->last_error;
    assigns self->last_setpoint;
    assigns self->last_measured;
+   assigns self->integral;
 
-   ensures \valid(\old(self)) ==> \valid(self);
+   //ensures \valid(\old(self)) ==> \valid(self);
 
    behavior disabled:
      assumes self->enabled == false;
@@ -195,7 +201,7 @@ float pid_compute(pid_controller_t *self, float measured, float setpoint) {
 
 /*@
  requires \valid(self);
- ensures \valid(\old(self)) ==> \valid(self);
+ //ensures \valid(\old(self)) ==> \valid(self);
  ensures self->p_gain == _p_gain;
 */
 void pid_set_p(pid_controller_t *self, float _p_gain) {
@@ -204,7 +210,7 @@ void pid_set_p(pid_controller_t *self, float _p_gain) {
 
 /*@
  requires \valid(self);
- ensures \valid(\old(self)) ==> \valid(self);
+ //ensures \valid(\old(self)) ==> \valid(self);
  ensures self->i_gain == _i_gain;
 */
 void pid_set_i(pid_controller_t *self, float _i_gain) {
@@ -213,7 +219,7 @@ void pid_set_i(pid_controller_t *self, float _i_gain) {
 
 /*@
  requires \valid(self);
- ensures \valid(\old(self)) ==> \valid(self);
+ //ensures \valid(\old(self)) ==> \valid(self);
  ensures self->d_gain == _d_gain;
 */
 void pid_set_d(pid_controller_t *self, float _d_gain) {

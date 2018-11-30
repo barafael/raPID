@@ -2,81 +2,87 @@
 
 #undef USE_SERIAL
 
-static arming_state_t *arming_state_instance = NULL;
+static uint64_t state_change_time;
+static internal_state_t internal_state;
+static int16_t *channels;
+
+#define TRANSITION_THROTTLE_THRESHOLD 55
+#define TRANSITION_ROLL_THRESHOLD 445
+#define TRANSITION_PITCH_THRESHOLD (-445)
+#define TRANSITION_YAW_THRESHOLD (-445)
 
 /*@ requires \valid_read(input + (0 .. NUM_CHANNELS − 1));
     assigns \nothing;
     behavior not_triggered:
-      assumes input[THROTTLE_CHANNEL] >   55 ||
-              input[ROLL_CHANNEL]     <  445 ||
-              input[PITCH_CHANNEL]    > -445 ||
-              input[YAW_CHANNEL]      > -445;
+      assumes input[THROTTLE_CHANNEL] >  TRANSITION_THROTTLE_THRESHOLD ||
+              input[ROLL_CHANNEL]     <  TRANSITION_ROLL_THRESHOLD ||
+              input[PITCH_CHANNEL]    >  TRANSITION_PITCH_THRESHOLD ||
+              input[YAW_CHANNEL]      >  TRANSITION_YAW_THRESHOLD;
       ensures \result == false;
     behavior triggered:
-      assumes input[THROTTLE_CHANNEL] <=   55 &&
-              input[ROLL_CHANNEL]     >=  445 &&
-              input[PITCH_CHANNEL]    <= -445 &&
-              input[YAW_CHANNEL]      <= -445;
+      assumes input[THROTTLE_CHANNEL] <=   TRANSITION_THROTTLE_THRESHOLD &&
+              input[ROLL_CHANNEL]     >=   TRANSITION_ROLL_THRESHOLD &&
+              input[PITCH_CHANNEL]    <=   TRANSITION_PITCH_THRESHOLD &&
+              input[YAW_CHANNEL]      <=   TRANSITION_YAW_THRESHOLD;
       ensures \result == true;
 
     complete behaviors triggered, not_triggered;
     disjoint behaviors triggered, not_triggered;
 */
 const bool state_transition_triggered(const int16_t input[NUM_CHANNELS]) {
-    if (input[THROTTLE_CHANNEL] >   55) return false;
-    if (input[ROLL_CHANNEL]     <  445) return false;
+    if (input[THROTTLE_CHANNEL] > TRANSITION_THROTTLE_THRESHOLD) return false;
+    if (input[ROLL_CHANNEL]     < TRANSITION_ROLL_THRESHOLD)     return false;
     /* No typo - roll is different from the other channels when not inverted */
-    if (input[PITCH_CHANNEL]    > -445) return false;
-    if (input[YAW_CHANNEL]      > -445) return false;
+    if (input[PITCH_CHANNEL]    > TRANSITION_PITCH_THRESHOLD)    return false;
+    if (input[YAW_CHANNEL]      > TRANSITION_YAW_THRESHOLD)      return false;
     return true;
 }
 
-//#define ARMING_DEBUG
-
 /*@
-    requires \valid(arming_state_instance); */
+    requires ghost_arming_state_initialized == ARMING_INITIALIZED;
+*/
 void enter_debug_mode() {
-    arming_state_instance->internal_state = INTERNAL_DEBUG;
+    internal_state = INTERNAL_DEBUG;
 }
 
 /*@
-    requires \valid(arming_state_instance);
-    requires \valid_read(arming_state_instance->channels);
-    requires \valid_read((arming_state_instance->channels) + (0 .. NUM_CHANNELS-1));
+    requires ghost_arming_state_initialized == ARMING_INITIALIZED;
+    requires \valid_read(channels);
+    requires \valid_read(channels + (0 .. NUM_CHANNELS-1));
     //assigns \nothing;
-    assigns ghost_interrupt_status;
-    ensures arming_state_instance->internal_state == INTERNAL_ARMED ||
-            arming_state_instance->internal_state == INTERNAL_DISARMED ||
-            arming_state_instance->internal_state == ARMING ||
-            arming_state_instance->internal_state == DISARMING ||
-            arming_state_instance->internal_state == ARMING_STANDBY ||
-            arming_state_instance->internal_state == DISARMING_STANDBY;
-    ensures \old(arming_state_instance->internal_state) == INTERNAL_ARMED ==>
-        \at(arming_state_instance->internal_state, Post) == INTERNAL_ARMED ||
-        \at(arming_state_instance->internal_state, Post) == DISARMING;
-    ensures \old(arming_state_instance->internal_state) == INTERNAL_DISARMED ==>
-        \at(arming_state_instance->internal_state, Post) == INTERNAL_DISARMED ||
-        \at(arming_state_instance->internal_state, Post) == ARMING;
+    assigns milliseconds;
+    ensures internal_state == INTERNAL_ARMED ||
+            internal_state == INTERNAL_DISARMED ||
+            internal_state == ARMING ||
+            internal_state == DISARMING ||
+            internal_state == ARMING_STANDBY ||
+            internal_state == DISARMING_STANDBY;
+    ensures \old(internal_state)  == INTERNAL_ARMED ==>
+        \at(internal_state, Post) == INTERNAL_ARMED ||
+        \at(internal_state, Post) == DISARMING;
+    ensures \old(internal_state)  == INTERNAL_DISARMED ==>
+        \at(internal_state, Post) == INTERNAL_DISARMED ||
+        \at(internal_state, Post) == ARMING;
 
-    ensures \old(arming_state_instance->internal_state) == DISARMING ==>
-        \at(arming_state_instance->internal_state, Post) == DISARMING ||
-        \at(arming_state_instance->internal_state, Post) == INTERNAL_ARMED ||
-        \at(arming_state_instance->internal_state, Post) == DISARMING_STANDBY;
-    ensures \old(arming_state_instance->internal_state) == ARMING ==>
-        \at(arming_state_instance->internal_state, Post) == ARMING ||
-        \at(arming_state_instance->internal_state, Post) == INTERNAL_DISARMED ||
-        \at(arming_state_instance->internal_state, Post) == ARMING_STANDBY;
+    ensures \old(internal_state)  == DISARMING ==>
+        \at(internal_state, Post) == DISARMING ||
+        \at(internal_state, Post) == INTERNAL_ARMED ||
+        \at(internal_state, Post) == DISARMING_STANDBY;
+    ensures \old(internal_state)  == ARMING ==>
+        \at(internal_state, Post) == ARMING ||
+        \at(internal_state, Post) == INTERNAL_DISARMED ||
+        \at(internal_state, Post) == ARMING_STANDBY;
 
-    ensures \old(arming_state_instance->internal_state) == ARMING_STANDBY ==>
-        \at(arming_state_instance->internal_state, Post) == ARMING_STANDBY ||
-        \at(arming_state_instance->internal_state, Post) == INTERNAL_ARMED;
-    ensures \old(arming_state_instance->internal_state) == DISARMING_STANDBY ==>
-        \at(arming_state_instance->internal_state, Post) == DISARMING_STANDBY ||
-        \at(arming_state_instance->internal_state, Post) == INTERNAL_DISARMED;
+    ensures \old(internal_state)  == ARMING_STANDBY ==>
+        \at(internal_state, Post) == ARMING_STANDBY ||
+        \at(internal_state, Post) == INTERNAL_ARMED;
+    ensures \old(internal_state)  == DISARMING_STANDBY ==>
+        \at(internal_state, Post) == DISARMING_STANDBY ||
+        \at(internal_state, Post) == INTERNAL_DISARMED;
 */
 void update_arming_state() {
-    bool triggered = state_transition_triggered(arming_state_instance->channels);
-    switch (arming_state_instance->internal_state) {
+    bool triggered = state_transition_triggered(channels);
+    switch (internal_state) {
         case INTERNAL_ARMED:
 #ifdef ARMING_DEBUG
 #ifdef USE_SERIAL
@@ -84,8 +90,8 @@ void update_arming_state() {
 #endif
 #endif
             if (triggered) {
-                arming_state_instance->internal_state    = DISARMING;
-                arming_state_instance->state_change_time = mock_millis();
+                internal_state    = DISARMING;
+                state_change_time = mock_millis();
             }
             break;
 
@@ -96,8 +102,8 @@ void update_arming_state() {
 #endif
 #endif
             if (triggered) {
-                arming_state_instance->internal_state    = ARMING;
-                arming_state_instance->state_change_time = mock_millis();
+                internal_state    = ARMING;
+                state_change_time = mock_millis();
             }
             break;
 
@@ -108,8 +114,8 @@ void update_arming_state() {
                 Serial.println("Disarming");
 #endif
 #endif
-                if ((mock_millis() - arming_state_instance->state_change_time) > DISARM_TIMEOUT_MS) {
-                    arming_state_instance->internal_state = DISARMING_STANDBY;
+                if ((mock_millis() - state_change_time) > DISARM_TIMEOUT_MS) {
+                    internal_state = DISARMING_STANDBY;
                 } else {
                     break;
                 }
@@ -119,7 +125,7 @@ void update_arming_state() {
                 Serial.println("Going back to armed");
 #endif
 #endif
-                arming_state_instance->internal_state = INTERNAL_ARMED;
+                internal_state = INTERNAL_ARMED;
             }
             break;
 
@@ -131,7 +137,7 @@ void update_arming_state() {
 #endif
 #endif
             } else {
-                arming_state_instance->internal_state = INTERNAL_DISARMED;
+                internal_state = INTERNAL_DISARMED;
             }
             break;
 
@@ -142,8 +148,8 @@ void update_arming_state() {
 #endif
 #endif
             if (triggered) {
-                if ((mock_millis() - arming_state_instance->state_change_time) > ARM_TIMEOUT_MS) {
-                    arming_state_instance->internal_state = ARMING_STANDBY;
+                if ((mock_millis() - state_change_time) > ARM_TIMEOUT_MS) {
+                    internal_state = ARMING_STANDBY;
                 } else {
                     break;
                 }
@@ -153,7 +159,7 @@ void update_arming_state() {
                 Serial.println("Going back to disarmed");
 #endif
 #endif
-                arming_state_instance->internal_state = INTERNAL_DISARMED;
+                internal_state = INTERNAL_DISARMED;
             }
             break;
 
@@ -165,7 +171,7 @@ void update_arming_state() {
 #endif
 #endif
             } else {
-                arming_state_instance->internal_state = INTERNAL_ARMED;
+                internal_state = INTERNAL_ARMED;
             }
             break;
 
@@ -176,34 +182,42 @@ void update_arming_state() {
             Serial.println("Unimpl. State. Disarming!");
 #endif
 #endif
-            arming_state_instance->internal_state = INTERNAL_DISARMED;
+            internal_state = INTERNAL_DISARMED;
     }
 }
 
-/*@ ensures arming_state_instance == state;
-    assigns arming_state_instance;
+/*@
+    requires \valid(channels);
+    requires \valid(channels + (0 .. NUM_CHANNELS - 1));
+    assigns channels;
+    assigns ghost_arming_state_initialized;
+    ensures channels == channels;
     ensures ghost_arming_state_initialized == ARMING_INITIALIZED;
 */
-void init_arming_state(arming_state_t *state, int16_t channels[NUM_CHANNELS]) {
-    //@ ghost arming_state_initialized = ARMING_INITIALIZED;
-    arming_state_instance = state;
-    state->channels       = channels;
+void init_arming_state(int16_t _channels[NUM_CHANNELS]) {
+    //@ ghost ghost_arming_state_initialized = ARMING_INITIALIZED;
+    channels = _channels;
     // TODO re-enable timer; until then, call update_arming_state periodically from main loop
     /*
-    if (!state->state_change_timer.begin(update_arming_state, INTERVAL_US)) {
+    if (!state_change_timer.begin(update_arming_state, INTERVAL_US)) {
         error_blink(STATE_TIMER_HARDWARE_BUSY, "Could not set up interval timer for arming state update!");
     }
     */
 }
 
-/*@ requires \valid(self);
-const state_t get_arming_state(arming_state_t *self) {
+/*@
+    requires \valid_read(channels);
+    requires ghost_arming_state_initialized == ARMING_INITIALIZED;
+    //assigns \nothing;
+    assigns ghost_interrupt_status;
+    ensures ghost_interrupt_status == INTERRUPTS_ON; */
+const state_t get_arming_state() {
     mock_noInterrupts();
-    switch (self->internal_state) {
+    switch (internal_state) {
         case INTERNAL_DEBUG:
         case INTERNAL_ARMED:
         case DISARMING:
-        case DISARMING_STANDBY: 
+        case DISARMING_STANDBY:
             mock_interrupts();
             return ARMED;
         case INTERNAL_DISARMED:

@@ -1,5 +1,5 @@
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 //#define WATCHDOG
 
@@ -45,14 +45,7 @@ int16_t offsets[NUM_CHANNELS]  = { -1000, -1500, -1500, -1500, -1500, -1500 };
 /* Default start state */
 arming_state_t state = { INTERNAL_DISARMED, channels, 0 };
 
-const uint64_t SERIAL_WAIT_TIMEOUT = 3000ul;
-
-/* Scaled yaw_pitch_roll to [0, 1000] */
-vec3_t attitude;
-
-vec3_t acceleration;
-vec3_t angular_velocity;
-vec3_t magnetization;
+#define SERIAL_WAIT_TIMEOUT 3000ul
 
 float pid_output_roll_stbl = 0.0;
 float pid_output_roll_rate = 0.0;
@@ -62,7 +55,7 @@ float pid_output_pitch_rate = 0.0;
 
 float pid_output_yaw_rate = 0.0;
 
-static void print_attitude() {
+static void print_attitude(vec3_t attitude) {
 #ifdef USE_SERIAL
     Serial.print(attitude.x);
     Serial.print(F("\t"));
@@ -74,7 +67,7 @@ static void print_attitude() {
 #endif
 }
 
-static void print_velocity() {
+static void print_velocity(vec3_t angular_velocity) {
 #ifdef USE_SERIAL
     Serial.print(angular_velocity.x);
     Serial.print(F("\t"));
@@ -103,17 +96,24 @@ extern "C" int main(void) {
     Serial.begin(9600);
 #endif
 
-    uint64_t serial_wait_start_time = millis();
+    uint64_t serial_wait_start_time = mock_millis();
 #ifdef USE_SERIAL
     while (!Serial) {
-        if (millis() - serial_wait_start_time > SERIAL_WAIT_TIMEOUT) {
+        if (mock_millis() - serial_wait_start_time > SERIAL_WAIT_TIMEOUT) {
             break;
         }
     }
 #endif
 
-    pinMode(LED_PIN, OUTPUT);
-    pinMode(DEBUG_PIN, OUTPUT);
+    mock_pinMode(LED_PIN, OUTPUT);
+    mock_pinMode(DEBUG_PIN, OUTPUT);
+
+    /* Scaled yaw_pitch_roll to [0, 1000] */
+    vec3_t attitude;
+
+    // vec3_t acceleration;
+    vec3_t angular_velocity;
+    // vec3_t magnetization;
 
     init_arming_state(&state, channels);
 
@@ -127,8 +127,8 @@ extern "C" int main(void) {
 
     bool receiver_active = false;
     if (receiver_active) {
-        while (!has_signal(&receiver)) {
-            delay(500);
+        while (!has_signal()) {
+            mock_delay(500);
 #ifdef USE_SERIAL
             Serial.println(F("No receiver signal! Waiting."));
 #endif
@@ -252,7 +252,7 @@ extern "C" int main(void) {
 
         /* Blink LED to indicate activity */
         blink_state = !blink_state;
-        digitalWrite(LED_PIN, blink_state);
+        mock_digitalWrite(LED_PIN, blink_state);
 #ifdef WATCHDOG
         watchdog_feed();
 #endif

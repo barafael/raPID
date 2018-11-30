@@ -3,8 +3,12 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <limits.h>
 
 #define M_PI_F 3.14159265358979323846f
+
+int64_t milliseconds = 0;
+int64_t microseconds = 0;
 
 int64_t mock_millis(void);
 
