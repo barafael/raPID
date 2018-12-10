@@ -23,8 +23,6 @@ typedef struct {
     float integral;
     float integral_limit;
 
-    float derivative;
-
     derivative_type d_type;
 
     /* For derivative-on-error */

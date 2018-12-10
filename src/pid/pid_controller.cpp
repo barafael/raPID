@@ -12,8 +12,6 @@ pid_controller_t pid_controller_init(float p_gain, float i_gain, float d_gain,
         .integral       = 0.0f,
         .integral_limit = integral_limit,
 
-        .derivative = 0.0f,
-
         .d_type = ERROR,
 
         /* For derivative-on-error */
