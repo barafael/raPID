@@ -175,11 +175,7 @@ float pid_compute(pid_controller_t *self, float measured, float setpoint) {
 #if FILTER_TYPE == MOVING_AVERAGE
     d_term = moving_average_next(&self->moving_average_filter, d_term);
 #else
-#if FILTER_TYPE == COMPLEMENTARY
-    d_term = complementary_next(&self->complementary_filter, d_term);
-#else
 #error "Undefined filter type!"
-#endif
 #endif
 #endif
 #endif

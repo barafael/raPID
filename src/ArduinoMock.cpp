@@ -46,7 +46,6 @@ int64_t mock_micros() {
     return microseconds;
 }
 
-// assigning a ghost variable is not assigning \nothing
 /*@ ensures ghost_interrupt_status == INTERRUPTS_ON;
     assigns ghost_interrupt_status; */
 void mock_interrupts() {

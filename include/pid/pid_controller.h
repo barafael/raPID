@@ -49,11 +49,7 @@ typedef struct {
 #if FILTER_TYPE == MOVING_AVERAGE
     moving_average_t moving_average_filter;
 #else
-#if FILTER_TYPE == COMPLEMENTARY
-    complementary_filter_t complementary_filter;
-#else
 #error "Undefined filter type!"
-#endif
 #endif
 #endif
 #endif
