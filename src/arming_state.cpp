@@ -51,6 +51,8 @@ void enter_debug_mode() {
     requires \valid_read(channels + (0 .. NUM_CHANNELS-1));
     //assigns \nothing;
     assigns milliseconds;
+    assigns internal_state;
+    assigns state_change_time;
     ensures internal_state == INTERNAL_ARMED ||
             internal_state == INTERNAL_DISARMED ||
             internal_state == ARMING ||

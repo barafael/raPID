@@ -134,6 +134,7 @@ float pid_compute(pid_controller_t *self, float measured, float setpoint) {
     }
 
     uint64_t now = mock_micros();
+    //@ assert now > self->last_time;
 
     /* If there is overflow, the elapsed time is still correct
      * The calculation overflows just like the timer */
