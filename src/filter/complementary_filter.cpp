@@ -1,5 +1,23 @@
 #include "../../include/filter/complementary_filter.h"
 
+/* axiomatic complement_real {
+     logic real complement_real(float value);
+
+     axiom compl:
+       \forall real r; 0. <= r < 1.0 ==> 0.0 <= complement_real(r) < 1.0;
+*/
+
+/*@ requires 0.0 <= value < 1.0;
+    ensures 0.0 < \result <= 1.0;
+    ensures \result >= 1.0 - value - 0.01;
+    ensures \result <= 1.0 - value + 0.01;
+    ensures \result == 1.0 - value;
+*/
+
+float complement(float value) {
+    return 1.0 - value;
+}
+
 /*@ requires \is_finite(beta);
     ensures 0.0 <= \result.beta <= 1.0;
     ensures 0.0 <= \result.ateb <= 1.0;
@@ -11,7 +29,7 @@ complementary_filter_t init_complementary_filter(float beta) {
     float ateb = -beta;
     //@ assert ateb == -beta;
     //@ assert -1.0f <= ateb <= 0.0f;
-    ++ateb;
+    ateb += 1.0f;
     //@ assert 0.0f <= ateb <= 1.0f;
     //@ assert beta + ateb == 1.0f;
     ateb = 1.0f - beta;
