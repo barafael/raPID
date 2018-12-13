@@ -1,14 +1,14 @@
 #include "Arduino.h"
 
-#include "../../include/receiver/PWMReceiver.h"
+#include "../../include/receiver/pwm_receiver.h"
 
 /* Access variable for ISRs */
-static PWMReceiver_t *receiver_instance = NULL;
+static pwm_receiver_t *receiver_instance = NULL;
 
 /* Array of void functions without params, one for each input */
 static void (*interrupts[NUM_CHANNELS])() = {};
 
-void PWMReceiver_init(PWMReceiver_t *self, uint8_t throttle_pin,
+void pwm_receiver_init(pwm_receiver_t *self, uint8_t throttle_pin,
         uint8_t roll_pin, uint8_t pitch_pin, uint8_t yaw_pin,
         uint8_t aux1_pin, uint8_t aux2_pin, int16_t *offsets) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
@@ -40,7 +40,7 @@ void PWMReceiver_init(PWMReceiver_t *self, uint8_t throttle_pin,
    ---------------------------------------------------------
 */
 
-const void receiver_update(PWMReceiver_t *self, int16_t *channels) {
+const void receiver_update(pwm_receiver_t *self, int16_t *channels) {
     noInterrupts();
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         channels[index] = self->channels_shared[index];
@@ -57,19 +57,19 @@ const void receiver_update(PWMReceiver_t *self, int16_t *channels) {
     }
 }
 
-void set_offsets(PWMReceiver_t *self, int16_t *offsets) {
+void set_offsets(pwm_receiver_t *self, int16_t *offsets) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         self->offsets[index] = offsets[index];
     }
 }
 
-void set_trims(PWMReceiver_t *self, int16_t *trims) {
+void set_trims(pwm_receiver_t *self, int16_t *trims) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         self->trims[index] = trims[index];
     }
 }
 
-void set_inversion(PWMReceiver_t *self, bool inversion[NUM_CHANNELS]) {
+void set_inversion(pwm_receiver_t *self, bool inversion[NUM_CHANNELS]) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         self->inversion[index] = inversion[index];
     }
@@ -77,7 +77,7 @@ void set_inversion(PWMReceiver_t *self, bool inversion[NUM_CHANNELS]) {
 
 // TODO copy has_signal logic from blinkenlights
 // Prove: interrupts always enabled after this function
-const bool has_signal(PWMReceiver_t *self) {
+const bool has_signal(pwm_receiver_t *self) {
     noInterrupts();
     for (size_t index = 0; index < 4; index++) {
         if (self->channels_shared[index] == 0) {

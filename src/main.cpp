@@ -12,7 +12,7 @@
 #include "../include/pid/pid_controller.h"
 #include "../include/pid/pid_param.h"
 #include "../include/pins.h"
-#include "../include/receiver/PWMReceiver.h"
+#include "../include/receiver/pwm_receiver.h"
 #include "../include/settings.h"
 
 #ifdef WATCHDOG
@@ -108,8 +108,8 @@ extern "C" int main(void) {
 
     static bool blink_state = false;
 
-    PWMReceiver_t receiver;
-    PWMReceiver_init(&receiver, THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
+    pwm_receiver_t receiver;
+    pwm_receiver_init(&receiver, THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
                          PITCH_INPUT_PIN, YAW_INPUT_PIN,
                          AUX1_INPUT_PIN,  AUX2_INPUT_PIN,
                          offsets);
