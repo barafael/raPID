@@ -9,7 +9,9 @@
 
 #define PWM_RECEIVER_NOT_INITIALIZED 0
 #define PWM_RECEIVER_INITIALIZED 1
+//@ ghost int ghost_pwmreceiver_status = PWM_RECEIVER_NOT_INITIALIZED;
 
+#define PWM_NUM_CHANNELS NUM_CHANNELS
 /* Interrupts write to this array and the update function reads
  * Note: disable interrupts when reading to avoid race conditions
 */
@@ -29,15 +31,15 @@ int16_t trims[NUM_CHANNELS];
     /* Per-channel inversion */
     bool inversion[NUM_CHANNELS];
 
-void pwm_receiver_init(uint8_t throttle_pin, uint8_t roll_pin, uint8_t pitch_pin, uint8_t yaw_pin,
-        uint8_t aux1_pin, uint8_t aux2_pin,
-        const int16_t offsets[NUM_CHANNELS]);
+void pwm_receiver_init(uint8_t _throttle_pin, uint8_t _roll_pin, uint8_t _pitch_pin, uint8_t _yaw_pin,
+        uint8_t _aux1_pin, uint8_t _aux2_pin,
+        const int16_t _offsets[NUM_CHANNELS]);
 
 const void receiver_update(int16_t channels[NUM_CHANNELS]);
 
-void set_offsets(int16_t *offsets);
-void set_trims(int16_t trims[NUM_CHANNELS]);
-void set_inversion(bool inversion[NUM_CHANNELS]);
+void set_offsets(int16_t _offsets[NUM_CHANNELS]);
+void set_trims(int16_t _trims[NUM_CHANNELS]);
+void set_inversion(bool _inversion[NUM_CHANNELS]);
 
 const bool has_signal();
 

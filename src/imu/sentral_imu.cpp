@@ -705,9 +705,8 @@ void magcalMPU9250(float *dest1, float *dest2) {
 }
 
 // Accelerometer and gyroscope self test; check calibration wrt factory settings
-void MPU9250SelfTest(
-    float *destination) // Should return percent deviation from factory trim values, +/- 14 or less deviation is a pass
-{
+// Should return percent deviation from factory trim values, +/- 14 or less deviation is a pass
+void MPU9250SelfTest(float *destination) {
     uint8_t rawData[6] = { 0, 0, 0, 0, 0, 0 };
     uint8_t selfTest[6];
     int16_t gAvg[3], aAvg[3], aSTAvg[3], gSTAvg[3];
@@ -851,8 +850,8 @@ uint8_t M24512DFMreadByte(uint8_t device_address, uint8_t data_address1, uint8_t
     Wire.write(data_address1); // Put slave register address in Tx buffer
     Wire.write(data_address2); // Put slave register address in Tx buffer
     Wire.endTransmission(I2C_NOSTOP); // Send the Tx buffer, but send a restart to keep connection alive
-    //	Wire.endTransmission(false);             // Send the Tx buffer, but send a restart to keep connection alive
-    //	Wire.requestFrom(address, 1);  // Read one byte from slave register address
+    //Wire.endTransmission(false);             // Send the Tx buffer, but send a restart to keep connection alive
+    // Read one byte from slave register address
     Wire.requestFrom(device_address, (size_t) 1); // Read one byte from slave register address
     data = Wire.read(); // Fill Rx buffer with result
     return data; // Return data read from slave register
@@ -864,7 +863,7 @@ void M24512DFMreadBytes(uint8_t device_address, uint8_t data_address1, uint8_t d
     Wire.write(data_address1); // Put slave register address in Tx buffer
     Wire.write(data_address2); // Put slave register address in Tx buffer
     Wire.endTransmission(I2C_NOSTOP); // Send the Tx buffer, but send a restart to keep connection alive
-    //	Wire.endTransmission(false);              // Send the Tx buffer, but send a restart to keep connection alive
+    //Wire.endTransmission(false);              // Send the Tx buffer, but send a restart to keep connection alive
     uint8_t i = 0;
     //        Wire.requestFrom(address, count);       // Read bytes from slave register address
     Wire.requestFrom(device_address, (size_t) count); // Read bytes from slave register address
@@ -994,8 +993,8 @@ uint8_t readByte(uint8_t address, uint8_t subAddress) {
     Wire.beginTransmission(address); // Initialize the Tx buffer
     Wire.write(subAddress); // Put slave register address in Tx buffer
     Wire.endTransmission(I2C_NOSTOP); // Send the Tx buffer, but send a restart to keep connection alive
-    //	Wire.endTransmission(false);             // Send the Tx buffer, but send a restart to keep connection alive
-    //	Wire.requestFrom(address, 1);  // Read one byte from slave register address
+    //Wire.endTransmission(false);             // Send the Tx buffer, but send a restart to keep connection alive
+    //Wire.requestFrom(address, 1);  // Read one byte from slave register address
     Wire.requestFrom(address, (size_t) 1); // Read one byte from slave register address
     data = Wire.read(); // Fill Rx buffer with result
     return data; // Return data read from slave register
@@ -1005,7 +1004,7 @@ void readBytes(uint8_t address, uint8_t subAddress, uint8_t count, uint8_t *dest
     Wire.beginTransmission(address); // Initialize the Tx buffer
     Wire.write(subAddress); // Put slave register address in Tx buffer
     Wire.endTransmission(I2C_NOSTOP); // Send the Tx buffer, but send a restart to keep connection alive
-    //	Wire.endTransmission(false);       // Send the Tx buffer, but send a restart to keep connection alive
+    //Wire.endTransmission(false);       // Send the Tx buffer, but send a restart to keep connection alive
     uint8_t i = 0;
     //        Wire.requestFrom(address, count);  // Read bytes from slave register address
     Wire.requestFrom(address, (size_t) count); // Read bytes from slave register address

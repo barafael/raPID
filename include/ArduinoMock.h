@@ -1,9 +1,9 @@
 #ifndef ARDUINO_MOCK_H
 #define ARDUINO_MOCK_H
 
-#include <stdint.h>
-#include <stddef.h>
 #include <limits.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #define M_PI_F 3.14159265358979323846f
 

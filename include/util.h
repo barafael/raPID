@@ -8,4 +8,5 @@
     ((value) = \
     ((value) < (low)  ? (low) : \
     ((value) > (high) ? (high) : (value))))
-#endif
+
+#endif // UTIL_H

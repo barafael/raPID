@@ -7,12 +7,12 @@
        \forall real r; 0. <= r < 1.0 ==> 0.0 <= complement_real(r) < 1.0;
 */
 
-/*@ requires 0.0 <= value < upper;
+/*@ requires 0.0 <= number < upper;
     ensures 0.0 < \result <= upper;
-    ensures \result >= upper - value - 0.01;
-    ensures \result <= upper - value + 0.01;
+    ensures \result >= upper - number - 0.01;
+    ensures \result <= upper - number + 0.01;
     ensures \result >= 0.0f;
-    ensures \result == upper - value;
+    ensures \result == upper - number;
 */
 float complement_float(float upper, float number) {
     return upper - number;
