@@ -53,6 +53,7 @@ int sum_int_array(const int *values, size_t size) {
 
 /*@ requires \valid_read(values + (0 .. size - 1));
 
+    requires \forall integer i; 0 <= i < size ==> \is_finite(values[i]);
     assigns \nothing;
 
     ensures \result == sum_real(values, 0, size);

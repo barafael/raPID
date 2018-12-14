@@ -12,7 +12,7 @@
 #include "../include/pid/pid_controller.h"
 #include "../include/pid/pid_param.h"
 #include "../include/pins.h"
-#include "../include/receiver/PWMReceiver.h"
+#include "../include/receiver/pwm_receiver.h"
 #include "../include/settings.h"
 
 #ifdef WATCHDOG
@@ -43,9 +43,16 @@ int16_t channels[NUM_CHANNELS] = { 0 };
 int16_t offsets[NUM_CHANNELS]  = { -1000, -1500, -1500, -1500, -1500, -1500 };
 
 /* Default start state */
-arming_state_t state = { INTERNAL_DISARMED, channels, 0 };
+arming_state_t state = DISARMED;
 
-#define SERIAL_WAIT_TIMEOUT 3000ul
+const uint64_t SERIAL_WAIT_TIMEOUT = 3000ul;
+
+/* Scaled yaw_pitch_roll to [0, 1000] */
+vec3_t attitude;
+
+vec3_t acceleration;
+vec3_t angular_velocity;
+vec3_t magnetization;
 
 float pid_output_roll_stbl = 0.0;
 float pid_output_roll_rate = 0.0;
@@ -115,12 +122,11 @@ extern "C" int main(void) {
     vec3_t angular_velocity;
     // vec3_t magnetization;
 
-    init_arming_state(&state, channels);
+    init_arming_state(channels);
 
     static bool blink_state = false;
 
-    PWMReceiver_t receiver;
-    PWMReceiver_init(&receiver, THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
+    pwm_receiver_init(THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
                          PITCH_INPUT_PIN, YAW_INPUT_PIN,
                          AUX1_INPUT_PIN,  AUX2_INPUT_PIN,
                          offsets);
@@ -172,7 +178,7 @@ extern "C" int main(void) {
 
     /* Flight loop */
     while (true) {
-        receiver_update(&receiver, channels);
+        receiver_update(channels);
         //print_channels(channels);
 
         /* For outer control loop */
@@ -185,7 +191,7 @@ extern "C" int main(void) {
 
         update_arming_state();
 
-        switch (get_arming_state(&state)) {
+        switch (get_arming_state()) {
             case ARMED:
                 pid_output_roll_stbl = pid_compute(&roll_controller_stbl, attitude.x, channels[ROLL_CHANNEL]);
 
@@ -244,9 +250,9 @@ extern "C" int main(void) {
 
             default:
 #ifdef USE_SERIAL
-                Serial.println(F("Unimplemented state! Will disarm."));
+                Serial.println(F("Unimplemented state!"));
 #endif
-                state.internal_state = INTERNAL_DISARMED;
+                //internal_state = INTERNAL_DISARMED;
                 break;
         }
 

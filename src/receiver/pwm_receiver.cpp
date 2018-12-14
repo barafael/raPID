@@ -1,4 +1,4 @@
-#include "../../include/receiver/PWMReceiver.h"
+#include "../../include/receiver/pwm_receiver.h"
 
 static int throttle_pin;
 static int roll_pin;
@@ -17,17 +17,16 @@ static volatile uint64_t pwm_pulse_duration_shared[NUM_CHANNELS] = { 0 };
 /*@ requires \valid(self);
     requires \valid(offsets + (0 .. 6 -1));
     requires \valid_read(offsets + (0 .. 6 -1));
-    requires \valid(self->offsets + (0 .. 6 -1));
-    requires \valid(self->pins + (0 .. 6 - 1));
+    requires \valid(pwm_offsets + (0 .. 6 -1));
     assigns *self;
-    assigns *(self->offsets + (0 .. 6 - 1));
-    ensures \forall int i; 0 <= i <= 6 - 1 ==> offsets[i] == self->offsets[i];
+    assigns *(pwm_offsets + (0 .. 6 - 1));
+    ensures \forall int i; 0 <= i <= 6 - 1 ==> offsets[i] == pwm_offsets[i];
 */
-void PWMReceiver_init(PWMReceiver_t *self, uint8_t _throttle_pin,
+void pwm_receiver_init(uint8_t _throttle_pin,
         uint8_t _roll_pin, uint8_t _pitch_pin, uint8_t _yaw_pin,
         uint8_t _aux1_pin, uint8_t _aux2_pin, const int16_t offsets[NUM_CHANNELS]) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
-        self->offsets[index] = offsets[index];
+        pwm_offsets[index] = offsets[index];
     }
 
     throttle_pin = _throttle_pin;
@@ -48,61 +47,77 @@ void PWMReceiver_init(PWMReceiver_t *self, uint8_t _throttle_pin,
 /*@
    requires \valid(self);
    requires \valid(channels);
-   assigns \nothing;
-   ensures \valid(\old(self)) ==> \valid(self);
-   ensures ghost_interrupt_status == INTERRUPTS_ON;
+   requires \valid(channels + (0 .. NUM_CHANNELS - 1));
+   //assigns \nothing;
+   assigns interrupt_status;
+   ensures interrupt_status == INTERRUPTS_ON;
 */
-const void receiver_update(PWMReceiver_t *self, int16_t channels[NUM_CHANNELS]) {
+const void receiver_update(int16_t channels[NUM_CHANNELS]) {
     mock_noInterrupts();
+    //@ assert interrupt_status == INTERRUPTS_OFF;
+    
+    /*@ loop invariant 0 <= index < NUM_CHANNELS;
+        loop assigns channels[0];
+        loop assigns channels[1];
+        loop assigns channels[2];
+        loop assigns channels[3];
+        loop assigns channels[4];
+        loop assigns channels[5];
+        //loop assigns channels + (0 .. NUM_CHANNELS - 1);
+        loop variant NUM_CHANNELS - index;
+    */
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         channels[index] = pwm_pulse_duration_shared[index];
     }
     mock_interrupts();
+    //@ assert interrupt_status == INTERRUPTS_ON;
 
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         clamp(channels[index], 1000, 2000);
-        if (self->inversion[index]) {
+        if (inversion[index]) {
             channels[index] = 2000 - (channels[index] - 1000);
         }
-        channels[index] += self->offsets[index];
-        channels[index] += self->trims[index];
+        channels[index] += pwm_offsets[index];
+        channels[index] += trims[index];
     }
 }
 
-void set_offsets(PWMReceiver_t *self, int16_t offsets[NUM_CHANNELS]) {
+void set_offsets(int16_t offsets[NUM_CHANNELS]) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
-        self->offsets[index] = offsets[index];
+        pwm_offsets[index] = offsets[index];
     }
 }
 
-void set_trims(PWMReceiver_t *self, int16_t trims[NUM_CHANNELS]) {
+void set_trims(int16_t trims[NUM_CHANNELS]) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
-        self->trims[index] = trims[index];
+        trims[index] = trims[index];
     }
 }
 
-void set_inversion(PWMReceiver_t *self, bool inversion[NUM_CHANNELS]) {
+void set_inversion(bool inversion[NUM_CHANNELS]) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
-        self->inversion[index] = inversion[index];
+        inversion[index] = inversion[index];
     }
 }
 
 // TODO copy has_signal logic from blinkenlights
 /*@
-   requires \valid(self);
+   requires \valid(pwm_pulse_duration_shared + (0 .. NUM_CHANNELS - 1));
    assigns \nothing;
-   ensures \valid(\old(self)) ==> \valid(self);
-   ensures ghost_interrupt_status == INTERRUPTS_ON;
+   ensures interrupt_status == INTERRUPTS_ON;
 */
 const bool has_signal() {
     mock_noInterrupts();
+    //@ assert interrupt_status == INTERRUPTS_OFF;
     for (size_t index = 0; index < 4; index++) {
         if (pwm_pulse_duration_shared[index] == 0) {
             mock_interrupts();
+            //@ assert interrupt_status == INTERRUPTS_ON;
             return false;
         }
     }
     mock_interrupts();
+    //@ assert interrupt_status == INTERRUPTS_ON;
     return true;
 }
 
@@ -113,7 +128,7 @@ const bool has_signal() {
 */
 
 // is this sufficient to denote that this function cannot be called when interrupts are off?
-/*@ requires ghost_interrupt_status == INTERRUPTS_ON;
+/*@ requires interrupt_status == INTERRUPTS_ON;
 */
 void update_throttle() {
     if (mock_digitalRead(throttle_pin) == HIGH) {

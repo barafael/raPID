@@ -193,11 +193,11 @@ void update_arming_state() {
     requires \valid(channels + (0 .. NUM_CHANNELS - 1));
     assigns channels;
     assigns ghost_arming_state_initialized;
-    ensures channels == channels;
+    ensures channels == _channels;
     ensures ghost_arming_state_initialized == ARMING_INITIALIZED;
 */
 void init_arming_state(int16_t _channels[NUM_CHANNELS]) {
-    //@ ghost ghost_arming_state_initialized = ARMING_INITIALIZED;
+    //@ ghost arming_state_initialized = ARMING_ON;
     channels = _channels;
     // TODO re-enable timer; until then, call update_arming_state periodically from main loop
     /*
@@ -213,7 +213,7 @@ void init_arming_state(int16_t _channels[NUM_CHANNELS]) {
     //assigns \nothing;
     assigns ghost_interrupt_status;
     ensures ghost_interrupt_status == INTERRUPTS_ON; */
-const state_t get_arming_state() {
+const arming_state_t get_arming_state() {
     mock_noInterrupts();
     switch (internal_state) {
         case INTERNAL_DEBUG:
@@ -221,13 +221,16 @@ const state_t get_arming_state() {
         case DISARMING:
         case DISARMING_STANDBY:
             mock_interrupts();
+            //@ assert interrupt_status == INTERRUPTS_ON;
             return ARMED;
         case INTERNAL_DISARMED:
         case ARMING:
         case ARMING_STANDBY:
             mock_interrupts();
+            //@ assert interrupt_status == INTERRUPTS_ON;
             return DISARMED;
     }
     mock_interrupts();
+    //@ assert interrupt_status == INTERRUPTS_ON;
     return DISARMED;
 }

@@ -49,13 +49,13 @@ int64_t mock_micros() {
 /*@ ensures ghost_interrupt_status == INTERRUPTS_ON;
     assigns ghost_interrupt_status; */
 void mock_interrupts() {
-    //@ ghost ghost_interrupt_status = INTERRUPTS_ON;
+    //@ ghost interrupt_status = INTERRUPTS_ON;
 }
 
 /*@ ensures ghost_interrupt_status == INTERRUPTS_OFF;
     assigns ghost_interrupt_status; */
 void mock_noInterrupts() {
-    //@ ghost ghost_interrupt_status = INTERRUPTS_OFF;
+    //@ ghost interrupt_status = INTERRUPTS_OFF;
 }
 
 //@ assigns \nothing;

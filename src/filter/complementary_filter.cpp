@@ -7,15 +7,24 @@
        \forall real r; 0. <= r < 1.0 ==> 0.0 <= complement_real(r) < 1.0;
 */
 
-/*@ requires 0.0 <= value < 1.0;
-    ensures 0.0 < \result <= 1.0;
-    ensures \result >= 1.0 - value - 0.01;
-    ensures \result <= 1.0 - value + 0.01;
-    ensures \result == 1.0 - value;
+/*@ requires 0.0 <= value < upper;
+    ensures 0.0 < \result <= upper;
+    ensures \result >= upper - value - 0.01;
+    ensures \result <= upper - value + 0.01;
+    ensures \result >= 0.0f;
+    ensures \result == upper - value;
 */
+float complement_float(float upper, float number) {
+    return upper - number;
+}
 
-float complement(float value) {
-    return 1.0 - value;
+/*@ requires 0 <= number < upper;
+    ensures \result + number == upper;
+    ensures \result >= 0.0f;
+    ensures \result <= upper;
+*/
+int complement_int(int upper, int number) {
+    return upper - number;
 }
 
 /*@ requires \is_finite(beta);

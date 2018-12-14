@@ -5,7 +5,7 @@
 void init_watchdog() {
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
-    delayMicroseconds(1);
+    mock_delayMicroseconds(1);
 
     /* Enable WDG */
     WDOG_STCTRLH = (uint16_t) 0x0001;
@@ -29,8 +29,8 @@ void watchdog_set_prescale(int prescale) {
 
 // ensure interrupts remain on
 void watchdog_feed() {
-    noInterrupts();
+    mock_noInterrupts();
     WDOG_REFRESH = 0xA602;
     WDOG_REFRESH = 0xB480;
-    interrupts();
+    mock_interrupts();
 }

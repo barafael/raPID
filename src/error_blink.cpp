@@ -7,12 +7,12 @@ void blink_pattern(const char *pattern) {
         for (size_t index = 0; index < strlen(pattern); index++) {
             switch (pattern[index]) {
                 case '0':
-                    digitalWrite(13, LOW);
-                    delay(BLINK_PERIOD);
+                    mock_digitalWrite(13, LOW);
+                    mock_delay(BLINK_PERIOD);
                     break;
                 case '1':
-                    digitalWrite(13, HIGH);
-                    delay(BLINK_PERIOD);
+                    mock_digitalWrite(13, HIGH);
+                    mock_delay(BLINK_PERIOD);
                     break;
                 default:
 #ifdef USE_SERIAL

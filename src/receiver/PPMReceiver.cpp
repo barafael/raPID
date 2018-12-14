@@ -1,6 +1,6 @@
 #include "../../include/receiver/PPMReceiver.hpp"
 
-PPMReceiver_t init_ppm_receiver(uint8_t input_pin, int16_t *offsets) {
+PPMReceiver_t init_ppm_receiver(uint8_t _input_pin, int16_t *offsets) {
     PPMReceiver_t receiver;
     switch (input_pin) {
         /* Filter pins that are ppm-capable */
@@ -15,11 +15,11 @@ PPMReceiver_t init_ppm_receiver(uint8_t input_pin, int16_t *offsets) {
             break;
         default:
             Serial.print("Pin ");
-            Serial.print(input_pin);
+            Serial.print(_input_pin);
             Serial.println(" cannot be used as pulse position input.");
     }
 
-    receiver.input_pin = input_pin;
+    receiver.input_pin = _input_pin;
 
     /* TODO use init list? */
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
