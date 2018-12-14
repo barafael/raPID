@@ -1,8 +1,7 @@
-#include "../../include/receiver/PPMReceiver.hpp"
+#include "../../include/receiver/ppm_receiver.h"
 
-PPMReceiver_t init_ppm_receiver(uint8_t _input_pin, int16_t *offsets) {
-    PPMReceiver_t receiver;
-    switch (input_pin) {
+void init_ppm_receiver(uint8_t _input_pin, const int16_t offsets[NUM_CHANNELS]) {
+    switch (ppm_input_pin) {
         /* Filter pins that are ppm-capable */
         case 5:
         case 6:
@@ -19,41 +18,40 @@ PPMReceiver_t init_ppm_receiver(uint8_t _input_pin, int16_t *offsets) {
             Serial.println(" cannot be used as pulse position input.");
     }
 
-    receiver.input_pin = _input_pin;
+    ppm_input_pin = _input_pin;
 
     /* TODO use init list? */
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
-        receiver.offsets[index] = offsets[index];
+        ppm_offsets[index] = offsets[index];
     }
-    receiver.ppm_rx.begin(input_pin);
-    return receiver;
+    ppm_rx.begin(ppm_input_pin);
 }
 
-const void receiver_update(PPMReceiver_t *self, int16_t *channels) {
-    int num = self->ppm_rx.available();
+const void ppm_receiver_update(int16_t channels[NUM_CHANNELS]) {
+    int num = ppm_rx.available();
     if (num > 0) {
         for (size_t index = 0; index < NUM_CHANNELS; index++) {
-            float val = self->ppm_rx.read(index + 1);
+            float val = ppm_rx.read(index + 1);
             clamp(val, 1000, 2000);
-            if (self->inversion[index]) {
+            if (ppm_inversion[index]) {
                 val = 2000 - (val - 1000);
             }
-            val += self->offsets[index];
-            val += self->trims[index];
-            channels[self->ppm_translate[index]] = (int16_t) val;
+            val += ppm_offsets[index];
+            val += ppm_trims[index];
+            channels[ppm_translate[index]] = (int16_t) val;
         }
     }
 }
 
-void set_trims(PPMReceiver_t *self, int16_t *trims) {
+void set_trims(int16_t trims[NUM_CHANNELS]) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
-        self->trims[index] = trims[index];
+        ppm_trims[index] = trims[index];
     }
 }
 
-void set_inversion(PPMReceiver_t *self, bool *inversion) {
+void set_inversion(bool inversion[NUM_CHANNELS]) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
-        self->inversion[index] = inversion[index];
+        ppm_inversion[index] = inversion[index];
     }
 }
 
