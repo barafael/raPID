@@ -5,7 +5,14 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define I2C_MASTER 0
+#define I2C_PINS_16_17 0
+#define I2C_PULLUP_EXT 0
+#define I2C_RATE_400 0
+
+#define I2C_NOSTOP 0
 #define M_PI_F 3.14159265358979323846f
+#define PI M_PI_F
 
 int64_t milliseconds = 0;
 int64_t microseconds = 0;
@@ -40,6 +47,8 @@ void mock_pinMode(int pin, int mode);
 #define INPUT 1
 
 #define CHANGE 0
-void attachInterrupt(int pin, void f(), int mode);
+#define RISING 1
+#define FALLING 2
+void mock_attachInterrupt(int pin, void f(), int mode);
 
 #endif // ARDUINO_MOCK_H

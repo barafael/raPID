@@ -86,6 +86,6 @@ void mock_pinMode(int pin, int mode) {
 }
 
 //@ assigns \nothing;
-void attachInterrupt(int pin, void f(), int mode) {
+void mock_attachInterrupt(int pin, void f(), int mode) {
 
 }

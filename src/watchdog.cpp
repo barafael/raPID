@@ -1,7 +1,21 @@
 #include "../include/watchdog.h"
 
-/*@ ensures WDOG_UNLOCK == WDOG_UNLOCK_SEQ2;
-    ensures WDOG_PRESC == 4 */
+/*@ requires \valid(&WDOG_UNLOCK);
+    requires \valid(&WDOG_STCTRLH);
+    requires \valid(&WDOG_TOVALL);
+    requires \valid(&WDOG_TOVALH);
+    requires \valid(&WDOG_PRESC);
+
+    assigns WDOG_UNLOCK;
+    assigns WDOG_STCTRLH;
+    assigns WDOG_TOVALL;
+    assigns WDOG_TOVALH;
+    assigns WDOG_PRESC;
+
+    // actually, these are volatile registers and not memory
+    //ensures WDOG_UNLOCK == WDOG_UNLOCK_SEQ2;
+    //ensures WDOG_PRESC == 4;
+*/
 void init_watchdog() {
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
@@ -22,15 +36,24 @@ void init_watchdog() {
     WDOG_PRESC = (uint16_t) 4;
 }
 
-/*@ ensures WDOG_PRESC == 4 */
+/*@ requires \valid(&WDOG_PRESC);
+    assigns WDOG_PRESC;
+    // not memory, just a volatile register
+    //ensures WDOG_PRESC == prescale;
+*/
 void watchdog_set_prescale(int prescale) {
     WDOG_PRESC = prescale;
 }
 
-// ensure interrupts remain on
+/*@ requires \valid(&WDOG_REFRESH);
+    assigns WDOG_REFRESH;
+    assigns ghost_interrupt_status;
+    ensures ghost_interrupt_status == INTERRUPTS_ON;
+*/
 void watchdog_feed() {
     mock_noInterrupts();
     WDOG_REFRESH = 0xA602;
     WDOG_REFRESH = 0xB480;
     mock_interrupts();
+    //@assert ghost_interrupt_status == INTERRUPTS_ON;
 }

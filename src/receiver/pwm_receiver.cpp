@@ -80,12 +80,12 @@ void pwm_receiver_init(uint8_t _throttle_pin,
     aux1_pin     = _aux1_pin;
     aux2_pin     = _aux2_pin;
 
-    attachInterrupt(throttle_pin, update_throttle, CHANGE);
-    attachInterrupt(roll_pin,     update_roll,     CHANGE);
-    attachInterrupt(pitch_pin,    update_pitch,    CHANGE);
-    attachInterrupt(yaw_pin,      update_yaw,      CHANGE);
-    attachInterrupt(aux1_pin,     update_aux1,     CHANGE);
-    attachInterrupt(aux2_pin,     update_aux2,     CHANGE);
+    mock_attachInterrupt(throttle_pin, update_throttle, CHANGE);
+    mock_attachInterrupt(roll_pin,     update_roll,     CHANGE);
+    mock_attachInterrupt(pitch_pin,    update_pitch,    CHANGE);
+    mock_attachInterrupt(yaw_pin,      update_yaw,      CHANGE);
+    mock_attachInterrupt(aux1_pin,     update_aux1,     CHANGE);
+    mock_attachInterrupt(aux2_pin,     update_aux2,     CHANGE);
     //@ ghost ghost_pwmreceiver_status = PWM_RECEIVER_INITIALIZED;
 }
 

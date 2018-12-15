@@ -40,8 +40,8 @@ float    uint32_reg_to_float(uint8_t *buf);
 void     update_sensors();
 void     writeByte(uint8_t address, uint8_t subAddress, uint8_t data);
 
-#include <SPI.h>
-#include <i2c_t3.h>
+#include "../../include/SPI.h"
+#include "../../include/i2c_t3.h"
 
 #define SerialDebug false
 
@@ -417,31 +417,31 @@ void initAK8963(float *destination) {
     // First extract the factory calibration for each magnetometer axis
     uint8_t rawData[3]; // x/y/z gyro calibration data stored here
     writeByte(AK8963_ADDRESS, AK8963_CNTL, 0x00); // Power down magnetometer
-    delay(20);
+    mock_delay(20);
     writeByte(AK8963_ADDRESS, AK8963_CNTL, 0x0F); // Enter Fuse ROM access mode
-    delay(20);
+    mock_delay(20);
     readBytes(AK8963_ADDRESS, AK8963_ASAX, 3, &rawData[0]); // Read the x-, y-, and z-axis calibration values
     destination[0] = (float) (rawData[0] - 128) / 256. + 1.; // Return x-axis sensitivity adjustment values, etc.
     destination[1] = (float) (rawData[1] - 128) / 256. + 1.;
     destination[2] = (float) (rawData[2] - 128) / 256. + 1.;
     writeByte(AK8963_ADDRESS, AK8963_CNTL, 0x00); // Power down magnetometer
-    delay(20);
+    mock_delay(20);
     // Configure the magnetometer for continuous read and highest resolution
     // set Mscale bit 4 to 1 (0) to enable 16 (14) bit resolution in CNTL register,
     // and enable continuous mode data acquisition Mmode (bits [3:0]), 0010 for 8 Hz and 0110 for 100 Hz sample rates
     writeByte(AK8963_ADDRESS, AK8963_CNTL, Mscale << 4 | Mmode); // Set magnetometer data resolution and sample ODR
-    delay(20);
+    mock_delay(20);
 }
 
 void initMPU9250() {
     // wake up device
     writeByte(MPU9250_ADDRESS, PWR_MGMT_1, 0x00); // Clear sleep mode bit (6), enable all sensors
-    delay(100); // Wait for all registers to reset
+    mock_delay(100); // Wait for all registers to reset
 
     // get stable time source
     writeByte(MPU9250_ADDRESS, PWR_MGMT_1,
               0x01); // Auto select clock source to be PLL gyroscope reference if ready else
-    delay(200);
+    mock_delay(200);
 
     // Configure Gyro and Thermometer
     // Disable FSYNC and set thermometer and gyro bandwidth to 41 and 42 Hz, respectively;
@@ -489,7 +489,7 @@ void initMPU9250() {
     // can join the I2C bus and all can be controlled by the Arduino as master
     writeByte(MPU9250_ADDRESS, INT_PIN_CFG, 0x22);
     writeByte(MPU9250_ADDRESS, INT_ENABLE, 0x01); // Enable data ready (bit 0) interrupt
-    delay(100);
+    mock_delay(100);
 }
 
 // Function which accumulates gyro and accelerometer data after device initialization. It calculates the average
@@ -501,13 +501,13 @@ void accelgyrocalMPU9250(float *dest1, float *dest2) {
 
     // reset device
     writeByte(MPU9250_ADDRESS, PWR_MGMT_1, 0x80); // Write a one to bit 7 reset bit; toggle reset device
-    delay(100);
+    mock_delay(100);
 
     // get stable time source; Auto select clock source to be PLL gyroscope reference if ready
     // else use the internal oscillator, bits 2:0 = 001
     writeByte(MPU9250_ADDRESS, PWR_MGMT_1, 0x01);
     writeByte(MPU9250_ADDRESS, PWR_MGMT_2, 0x00);
-    delay(200);
+    mock_delay(200);
 
     // Configure device for bias calculation
     writeByte(MPU9250_ADDRESS, INT_ENABLE, 0x00); // Disable all interrupts
@@ -516,7 +516,7 @@ void accelgyrocalMPU9250(float *dest1, float *dest2) {
     writeByte(MPU9250_ADDRESS, I2C_MST_CTRL, 0x00); // Disable I2C master
     writeByte(MPU9250_ADDRESS, USER_CTRL, 0x00); // Disable FIFO and I2C master modes
     writeByte(MPU9250_ADDRESS, USER_CTRL, 0x0C); // Reset FIFO and DMP
-    delay(15);
+    mock_delay(15);
 
     // Configure MPU6050 gyro and accelerometer for bias calculation
     writeByte(MPU9250_ADDRESS, CONFIG, 0x01); // Set low-pass filter to 188 Hz
@@ -531,7 +531,7 @@ void accelgyrocalMPU9250(float *dest1, float *dest2) {
     writeByte(MPU9250_ADDRESS, USER_CTRL, 0x40); // Enable FIFO
     writeByte(MPU9250_ADDRESS, FIFO_EN,
               0x78); // Enable gyro and accelerometer sensors for FIFO  (max size 512 bytes in MPU-9150)
-    delay(40); // accumulate 40 samples in 40 milliseconds = 480 bytes
+    mock_delay(40); // accumulate 40 samples in 40 milliseconds = 480 bytes
 
     // At end of sample accumulation, turn off FIFO sensor read
     writeByte(MPU9250_ADDRESS, FIFO_EN, 0x00); // Disable gyro and accelerometer sensors for FIFO
@@ -655,8 +655,10 @@ void magcalMPU9250(float *dest1, float *dest2) {
     int32_t  mag_bias[3] = { 0, 0, 0 }, mag_scale[3] = { 0, 0, 0 };
     int16_t  mag_max[3] = { 0xFF, 0xFF, 0xFF }, mag_min[3] = { 0x7F, 0x7F, 0x7F }, mag_temp[3] = { 0, 0, 0 };
 
+#ifdef USE_SERIAL
     Serial.println("Mag Calibration: Wave device in a figure eight until done!");
-    delay(4000);
+#endif
+    mock_delay(4000);
 
     if (Mmode == 0x02)
         sample_count = 128;
@@ -671,9 +673,9 @@ void magcalMPU9250(float *dest1, float *dest2) {
                 mag_min[jj] = mag_temp[jj];
         }
         if (Mmode == 0x02)
-            delay(135); // at 8 Hz ODR, new mag data is available every 125 ms
+            mock_delay(135); // at 8 Hz ODR, new mag data is available every 125 ms
         if (Mmode == 0x06)
-            delay(12); // at 100 Hz ODR, new mag data is available every 10 ms
+            mock_delay(12); // at 100 Hz ODR, new mag data is available every 10 ms
     }
 
     //    Serial.println("mag x min/max:"); Serial.println(mag_max[0]); Serial.println(mag_min[0]);
@@ -701,7 +703,9 @@ void magcalMPU9250(float *dest1, float *dest2) {
     dest2[1] = avg_rad / ((float) mag_scale[1]);
     dest2[2] = avg_rad / ((float) mag_scale[2]);
 
+#ifdef USE_SERIAL
     Serial.println("Mag Calibration done!");
+#endif
 }
 
 // Accelerometer and gyroscope self test; check calibration wrt factory settings
@@ -745,7 +749,7 @@ void MPU9250SelfTest(float *destination) {
               0xE0); // Enable self test on all three axes and set accelerometer range to +/- 2 g
     writeByte(MPU9250_ADDRESS, GYRO_CONFIG,
               0xE0); // Enable self test on all three axes and set gyro range to +/- 250 degrees/s
-    delay(25); // Delay a while to let the device stabilize
+    mock_delay(25); // Delay a while to let the device stabilize
 
     for (int ii = 0; ii < 200; ii++) { // get average self-test values of gyro and acclerometer
 
@@ -771,7 +775,7 @@ void MPU9250SelfTest(float *destination) {
     // Configure the gyro and accelerometer for normal operation
     writeByte(MPU9250_ADDRESS, ACCEL_CONFIG, 0x00);
     writeByte(MPU9250_ADDRESS, GYRO_CONFIG, 0x00);
-    delay(25); // Delay a while to let the device stabilize
+    mock_delay(25); // Delay a while to let the device stabilize
 
     // Retrieve accelerometer and gyro factory Self-Test Code from USR_Reg
     selfTest[0] = readByte(MPU9250_ADDRESS, SELF_TEST_X_ACCEL); // X-axis accel self-test results
@@ -821,54 +825,56 @@ int16_t readSENtralTempData() {
 // since the address is defined by two bytes
 
 void M24512DFMwriteByte(uint8_t device_address, uint8_t data_address1, uint8_t data_address2, uint8_t data) {
-    Wire.beginTransmission(device_address); // Initialize the Tx buffer
-    Wire.write(data_address1); // Put slave register address in Tx buffer
-    Wire.write(data_address2); // Put slave register address in Tx buffer
-    Wire.write(data); // Put data in Tx buffer
-    Wire.endTransmission(); // Send the Tx buffer
+    wire_beginTransmission(device_address); // Initialize the Tx buffer
+    wire_write(data_address1); // Put slave register address in Tx buffer
+    wire_write(data_address2); // Put slave register address in Tx buffer
+    wire_write(data); // Put data in Tx buffer
+    wire_endTransmission(); // Send the Tx buffer
 }
 
 void M24512DFMwriteBytes(uint8_t device_address, uint8_t data_address1, uint8_t data_address2, uint8_t count,
                          uint8_t *dest) {
     if (count > 128) {
         count = 128;
+#ifdef USE_SERIAL
         Serial.print("Page count cannot be more than 128 bytes!");
+#endif
     }
 
-    Wire.beginTransmission(device_address); // Initialize the Tx buffer
-    Wire.write(data_address1); // Put slave register address in Tx buffer
-    Wire.write(data_address2); // Put slave register address in Tx buffer
+    wire_beginTransmission(device_address); // Initialize the Tx buffer
+    wire_write(data_address1); // Put slave register address in Tx buffer
+    wire_write(data_address2); // Put slave register address in Tx buffer
     for (uint8_t i = 0; i < count; i++) {
-        Wire.write(dest[i]); // Put data in Tx buffer
+        wire_write(dest[i]); // Put data in Tx buffer
     }
-    Wire.endTransmission(); // Send the Tx buffer
+    wire_endTransmission(); // Send the Tx buffer
 }
 
 uint8_t M24512DFMreadByte(uint8_t device_address, uint8_t data_address1, uint8_t data_address2) {
     uint8_t data; // `data` will store the register data
-    Wire.beginTransmission(device_address); // Initialize the Tx buffer
-    Wire.write(data_address1); // Put slave register address in Tx buffer
-    Wire.write(data_address2); // Put slave register address in Tx buffer
-    Wire.endTransmission(I2C_NOSTOP); // Send the Tx buffer, but send a restart to keep connection alive
-    //Wire.endTransmission(false);             // Send the Tx buffer, but send a restart to keep connection alive
+    wire_beginTransmission(device_address); // Initialize the Tx buffer
+    wire_write(data_address1); // Put slave register address in Tx buffer
+    wire_write(data_address2); // Put slave register address in Tx buffer
+    wire_endTransmission(I2C_NOSTOP); // Send the Tx buffer, but send a restart to keep connection alive
+    //wire_endTransmission(false);             // Send the Tx buffer, but send a restart to keep connection alive
     // Read one byte from slave register address
-    Wire.requestFrom(device_address, (size_t) 1); // Read one byte from slave register address
-    data = Wire.read(); // Fill Rx buffer with result
+    wire_requestFrom(device_address, /*(size_t)*/ 1); // Read one byte from slave register address
+    data = wire_read(); // Fill Rx buffer with result
     return data; // Return data read from slave register
 }
 
 void M24512DFMreadBytes(uint8_t device_address, uint8_t data_address1, uint8_t data_address2, uint8_t count,
                         uint8_t *dest) {
-    Wire.beginTransmission(device_address); // Initialize the Tx buffer
-    Wire.write(data_address1); // Put slave register address in Tx buffer
-    Wire.write(data_address2); // Put slave register address in Tx buffer
-    Wire.endTransmission(I2C_NOSTOP); // Send the Tx buffer, but send a restart to keep connection alive
-    //Wire.endTransmission(false);              // Send the Tx buffer, but send a restart to keep connection alive
+    wire_beginTransmission(device_address); // Initialize the Tx buffer
+    wire_write(data_address1); // Put slave register address in Tx buffer
+    wire_write(data_address2); // Put slave register address in Tx buffer
+    wire_endTransmission(I2C_NOSTOP); // Send the Tx buffer, but send a restart to keep connection alive
+    //wire_endTransmission(false);              // Send the Tx buffer, but send a restart to keep connection alive
     uint8_t i = 0;
-    //        Wire.requestFrom(address, count);       // Read bytes from slave register address
-    Wire.requestFrom(device_address, (size_t) count); // Read bytes from slave register address
-    while (Wire.available()) {
-        dest[i++] = Wire.read();
+    //        wire_requestFrom(address, count);       // Read bytes from slave register address
+    wire_requestFrom(device_address, /*(size_t)*/ count); // Read bytes from slave register address
+    while (wire_available()) {
+        dest[i++] = wire_read();
     } // Put read results in the Rx buffer
 }
 
@@ -945,71 +951,83 @@ uint32_t bmp280_compensate_P(int32_t adc_P) {
 // simple function to scan for I2C devices on the bus
 void I2Cscan() {
     // scan for i2c devices
-    byte error, address;
+    uint8_t error;
+    uint8_t address;
     int  nDevices;
 
+#ifdef USE_SERIAL
     Serial.println("Scanning...");
+#endif
 
     nDevices = 0;
     for (address = 1; address < 127; address++) {
         // The i2c_scanner uses the return value of
         // the Write.endTransmisstion to see if
         // a device did acknowledge to the address.
-        Wire.beginTransmission(address);
-        error = Wire.endTransmission();
+        wire_beginTransmission(address);
+        error = wire_endTransmission();
 
         if (error == 0) {
+#ifdef USE_SERIAL
             Serial.print("I2C device found at address 0x");
+#endif
+#ifdef USE_SERIAL
             if (address < 16)
                 Serial.print("0");
             Serial.print(address, HEX);
             Serial.println("  !");
+#endif
 
             nDevices++;
         } else if (error == 4) {
+#ifdef USE_SERIAL
             Serial.print("Unknow error at address 0x");
             if (address < 16)
                 Serial.print("0");
             Serial.println(address, HEX);
+#endif
         }
     }
-    if (nDevices == 0)
+#ifdef USE_SERIAL
+    if (nDevices == 0) {
         Serial.println("No I2C devices found\n");
-    else
+    } else {
         Serial.println("done\n");
+    }
+#endif
 }
 
 // I2C read/write functions for the MPU9250 and AK8963 sensors
 
 void writeByte(uint8_t address, uint8_t subAddress, uint8_t data) {
-    Wire.beginTransmission(address); // Initialize the Tx buffer
-    Wire.write(subAddress); // Put slave register address in Tx buffer
-    Wire.write(data); // Put data in Tx buffer
-    Wire.endTransmission(); // Send the Tx buffer
+    wire_beginTransmission(address); // Initialize the Tx buffer
+    wire_write(subAddress); // Put slave register address in Tx buffer
+    wire_write(data); // Put data in Tx buffer
+    wire_endTransmission(); // Send the Tx buffer
 }
 
 uint8_t readByte(uint8_t address, uint8_t subAddress) {
     uint8_t data; // `data` will store the register data
-    Wire.beginTransmission(address); // Initialize the Tx buffer
-    Wire.write(subAddress); // Put slave register address in Tx buffer
-    Wire.endTransmission(I2C_NOSTOP); // Send the Tx buffer, but send a restart to keep connection alive
-    //Wire.endTransmission(false);             // Send the Tx buffer, but send a restart to keep connection alive
-    //Wire.requestFrom(address, 1);  // Read one byte from slave register address
-    Wire.requestFrom(address, (size_t) 1); // Read one byte from slave register address
-    data = Wire.read(); // Fill Rx buffer with result
+    wire_beginTransmission(address); // Initialize the Tx buffer
+    wire_write(subAddress); // Put slave register address in Tx buffer
+    wire_endTransmission_arg(I2C_NOSTOP); // Send the Tx buffer, but send a restart to keep connection alive
+    //wire_endTransmission(false);             // Send the Tx buffer, but send a restart to keep connection alive
+    //wire_requestFrom(address, 1);  // Read one byte from slave register address
+    wire_requestFrom(address, /*(size_t)*/ 1); // Read one byte from slave register address
+    data = wire_read(); // Fill Rx buffer with result
     return data; // Return data read from slave register
 }
 
 void readBytes(uint8_t address, uint8_t subAddress, uint8_t count, uint8_t *dest) {
-    Wire.beginTransmission(address); // Initialize the Tx buffer
-    Wire.write(subAddress); // Put slave register address in Tx buffer
-    Wire.endTransmission(I2C_NOSTOP); // Send the Tx buffer, but send a restart to keep connection alive
-    //Wire.endTransmission(false);       // Send the Tx buffer, but send a restart to keep connection alive
+    wire_beginTransmission(address); // Initialize the Tx buffer
+    wire_write(subAddress); // Put slave register address in Tx buffer
+    wire_endTransmission_arg(I2C_NOSTOP); // Send the Tx buffer, but send a restart to keep connection alive
+    //wire_endTransmission(false);       // Send the Tx buffer, but send a restart to keep connection alive
     uint8_t i = 0;
-    //        Wire.requestFrom(address, count);  // Read bytes from slave register address
-    Wire.requestFrom(address, (size_t) count); // Read bytes from slave register address
-    while (Wire.available()) {
-        dest[i++] = Wire.read();
+    //        wire_requestFrom(address, count);  // Read bytes from slave register address
+    wire_requestFrom(address, /*(size_t)*/ count); // Read bytes from slave register address
+    while (wire_available()) {
+        dest[i++] = wire_read();
     } // Put read results in the Rx buffer
 }
 
@@ -1031,106 +1049,165 @@ void sentral_data_ready() {
    ---------------------------------------------------
 */
 
-sentral_imu_t init_sentral_imu() {
-    pinMode(SENTRAL_POWER, OUTPUT);
-    pinMode(SENTRAL_GND, OUTPUT);
+IMU_INIT_ERROR init_sentral_imu() {
+    /* Power supply */
+    mock_pinMode(SENTRAL_POWER, OUTPUT);
+    mock_pinMode(SENTRAL_GND, OUTPUT);
 
-    digitalWrite(SENTRAL_POWER, HIGH);
-    digitalWrite(SENTRAL_GND, LOW);
+    mock_digitalWrite(SENTRAL_POWER, HIGH);
+    mock_digitalWrite(SENTRAL_GND, LOW);
 
-    Wire.begin(I2C_MASTER, 0x00, I2C_PINS_16_17, I2C_PULLUP_EXT, I2C_RATE_400);
+    wire_begin(I2C_MASTER, 0x00, I2C_PINS_16_17, I2C_PULLUP_EXT, I2C_RATE_400);
 
-    pinMode(SENTRAL_INTERRUPT_PIN, INPUT);
+    mock_pinMode(SENTRAL_INTERRUPT_PIN, INPUT);
 
-    attachInterrupt(SENTRAL_INTERRUPT_PIN, sentral_data_ready, RISING);
+    mock_attachInterrupt(SENTRAL_INTERRUPT_PIN, sentral_data_ready, RISING);
 
     // Check event status register to clear the EM7180 interrupt before the main loop
     // reading clears the register and interrupt
     readByte(EM7180_ADDRESS, EM7180_EventStatus);
 
-    delay(50);
+    mock_delay(50);
 
     I2Cscan(); // should detect SENtral at 0x28
 
     // Read SENtral device information
     uint16_t ROM1 = readByte(EM7180_ADDRESS, EM7180_ROMVersion1);
     uint16_t ROM2 = readByte(EM7180_ADDRESS, EM7180_ROMVersion2);
+#ifdef USE_SERIAL
     Serial.print("EM7180 ROM Version: 0x");
     Serial.print(ROM1, HEX);
     Serial.println(ROM2, HEX);
     Serial.println("Should be: 0xE609");
+#endif
+    if (ROM1 != 0xE6 || ROM2 != 0x09) {
+        return ROM_VERSION_ERROR;
+    }
 
     uint16_t RAM1 = readByte(EM7180_ADDRESS, EM7180_RAMVersion1);
     uint16_t RAM2 = readByte(EM7180_ADDRESS, EM7180_RAMVersion2);
+#ifdef USE_SERIAL
     Serial.print("EM7180 RAM Version: 0x");
     Serial.print(RAM1);
     Serial.println(RAM2);
+#endif
 
     uint8_t PID = readByte(EM7180_ADDRESS, EM7180_ProductID);
+#ifdef USE_SERIAL
     Serial.print("EM7180 ProductID: 0x");
     Serial.print(PID, HEX);
     Serial.println(" Should be: 0x80");
+#endif
+
+    /* Terminate if wrong I2C address */
+    if (PID != 0x80) {
+        return ADDRESS_MISMATCH;
+    }
 
     uint8_t RID = readByte(EM7180_ADDRESS, EM7180_RevisionID);
+#ifdef USE_SERIAL
     Serial.print("EM7180 RevisionID: 0x");
     Serial.print(RID, HEX);
     Serial.println(" Should be: 0x02");
+#endif
 
-    delay(10); // give some time to read the screen
+    if (RID != 0x02) {
+        return REVISION_ID_MISMATCH;
+    }
+
+    mock_delay(10); // give some time to read the screen
 
     // Check which sensors can be detected by the EM7180
     uint8_t featureflag = readByte(EM7180_ADDRESS, EM7180_FeatureFlags);
     if (featureflag & 0x01)
+#ifdef USE_SERIAL
         Serial.println("A barometer is installed");
+#endif
     if (featureflag & 0x02)
+#ifdef USE_SERIAL
         Serial.println("A humidity sensor is installed");
+#endif
     if (featureflag & 0x04)
+#ifdef USE_SERIAL
         Serial.println("A temperature sensor is installed");
+#endif
     if (featureflag & 0x08)
+#ifdef USE_SERIAL
         Serial.println("A custom sensor is installed");
+#endif
     if (featureflag & 0x10)
+#ifdef USE_SERIAL
         Serial.println("A second custom sensor is installed");
+#endif
     if (featureflag & 0x20)
+#ifdef USE_SERIAL
         Serial.println("A third custom sensor is installed");
+#endif
 
-    delay(10); // give some time to read the screen
+    mock_delay(10); // give some time to read the screen
 
-    // Check SENtral status, make sure EEPROM upload of firmware was accomplished
-    byte STAT = (readByte(EM7180_ADDRESS, EM7180_SentralStatus) & 0x01);
-    if (readByte(EM7180_ADDRESS, EM7180_SentralStatus) & 0x01)
-        Serial.println("EEPROM detected on the sensor bus!");
-    if (readByte(EM7180_ADDRESS, EM7180_SentralStatus) & 0x02)
-        Serial.println("EEPROM uploaded config file!");
-    if (readByte(EM7180_ADDRESS, EM7180_SentralStatus) & 0x04)
-        Serial.println("EEPROM CRC incorrect!");
-    if (readByte(EM7180_ADDRESS, EM7180_SentralStatus) & 0x08)
-        Serial.println("EM7180 in initialized state!");
-    if (readByte(EM7180_ADDRESS, EM7180_SentralStatus) & 0x10)
-        Serial.println("No EEPROM detected!");
-    int count = 0;
-    while (!STAT) {
+    for (int count = 0; count < 10; count++) {
         writeByte(EM7180_ADDRESS, EM7180_ResetRequest, 0x01);
-        delay(500);
-        count++;
-        STAT = (readByte(EM7180_ADDRESS, EM7180_SentralStatus) & 0x01);
-        if (readByte(EM7180_ADDRESS, EM7180_SentralStatus) & 0x01)
+        mock_delay(500);
+
+        uint8_t status = (readByte(EM7180_ADDRESS, EM7180_SentralStatus));
+        if (status & 0x01)
+#ifdef USE_SERIAL
             Serial.println("EEPROM detected on the sensor bus!");
-        if (readByte(EM7180_ADDRESS, EM7180_SentralStatus) & 0x02)
+#endif
+        if (status & 0x02)
+#ifdef USE_SERIAL
             Serial.println("EEPROM uploaded config file!");
-        if (readByte(EM7180_ADDRESS, EM7180_SentralStatus) & 0x04)
+#endif
+        if (status & 0x04) {
+#ifdef USE_SERIAL
             Serial.println("EEPROM CRC incorrect!");
-        if (readByte(EM7180_ADDRESS, EM7180_SentralStatus) & 0x08)
+#endif
+        }
+        if (status & 0x08)
+#ifdef USE_SERIAL
             Serial.println("EM7180 in initialized state!");
-        if (readByte(EM7180_ADDRESS, EM7180_SentralStatus) & 0x10)
+#endif
+        if (status & 0x10) {
+#ifdef USE_SERIAL
             Serial.println("No EEPROM detected!");
-        if (count > 10) {
+#endif
+        }
+        if ((status & 0x01) == 0) {
             break;
         }
     }
+    // Check SENtral status, make sure EEPROM upload of firmware was accomplished
+    if (readByte(EM7180_ADDRESS, EM7180_SentralStatus) & 0x01)
+#ifdef USE_SERIAL
+        Serial.println("EEPROM detected on the sensor bus!");
+#endif
+    if (readByte(EM7180_ADDRESS, EM7180_SentralStatus) & 0x02)
+#ifdef USE_SERIAL
+        Serial.println("EEPROM uploaded config file!");
+#endif
+    if (readByte(EM7180_ADDRESS, EM7180_SentralStatus) & 0x04) {
+#ifdef USE_SERIAL
+        Serial.println("EEPROM CRC incorrect!");
+#endif
+        return EEPROM_CRC_ERROR;
+    }
+    if (readByte(EM7180_ADDRESS, EM7180_SentralStatus) & 0x08)
+#ifdef USE_SERIAL
+        Serial.println("EM7180 in initialized state!");
+#endif
+    if (readByte(EM7180_ADDRESS, EM7180_SentralStatus) & 0x10) {
+#ifdef USE_SERIAL
+        Serial.println("No EEPROM detected!");
+#endif
+        return NO_EEPROM;
+    }
 
     if (!(readByte(EM7180_ADDRESS, EM7180_SentralStatus) & 0x04))
+#ifdef USE_SERIAL
         Serial.println("EEPROM upload successful!");
-    delay(10); // give some time to read the screen
+#endif
+    mock_delay(10); // give some time to read the screen
 
     // Set up the SENtral as sensor bus in normal operating mode
     // Enter EM7180 initialized state
@@ -1159,15 +1236,17 @@ sentral_imu_t init_sentral_imu() {
     writeByte(EM7180_ADDRESS, EM7180_EnableEvents, 0x07);
     // Enable EM7180 run mode
     writeByte(EM7180_ADDRESS, EM7180_HostControl, 0x01); // set SENtral in normal run mode
-    delay(100);
+    mock_delay(100);
 
     // EM7180 parameter adjustments
+#ifdef USE_SERIAL
     Serial.println("Beginning Parameter Adjustments");
+#endif
 
     // Read sensor default FS values from parameter space
     writeByte(EM7180_ADDRESS, EM7180_ParamRequest, 0x4A); // Request to read parameter 74
     writeByte(EM7180_ADDRESS, EM7180_AlgorithmControl, 0x80); // Request parameter transfer process
-    byte param_xfer = readByte(EM7180_ADDRESS, EM7180_ParamAcknowledge);
+    uint8_t param_xfer = readByte(EM7180_ADDRESS, EM7180_ParamAcknowledge);
 
     while (!(param_xfer == 0x4A)) {
         param_xfer = readByte(EM7180_ADDRESS, EM7180_ParamAcknowledge);
@@ -1181,12 +1260,14 @@ sentral_imu_t init_sentral_imu() {
     EM7180_mag_fs = ((int16_t)(param[1] << 8) | param[0]);
     EM7180_acc_fs = ((int16_t)(param[3] << 8) | param[2]);
 
+#ifdef USE_SERIAL
     Serial.print("Magnetometer Default Full Scale Range: +/-");
     Serial.print(EM7180_mag_fs);
     Serial.println("uT");
     Serial.print("Accelerometer Default Full Scale Range: +/-");
     Serial.print(EM7180_acc_fs);
     Serial.println("g");
+#endif
 
     writeByte(EM7180_ADDRESS, EM7180_ParamRequest, 0x4B); // Request to read  parameter 75
     param_xfer = readByte(EM7180_ADDRESS, EM7180_ParamAcknowledge);
@@ -1202,9 +1283,11 @@ sentral_imu_t init_sentral_imu() {
 
     EM7180_gyro_fs = ((int16_t)(param[1] << 8) | param[0]);
 
+#ifdef USE_SERIAL
     Serial.print("Gyroscope Default Full Scale Range: +/-");
     Serial.print(EM7180_gyro_fs);
     Serial.println("dps");
+#endif
 
     writeByte(EM7180_ADDRESS, EM7180_ParamRequest, 0x00); //End parameter transfer
     writeByte(EM7180_ADDRESS, EM7180_AlgorithmControl, 0x00); // re-enable algorithm
@@ -1234,12 +1317,14 @@ sentral_imu_t init_sentral_imu() {
     EM7180_mag_fs = ((int16_t)(param[1] << 8) | param[0]);
     EM7180_acc_fs = ((int16_t)(param[3] << 8) | param[2]);
 
+#ifdef USE_SERIAL
     Serial.print("Magnetometer New Full Scale Range: +/-");
     Serial.print(EM7180_mag_fs);
     Serial.println("uT");
     Serial.print("Accelerometer New Full Scale Range: +/-");
     Serial.print(EM7180_acc_fs);
     Serial.println("g");
+#endif
     writeByte(EM7180_ADDRESS, EM7180_ParamRequest, 0x4B); // Request to read  parameter 75
     param_xfer = readByte(EM7180_ADDRESS, EM7180_ParamAcknowledge);
 
@@ -1254,66 +1339,131 @@ sentral_imu_t init_sentral_imu() {
 
     EM7180_gyro_fs = ((int16_t)(param[1] << 8) | param[0]);
 
+#ifdef USE_SERIAL
     Serial.print("Gyroscope New Full Scale Range: +/-");
     Serial.print(EM7180_gyro_fs);
     Serial.println("dps");
+#endif
 
     writeByte(EM7180_ADDRESS, EM7180_ParamRequest, 0x00); //End parameter transfer
     writeByte(EM7180_ADDRESS, EM7180_AlgorithmControl, 0x00); // re-enable algorithm
 
     // Read EM7180 status
     uint8_t runStatus = readByte(EM7180_ADDRESS, EM7180_RunStatus);
-    if (runStatus & 0x01)
+#ifdef USE_SERIAL
+    if (runStatus & 0x01) {
         Serial.println(" EM7180 run status = normal mode");
+    }
+#endif
     uint8_t algoStatus = readByte(EM7180_ADDRESS, EM7180_AlgorithmStatus);
-    if (algoStatus & 0x01)
+    if (algoStatus & 0x01) {
+#ifdef USE_SERIAL
         Serial.println(" EM7180 standby status");
-    if (algoStatus & 0x02)
+#endif
+    }
+    if (algoStatus & 0x02) {
+#ifdef USE_SERIAL
         Serial.println(" EM7180 algorithm slow");
-    if (algoStatus & 0x04)
+#endif
+    }
+    if (algoStatus & 0x04) {
+#ifdef USE_SERIAL
         Serial.println(" EM7180 in stillness mode");
-    if (algoStatus & 0x08)
+#endif
+    }
+    if (algoStatus & 0x08) {
+#ifdef USE_SERIAL
         Serial.println(" EM7180 mag calibration completed");
-    if (algoStatus & 0x10)
+#endif
+    }
+    if (algoStatus & 0x10) {
+#ifdef USE_SERIAL
         Serial.println(" EM7180 magnetic anomaly detected");
-    if (algoStatus & 0x20)
+#endif
+    }
+    if (algoStatus & 0x20) {
+#ifdef USE_SERIAL
         Serial.println(" EM7180 unreliable sensor data");
+#endif
+    }
     uint8_t passthruStatus = readByte(EM7180_ADDRESS, EM7180_PassThruStatus);
-    if (passthruStatus & 0x01)
+#ifdef USE_SERIAL
+    if (passthruStatus & 0x01) {
         Serial.print(" EM7180 in passthru mode!");
+    }
+#endif
     uint8_t eventStatus = readByte(EM7180_ADDRESS, EM7180_EventStatus);
-    if (eventStatus & 0x01)
+    if (eventStatus & 0x01) {
+#ifdef USE_SERIAL
         Serial.println(" EM7180 CPU reset");
-    if (eventStatus & 0x02)
+#endif
+    }
+    if (eventStatus & 0x02) {
+#ifdef USE_SERIAL
         Serial.println(" EM7180 Error");
-    if (eventStatus & 0x04)
+#endif
+    }
+    if (eventStatus & 0x04) {
+#ifdef USE_SERIAL
         Serial.println(" EM7180 new quaternion result");
-    if (eventStatus & 0x08)
+#endif
+    }
+    if (eventStatus & 0x08) {
+#ifdef USE_SERIAL
         Serial.println(" EM7180 new mag result");
-    if (eventStatus & 0x10)
+#endif
+    }
+    if (eventStatus & 0x10) {
+#ifdef USE_SERIAL
         Serial.println(" EM7180 new accel result");
-    if (eventStatus & 0x20)
+#endif
+    }
+    if (eventStatus & 0x20) {
+#ifdef USE_SERIAL
         Serial.println(" EM7180 new gyro result");
+#endif
+    }
 
-    delay(10); // give some time to read the screen
+    mock_delay(10); // give some time to read the screen
 
     // Check sensor status
     uint8_t sensorStatus = readByte(EM7180_ADDRESS, EM7180_SensorStatus);
+#ifdef USE_SERIAL
     Serial.print(" EM7180 sensor status = ");
     Serial.println(sensorStatus);
-    if (sensorStatus & 0x01)
+#endif
+    if (sensorStatus & 0x01) {
+#ifdef USE_SERIAL
         Serial.print("Magnetometer not acknowledging!");
-    if (sensorStatus & 0x02)
+#endif
+    }
+    if (sensorStatus & 0x02) {
+#ifdef USE_SERIAL
         Serial.print("Accelerometer not acknowledging!");
-    if (sensorStatus & 0x04)
+#endif
+    }
+    if (sensorStatus & 0x04) {
+#ifdef USE_SERIAL
         Serial.print("Gyro not acknowledging!");
-    if (sensorStatus & 0x10)
+#endif
+    }
+    if (sensorStatus & 0x10) {
+#ifdef USE_SERIAL
         Serial.print("Magnetometer ID not recognized!");
-    if (sensorStatus & 0x20)
+#endif
+    }
+    if (sensorStatus & 0x20) {
+#ifdef USE_SERIAL
         Serial.print("Accelerometer ID not recognized!");
-    if (sensorStatus & 0x40)
+#endif
+    }
+    if (sensorStatus & 0x40) {
+#ifdef USE_SERIAL
         Serial.print("Gyro ID not recognized!");
+#endif
+    }
 
+#ifdef USE_SERIAL
     Serial.print("Actual MagRate = ");
     Serial.print(readByte(EM7180_ADDRESS, EM7180_ActualMagRate));
     Serial.println(" Hz");
@@ -1326,11 +1476,10 @@ sentral_imu_t init_sentral_imu() {
     Serial.print("Actual BaroRate = ");
     Serial.print(readByte(EM7180_ADDRESS, EM7180_ActualBaroRate));
     Serial.println(" Hz");
+#endif
     //  Serial.print("Actual TempRate = "); Serial.print(readByte(EM7180_ADDRESS, EM7180_ActualTempRate)); Serial.println(" Hz");
 
-    delay(10); // give some time to read the screen
-    sentral_imu_t self = {};
-    return self;
+    return IMU_INIT_OK;
 }
 
 /*static void Quat2EulerAngle(const float Quat[4], float &roll, float &pitch, float &yaw) {
@@ -1365,6 +1514,7 @@ void update_sensors() {
         if (eventStatus & 0x02) { // error detected, what is it?
 
             uint8_t errorStatus = readByte(EM7180_ADDRESS, EM7180_ErrorRegister);
+#ifdef USE_SERIAL
             if (errorStatus != 0x00) { // non-zero value indicates error, what is it?
                 Serial.print("EM7180 sensor status = ");
                 Serial.println(errorStatus);
@@ -1385,6 +1535,9 @@ void update_sensors() {
                 if (errorStatus & 0x80)
                     Serial.println("Invalid sample rate!");
             }
+#endif
+            // if just proceeding after error, any measurement might result
+            return;
         }
 
         // if no errors, see if new data is ready
@@ -1462,16 +1615,17 @@ void update_sensors() {
     }
 
     // keep track of rates
-    Now        = micros();
+    Now        = mock_micros();
     deltat     = ((Now - lastUpdate) / 1000000.0f); // set integration time by time elapsed since last filter update
     lastUpdate = Now;
 
     sum += deltat; // sum for averaging filter update rate
     sumCount++;
 
-    delt_t = millis() - count;
+    delt_t = mock_millis() - count;
     if (SerialDebug) {
 #ifdef SENTRAL_COLLECT_ALL
+#ifdef USE_SERIAL
         Serial.print("ax = ");
         Serial.print((int) 1000 * ax);
         Serial.print(" ay = ");
@@ -1487,7 +1641,9 @@ void update_sensors() {
         Serial.print((int) mz);
         Serial.println(" mG");
 #endif
+#endif
         // Angular rates from gyro
+#ifdef USE_SERIAL
         Serial.print("gx = ");
         Serial.print(gx, 2);
         Serial.print(" gy = ");
@@ -1505,12 +1661,15 @@ void update_sensors() {
         Serial.print(Quat[2]);
         Serial.print(" Qz = ");
         Serial.println(Quat[3]);
+#endif
     }
 
-    // tempCount = readTempData();  // Read the gyro adc values
-    //    temperature = ((float) tempCount) / 333.87 + 21.0; // Gyro chip temperature in degrees Centigrade
+#ifdef SENTRAL_COLLECT_TEMPERATURE
+    tempCount = readTempData();  // Read the gyro adc values
+    temperature = ((float) tempCount) / 333.87 + 21.0; // Gyro chip temperature in degrees Centigrade
     // Print temperature in degrees Centigrade
-    //    Serial.print("Gyro temperature is ");  Serial.print(temperature, 1);  Serial.println(" degrees C"); // Print T values to tenths of s degree C
+    //Serial.print("Gyro temperature is ");  Serial.print(temperature, 1);  Serial.println(" degrees C"); // Print T values to tenths of s degree C
+#endif
 
     // Or define output variable according to the Android system, where heading (0 to 360) is defined by the angle between the y-axis
     // and True North, pitch is rotation about the x-axis (-180 to +180), and roll is rotation about the y-axis (-90 to +90)
@@ -1519,6 +1678,7 @@ void update_sensors() {
     //
 
     if (SerialDebug) {
+#ifdef USE_SERIAL
         Serial.print("Hardware Yaw, Pitch, Roll: ");
         Serial.print(Yaw, 2);
         Serial.print(", ");
@@ -1533,7 +1693,9 @@ void update_sensors() {
         Serial.print("Altimeter pressure = ");
         Serial.print(pressure, 2);
         Serial.println(" mbar"); // pressure in millibar
+#endif
         altitude = 145366.45f * (1.0f - pow((pressure / 1013.25f), 0.190284f));
+#ifdef USE_SERIAL
         Serial.print("Altitude = ");
         Serial.print(altitude, 2);
         Serial.println(" feet");
@@ -1542,13 +1704,14 @@ void update_sensors() {
         Serial.print("rate = ");
         Serial.print((float) sumCount / sum, 2);
         Serial.println(" Hz");
+#endif
 
         // Serial.print(millis()/1000.0, 1);Serial.print(",");
         // Serial.print(yaw); Serial.print(",");Serial.print(pitch); Serial.print(",");Serial.print(roll); Serial.print(",");
         // Serial.print(Yaw); Serial.print(",");Serial.print(Pitch); Serial.print(",");Serial.println(Roll);
     }
 
-    count    = millis();
+    count    = mock_millis();
     sumCount = 0;
     sum      = 0;
 }
@@ -1558,7 +1721,7 @@ void update_sensors() {
    ---       FETCH ACCELERATION FROM IMU                       ----
    ----------------------------------------------------------------
 */
-vec3_t update_accelerometer(sentral_imu_t *self) {
+vec3_t update_accelerometer() {
     //digitalWrite(DEBUG_PIN, HIGH);
     update_sensors();
     vec3_t acceleration;
@@ -1575,7 +1738,7 @@ vec3_t update_accelerometer(sentral_imu_t *self) {
    ----------------------------------------------------------------
 */
 /* max..min [32767, -32768] */
-vec3_t update_gyroscope(sentral_imu_t *self) {
+vec3_t update_gyroscope() {
     //digitalWrite(DEBUG_PIN, HIGH);
     update_sensors();
     vec3_t angular_rates;
@@ -1591,7 +1754,7 @@ vec3_t update_gyroscope(sentral_imu_t *self) {
    ---       FETCH MAGNETOMETER DATA FROM IMU                  ----
    ----------------------------------------------------------------
 */
-vec3_t update_magnetometer(sentral_imu_t *self) {
+vec3_t update_magnetometer() {
     //digitalWrite(DEBUG_PIN, HIGH);
     update_sensors();
     vec3_t magnetization;
@@ -1608,7 +1771,7 @@ vec3_t update_magnetometer(sentral_imu_t *self) {
    -------------------------------------------------------------
 */
 
-vec3_t update_attitude(sentral_imu_t *self) {
+vec3_t update_attitude() {
     //digitalWrite(DEBUG_PIN, HIGH);
     update_sensors();
     vec3_t attitude;
