@@ -1,4 +1,6 @@
 #include "../../include/receiver/pwm_receiver.h"
+#include "./../../include/copy_int16.h"
+#include "../../include/copy_bool.h"
 
 #define NUM_CHANNELS 6
 
@@ -16,11 +18,11 @@ static volatile uint64_t pwm_pulse_start_tick[NUM_CHANNELS] = { 0 };
  * Note: disable interrupts when reading to avoid race conditions */
 static volatile uint64_t pwm_pulse_duration_shared[NUM_CHANNELS] = { 0 };
 
-/*@ requires \valid_read(_offsets + (0 .. NUM_CHANNELS - 1));
+/*@ requires \valid(_offsets + (0 .. NUM_CHANNELS - 1));
     requires \valid(pwm_offsets + (0 .. NUM_CHANNELS - 1));
-    // sometimes, it is quite hard to intuitively understand what frama-c still needs for the proof. 
     // It makes sense that the pointers should be separated! But it's hard to understand the first time.
-    requires \separated(pwm_offsets, _offsets);
+    requires \separated(pwm_offsets + (0 .. NUM_CHANNELS - 1), _offsets + (0 .. NUM_CHANNELS - 1));
+
     assigns pwm_offsets[0];
     assigns pwm_offsets[1];
     assigns pwm_offsets[2];
@@ -36,13 +38,6 @@ static volatile uint64_t pwm_pulse_duration_shared[NUM_CHANNELS] = { 0 };
     assigns aux2_pin;
     assigns ghost_pwmreceiver_status;
 
-    ensures \forall size_t i; 0 <= i < NUM_CHANNELS ==> _offsets[i] == pwm_offsets[i];
-    ensures pwm_offsets[0] == _offsets[0];
-    ensures pwm_offsets[1] == _offsets[1];
-    ensures pwm_offsets[2] == _offsets[2];
-    ensures pwm_offsets[3] == _offsets[3];
-    ensures pwm_offsets[4] == _offsets[4];
-    ensures pwm_offsets[5] == _offsets[5];
     ensures throttle_pin == _throttle_pin;
     ensures roll_pin     == _roll_pin;
     ensures pitch_pin    == _pitch_pin;
@@ -54,24 +49,7 @@ static volatile uint64_t pwm_pulse_duration_shared[NUM_CHANNELS] = { 0 };
 void pwm_receiver_init(uint8_t _throttle_pin,
         uint8_t _roll_pin, uint8_t _pitch_pin, uint8_t _yaw_pin,
         uint8_t _aux1_pin, uint8_t _aux2_pin, const int16_t _offsets[NUM_CHANNELS]) {
-    pwm_offsets[0] = _offsets[0];
-    pwm_offsets[1] = _offsets[1];
-    pwm_offsets[2] = _offsets[2];
-    pwm_offsets[3] = _offsets[3];
-    pwm_offsets[4] = _offsets[4];
-    pwm_offsets[5] = _offsets[5];
-
-    // breaks proofs:
-    /*//@ loop invariant 0 <= index <= NUM_CHANNELS;
-        //loop invariant \forall int j < index ==> 0 <= pwm_offsets[
-        loop assigns index, pwm_offsets[0 .. (index - 1)];
-        loop variant NUM_CHANNELS - index;
-    */
-    /*
-    for (size_t index = 0; index < NUM_CHANNELS; index++) {
-        pwm_offsets[index] = offsets[index];
-    }
-    */
+    set_offsets(_offsets);
 
     throttle_pin = _throttle_pin;
     roll_pin     = _roll_pin;
@@ -99,7 +77,7 @@ void pwm_receiver_init(uint8_t _throttle_pin,
    requires \valid_read(trims + (0 .. NUM_CHANNELS));
    requires \valid_read(inversion + (0 .. NUM_CHANNELS));
 
-   requires \separated(pwm_channels, channels);
+   requires \separated(pwm_pulse_duration_shared + (0 .. NUM_CHANNELS - 1), channels + (0 .. NUM_CHANNELS - 1));
 
    assigns channels[0];
    assigns channels[1];
@@ -107,7 +85,7 @@ void pwm_receiver_init(uint8_t _throttle_pin,
    assigns channels[3];
    assigns channels[4];
    assigns channels[5];
-   assigns interrupt_status;
+   assigns ghost_interrupt_status;
 
    ensures ghost_interrupt_status == INTERRUPTS_ON;
 */
@@ -175,27 +153,65 @@ const void receiver_update(int16_t channels[NUM_CHANNELS]) {
     }
 }
 
-void set_offsets(int16_t _offsets[NUM_CHANNELS]) {
-    /*@ loop invariant 0 <= index <= NUM_CHANNELS;
-        loop assigns index, pwm_offsets[0 .. (index - 1)];
-        loop variant NUM_CHANNELS - index;
-    */
-    for (size_t index = 0; index < NUM_CHANNELS; index++) {
-        pwm_offsets[index] = _offsets[index];
-    }
+/*@ requires \valid(_offsets + (0 .. NUM_CHANNELS - 1));
+    requires \valid(pwm_offsets + (0 .. NUM_CHANNELS - 1));
+
+    requires \separated(pwm_offsets + (0 .. NUM_CHANNELS − 1) , _offsets + (0 .. NUM_CHANNELS − 1));
+
+    assigns pwm_offsets[0];
+    assigns pwm_offsets[1];
+    assigns pwm_offsets[2];
+    assigns pwm_offsets[3];
+    assigns pwm_offsets[4];
+    assigns pwm_offsets[5];
+
+    ensures IsEqual_int16{Here, Here}(&pwm_offsets[0], NUM_CHANNELS, &_offsets[0]) ;
+
+    ensures _offsets[0] == pwm_offsets[0];
+    ensures _offsets[1] == pwm_offsets[1];
+    ensures _offsets[2] == pwm_offsets[2];
+    ensures _offsets[3] == pwm_offsets[3];
+    ensures _offsets[4] == pwm_offsets[4];
+    ensures _offsets[5] == pwm_offsets[5];
+*/
+void set_offsets(const int16_t _offsets[NUM_CHANNELS]) {
+    copy_int16(_offsets, pwm_offsets, NUM_CHANNELS);
 }
 
-void set_trims(int16_t _trims[NUM_CHANNELS]) {
-    /*@ loop invariant 0 <= index <= NUM_CHANNELS;
-        loop assigns index, trims[0 .. (index - 1)];
-        loop variant NUM_CHANNELS - index;
+/*@ requires \valid(trims + (0 .. NUM_CHANNELS - 1));
+    requires \valid(_trims + (0 .. NUM_CHANNELS - 1));
+
+    requires \separated(trims + (0 .. NUM_CHANNELS − 1) , _trims + (0 .. NUM_CHANNELS − 1));
+
+    assigns trims[0 .. NUM_CHANNELS - 1];
+
+    ensures IsEqual_int16{Here, Here}(&trims[0], NUM_CHANNELS, &_trims[0]) ;
     */
-    for (size_t index = 0; index < NUM_CHANNELS; index++) {
-        trims[index] = _trims[index];
-    }
+void set_trims(const int16_t _trims[NUM_CHANNELS]) {
+    copy_int16(_trims, trims, NUM_CHANNELS);
 }
 
-void set_inversion(bool _inversion[NUM_CHANNELS]) {
+/*@ requires \valid(inversion + (0 .. NUM_CHANNELS - 1));
+    requires \valid(_inversion + (0 .. NUM_CHANNELS - 1));
+
+    requires \separated(inversion + (0 .. NUM_CHANNELS − 1) , _inversion + (0 .. NUM_CHANNELS − 1));
+
+    assigns inversion[0 .. NUM_CHANNELS - 1];
+
+    ensures IsEqual_bool{Here, Here}(&inversion[0], NUM_CHANNELS, &_inversion[0]) ;
+
+    ensures inversion[0] == _inversion[0];
+    ensures inversion[1] == _inversion[1];
+    ensures inversion[2] == _inversion[2];
+    ensures inversion[3] == _inversion[3];
+    ensures inversion[4] == _inversion[4];
+    ensures inversion[5] == _inversion[5];
+*/
+void set_inversion(const bool _inversion[NUM_CHANNELS]) {
+#define CORRECT
+#ifdef CORRECT
+    copy_bool(_inversion, inversion, NUM_CHANNELS);
+#else
     /*@ loop invariant 0 <= index <= NUM_CHANNELS;
         loop assigns index, inversion[0 .. (index - 1)];
         loop variant NUM_CHANNELS - index;
@@ -203,26 +219,35 @@ void set_inversion(bool _inversion[NUM_CHANNELS]) {
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         inversion[index] = _inversion[index];
     }
+#endif
 }
 
-// TODO copy has_signal logic from blinkenlights
+// TODO has_signal logic from blinkenlights
 /*@
    requires \valid(pwm_pulse_duration_shared + (0 .. NUM_CHANNELS - 1));
-   assigns \nothing;
-   ensures ghost_interrupt_status == INTERRUPTS_ON;
+
+   assigns ghost_interrupt_status;
+   behavior has:
+     assumes \exists integer i; 0 <= i < NUM_CHANNELS && pwm_pulse_duration_shared[i] == 0;
+     ensures ghost_interrupt_status == INTERRUPTS_ON;
+     ensures \result == false;
+   behavior has_not:
+     assumes \forall integer i; 0 <= i < NUM_CHANNELS && pwm_pulse_duration_shared[i] != 0;
+     ensures ghost_interrupt_status == INTERRUPTS_ON;
+     ensures \result == true;
 */
 const bool has_signal() {
     mock_noInterrupts();
-    //@ assert interrupt_status == INTERRUPTS_OFF;
+    //@ assert ghost_interrupt_status == INTERRUPTS_OFF;
     for (size_t index = 0; index < 4; index++) {
         if (pwm_pulse_duration_shared[index] == 0) {
             mock_interrupts();
-            //@ assert interrupt_status == INTERRUPTS_ON;
+            //@ assert ghost_interrupt_status == INTERRUPTS_ON;
             return false;
         }
     }
     mock_interrupts();
-    //@ assert interrupt_status == INTERRUPTS_ON;
+    //@ assert ghost_interrupt_status == INTERRUPTS_ON;
     return true;
 }
 
@@ -236,7 +261,7 @@ const bool has_signal() {
 /*@ requires ghost_interrupt_status == INTERRUPTS_ON;
     requires \valid(pwm_pulse_start_tick + (0 .. NUM_CHANNELS));
     requires \valid(pwm_pulse_duration_shared + (0 .. NUM_CHANNELS));
-    // absolutely impossible to prove
+    // impossible to prove
     // ensure 1000 <= pwm_pulse_start_tick[THROTTLE_CHANNEL] <= 2000;
 */
 void update_throttle() {

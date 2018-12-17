@@ -2,6 +2,7 @@
 #define PWM_RECEIVER_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "../ArduinoMock.h"
 #include "../settings.h"
@@ -37,9 +38,9 @@ void pwm_receiver_init(uint8_t _throttle_pin, uint8_t _roll_pin, uint8_t _pitch_
 
 const void receiver_update(int16_t channels[NUM_CHANNELS]);
 
-void set_offsets(int16_t _offsets[NUM_CHANNELS]);
-void set_trims(int16_t _trims[NUM_CHANNELS]);
-void set_inversion(bool _inversion[NUM_CHANNELS]);
+void set_offsets(const int16_t _offsets[NUM_CHANNELS]);
+void set_trims(const int16_t _trims[NUM_CHANNELS]);
+void set_inversion(const bool _inversion[NUM_CHANNELS]);
 
 const bool has_signal();
 

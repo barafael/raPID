@@ -1,13 +1,18 @@
 #include "../../include/filter/complementary_filter.h"
+#include <assert.h>
 
 /* axiomatic complement_real {
      logic real complement_real(float value);
 
+     axiom zero:
+       \forall real r; r == 0.0 ==> complement_real(r) == 1.0;
+     axiom one:
+       \forall real r; r == 1.0 ==> complement_real(r) == 0.0;
      axiom compl:
-       \forall real r; 0. <= r < 1.0 ==> 0.0 <= complement_real(r) < 1.0;
+       \forall real r; 0.0 < r < 1.0 ==> 0.0 <= complement_real(r) < 1.0;
 */
 
-/*@ requires 0.0 <= number < upper;
+/*//@ requires 0.0 <= number < upper;
     ensures 0.0 < \result <= upper;
     ensures \result >= upper - number - 0.01;
     ensures \result <= upper - number + 0.01;
@@ -18,7 +23,7 @@ float complement_float(float upper, float number) {
     return upper - number;
 }
 
-/*@ requires 0 <= number < upper;
+/*//@ requires 0 <= number < upper;
     ensures \result + number == upper;
     ensures \result >= 0.0f;
     ensures \result <= upper;

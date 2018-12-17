@@ -1,12 +1,14 @@
 #include "../../include/filter/moving_average_filter.h"
 
-/*@ assigns \nothing;
+/*@ requires ghost_maf_status == MAF_UNINITIALIZED;
+    assigns ghost_maf_status;
+    ensures \result.marker == 0;
+    ensures is_initialized: ghost_maf_status == MAF_INITIALIZED;
 */
-//ensures \valid(\result.values + (0 .. FILTER_SIZE));
-// ensures \result.marker == 0;
 moving_average_t init_moving_average_filter() {
     moving_average_t self;
     self.marker = 0;
+    //@ ghost ghost_maf_status = MAF_INITIALIZED;
     return self;
 }
 
@@ -25,7 +27,8 @@ moving_average_t init_moving_average_filter() {
 
     assigns \nothing;
 
-    ensures \result == sum_int(values, 0, size);
+    ensures result_is_sum: \result == sum_int(values, 0, size);
+    ensures \result == \sum(0, FILTER_SIZE − 1, \lambda integer i; values[i]); 
 */
 int sum_int_array(const int *values, size_t size) {
     int sum = 0;
@@ -57,6 +60,7 @@ int sum_int_array(const int *values, size_t size) {
     assigns \nothing;
 
     ensures \result == sum_real(values, 0, size);
+    ensures \result == \sum(0, FILTER_SIZE − 1, \lambda integer i; values[i]); 
 */
 float sum_float_array(const float *values, size_t size) {
     float sum = 0;
@@ -74,13 +78,13 @@ float sum_float_array(const float *values, size_t size) {
 /*@ requires \valid(self);
     requires \valid(self->values + (0 .. FILTER_SIZE));
     requires \is_finite(value);
+    requires is_initialized: ghost_maf_status == MAF_INITIALIZED;
 
     assigns self->values[self->marker], self->marker;
 
     behavior increment:
         assumes self->marker < (FILTER_SIZE - 1);
         ensures self->values[(\old(self->marker))] == value;
-        ensures \at(self->marker, Post) == 0;
     behavior reset:
         assumes self->marker == FILTER_SIZE - 1;
         ensures self->values[(\old(self->marker))] == value;

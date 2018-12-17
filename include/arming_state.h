@@ -8,9 +8,9 @@
 #include "ArduinoMock.h"
 
 #define ARMING_INITIALIZED 0
-#define ARMING_OFF 1
+#define ARMING_NOT_INITIALIZED 1
 
-//@ ghost int ghost_arming_state_initialized = ARMING_OFF;
+//@ ghost int ghost_arming_state_initialized = ARMING_NOT_INITIALIZED;
 
 const bool state_transition_triggered(const int16_t input[NUM_CHANNELS]);
 

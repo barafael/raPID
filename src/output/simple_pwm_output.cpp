@@ -1,6 +1,5 @@
 #include "../../include/output/simple_pwm_output.h"
 
-/*@ requires pin > 0; */
 simple_pwm_output_t simple_out_init(const uint8_t pin, float throttle_volume, float roll_volume, float pitch_volume,
                                   float yaw_volume, bool is_throttle) {
     mock_pinMode(pin, OUTPUT);

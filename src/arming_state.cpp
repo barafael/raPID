@@ -39,6 +39,7 @@ const bool state_transition_triggered(const int16_t input[NUM_CHANNELS]) {
 }
 
 /*@
+    // #requirement(ARMING0)
     requires ghost_arming_state_initialized == ARMING_INITIALIZED;
 */
 void enter_debug_mode() {
@@ -46,13 +47,14 @@ void enter_debug_mode() {
 }
 
 /*@
+    // #requirement(ARMING0)
     requires ghost_arming_state_initialized == ARMING_INITIALIZED;
     requires \valid_read(channels);
-    requires \valid_read(channels + (0 .. NUM_CHANNELS-1));
-    //assigns \nothing;
+    requires \valid_read(channels + (0 .. NUM_CHANNELS - 1));
     assigns milliseconds;
     assigns internal_state;
     assigns state_change_time;
+    ensures internal_state == ARMING_STANDBY ==> \at(internal_state, Post) == ARMING_STANDBY || \at(internal_state, Post) == ARMED;
     ensures internal_state == INTERNAL_ARMED ||
             internal_state == INTERNAL_DISARMED ||
             internal_state == ARMING ||
@@ -191,13 +193,18 @@ void update_arming_state() {
 /*@
     requires \valid(channels);
     requires \valid(channels + (0 .. NUM_CHANNELS - 1));
+
+    // #requirement(ARMING6)
+    requires ghost_arming_state_initialized == ARMING_NOT_INITIALIZED;
+
     assigns channels;
     assigns ghost_arming_state_initialized;
     ensures channels == _channels;
-    ensures ghost_arming_state_initialized == ARMING_INITIALIZED;
+
+    // #requirement(ARMING0)
+    ensures ARMING0: ghost_arming_state_initialized == ARMING_INITIALIZED;
 */
 void init_arming_state(int16_t _channels[NUM_CHANNELS]) {
-    //@ ghost arming_state_initialized = ARMING_ON;
     channels = _channels;
     // TODO re-enable timer; until then, call update_arming_state periodically from main loop
     /*
@@ -205,14 +212,20 @@ void init_arming_state(int16_t _channels[NUM_CHANNELS]) {
         error_blink(STATE_TIMER_HARDWARE_BUSY, "Could not set up interval timer for arming state update!");
     }
     */
+    // #requirement(ARMING0)
+    //@ ghost ghost_arming_state_initialized = ARMING_INITIALIZED;
 }
 
 /*@
     requires \valid_read(channels);
+    // #requirement(ARMING0)
     requires ghost_arming_state_initialized == ARMING_INITIALIZED;
     //assigns \nothing;
     assigns ghost_interrupt_status;
-    ensures ghost_interrupt_status == INTERRUPTS_ON; */
+    // #requirement(ARMING5)
+    ensures \result == ARMED || \result == DISARMED;
+    ensures ghost_interrupt_status == INTERRUPTS_ON;
+*/
 const arming_state_t get_arming_state() {
     mock_noInterrupts();
     switch (internal_state) {
@@ -221,16 +234,16 @@ const arming_state_t get_arming_state() {
         case DISARMING:
         case DISARMING_STANDBY:
             mock_interrupts();
-            //@ assert interrupt_status == INTERRUPTS_ON;
+            //@ assert ghost_interrupt_status == INTERRUPTS_ON;
             return ARMED;
         case INTERNAL_DISARMED:
         case ARMING:
         case ARMING_STANDBY:
             mock_interrupts();
-            //@ assert interrupt_status == INTERRUPTS_ON;
+            //@ assert ghost_interrupt_status == INTERRUPTS_ON;
             return DISARMED;
     }
     mock_interrupts();
-    //@ assert interrupt_status == INTERRUPTS_ON;
+    //@ assert ghost_interrupt_status == INTERRUPTS_ON;
     return DISARMED;
 }

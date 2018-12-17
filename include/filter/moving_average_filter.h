@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#define MAF_UNINITIALIZED 0
+#define MAF_INITIALIZED 1
+//@ ghost int ghost_maf_status = MAF_UNINITIALIZED;
 //TODO use dynamic size
 #define FILTER_SIZE 10
 
