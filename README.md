@@ -81,6 +81,9 @@ the setpoint to the next controller) and only using the rate controller.
 
 Blog-in-progress @ [https://barafael.github.io/Remote-Control-Vehicle-Balance-controller/](https://barafael.github.io/Remote-Control-Vehicle-Balance-controller/)
 
+BUG: when the shut_off function is called in the output actuator driver, the PWM signal is set to 0.
+The actuator driver should only set the PWM signal to 0 if the output actuator type is a motor (it can also be a servo or something else).
+
 ## Inspiration and Acknowledgments
 
 * OpenAeroVTOL from the RCGroups forums, by HappySundays - awesome project.
