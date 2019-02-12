@@ -1,7 +1,9 @@
 #include "../../include/output/simple_pwm_output.h"
 
-simple_pwm_output_t simple_out_init(const uint8_t pin, float throttle_volume, float roll_volume, float pitch_volume,
-                                  float yaw_volume, bool is_throttle) {
+simple_pwm_output_t simple_out_init(const uint8_t pin,
+        float throttle_volume, float roll_volume, float pitch_volume, float yaw_volume,
+        bool is_throttle) {
+    // is_pwm_pin(pin)
     mock_pinMode(pin, OUTPUT);
 
     mixer_t mixer = mixer_init(throttle_volume, roll_volume, pitch_volume, yaw_volume);
@@ -26,7 +28,7 @@ static void simple_out_write(simple_pwm_output_t *self, uint16_t _milli_throttle
 }
 
 /*@ requires \valid(self);
-    behavior cutoff:
+    behavior OUTPUTcutoff:
       assumes self->low_throttle_cutoff_enabled;
       assumes _milli_throttle < self->throttle_low_cutoff;
       ensures motor_status == MOTOR_OFF;
@@ -34,8 +36,8 @@ static void simple_out_write(simple_pwm_output_t *self, uint16_t _milli_throttle
       assumes _milli_throttle > self->throttle_low_cutoff;
       ensures motor_status == MOTOR_OFF;
 
-    complete behaviors on, cutoff;
-    disjoint behaviors on, cutoff;
+    complete behaviors on, OUTPUTcutoff;
+    disjoint behaviors on, OUTPUTcutoff;
  */
 void simple_out_apply(simple_pwm_output_t *self, uint16_t _milli_throttle,
         float roll_stbl, float pitch_stbl, float yaw_stbl) {

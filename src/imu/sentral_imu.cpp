@@ -1115,64 +1115,42 @@ IMU_INIT_ERROR init_sentral_imu() {
         return REVISION_ID_MISMATCH;
     }
 
-    mock_delay(10); // give some time to read the screen
-
     // Check which sensors can be detected by the EM7180
+#ifdef USE_SERIAL
     uint8_t featureflag = readByte(EM7180_ADDRESS, EM7180_FeatureFlags);
     if (featureflag & 0x01)
-#ifdef USE_SERIAL
         Serial.println("A barometer is installed");
-#endif
     if (featureflag & 0x02)
-#ifdef USE_SERIAL
         Serial.println("A humidity sensor is installed");
-#endif
     if (featureflag & 0x04)
-#ifdef USE_SERIAL
         Serial.println("A temperature sensor is installed");
-#endif
     if (featureflag & 0x08)
-#ifdef USE_SERIAL
         Serial.println("A custom sensor is installed");
-#endif
     if (featureflag & 0x10)
-#ifdef USE_SERIAL
         Serial.println("A second custom sensor is installed");
-#endif
     if (featureflag & 0x20)
-#ifdef USE_SERIAL
         Serial.println("A third custom sensor is installed");
 #endif
-
-    mock_delay(10); // give some time to read the screen
 
     for (int count = 0; count < 10; count++) {
         writeByte(EM7180_ADDRESS, EM7180_ResetRequest, 0x01);
         mock_delay(500);
 
         uint8_t status = (readByte(EM7180_ADDRESS, EM7180_SentralStatus));
+#ifdef USE_SERIAL
         if (status & 0x01)
-#ifdef USE_SERIAL
             Serial.println("EEPROM detected on the sensor bus!");
-#endif
         if (status & 0x02)
-#ifdef USE_SERIAL
             Serial.println("EEPROM uploaded config file!");
-#endif
         if (status & 0x04) {
-#ifdef USE_SERIAL
             Serial.println("EEPROM CRC incorrect!");
-#endif
         }
         if (status & 0x08)
-#ifdef USE_SERIAL
             Serial.println("EM7180 in initialized state!");
-#endif
         if (status & 0x10) {
-#ifdef USE_SERIAL
             Serial.println("No EEPROM detected!");
-#endif
         }
+#endif
         if ((status & 0x01) == 0) {
             break;
         }
@@ -1181,9 +1159,7 @@ IMU_INIT_ERROR init_sentral_imu() {
     if (readByte(EM7180_ADDRESS, EM7180_SentralStatus) & 0x01)
 #ifdef USE_SERIAL
         Serial.println("EEPROM detected on the sensor bus!");
-#endif
     if (readByte(EM7180_ADDRESS, EM7180_SentralStatus) & 0x02)
-#ifdef USE_SERIAL
         Serial.println("EEPROM uploaded config file!");
 #endif
     if (readByte(EM7180_ADDRESS, EM7180_SentralStatus) & 0x04) {
@@ -1207,7 +1183,6 @@ IMU_INIT_ERROR init_sentral_imu() {
 #ifdef USE_SERIAL
         Serial.println("EEPROM upload successful!");
 #endif
-    mock_delay(10); // give some time to read the screen
 
     // Set up the SENtral as sensor bus in normal operating mode
     // Enter EM7180 initialized state
@@ -1217,7 +1192,6 @@ IMU_INIT_ERROR init_sentral_imu() {
     writeByte(EM7180_ADDRESS, EM7180_HostControl, 0x00); // set SENtral in initialized state to configure registers
 
     //Setup LPF bandwidth (BEFORE setting ODR's)
-    //TODO: find custom frequencies
     writeByte(EM7180_ADDRESS, EM7180_ACC_LPF_BW, 0x03); // 41Hz
     writeByte(EM7180_ADDRESS, EM7180_GYRO_LPF_BW, 0x03); // 41Hz
     // Set accel/gyro/mage desired ODR rates
@@ -1424,8 +1398,6 @@ IMU_INIT_ERROR init_sentral_imu() {
 #endif
     }
 
-    mock_delay(10); // give some time to read the screen
-
     // Check sensor status
     uint8_t sensorStatus = readByte(EM7180_ADDRESS, EM7180_SensorStatus);
 #ifdef USE_SERIAL
@@ -1434,17 +1406,17 @@ IMU_INIT_ERROR init_sentral_imu() {
 #endif
     if (sensorStatus & 0x01) {
 #ifdef USE_SERIAL
-        Serial.print("Magnetometer not acknowledging!");
+        Serial.print("Magnetometer not ack'ing!");
 #endif
     }
     if (sensorStatus & 0x02) {
 #ifdef USE_SERIAL
-        Serial.print("Accelerometer not acknowledging!");
+        Serial.print("Accelerometer not ack'ing!");
 #endif
     }
     if (sensorStatus & 0x04) {
 #ifdef USE_SERIAL
-        Serial.print("Gyro not acknowledging!");
+        Serial.print("Gyro not ack'ing!");
 #endif
     }
     if (sensorStatus & 0x10) {

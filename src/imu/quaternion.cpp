@@ -16,6 +16,79 @@ quaternion_t quat_from_array(float const q[4]) {
     requires \is_finite(quat->b);
     requires \is_finite(quat->c);
     requires \is_finite(quat->d);
+    requires arg_positive:
+        (float)((float)((float)
+            ((float)(quat->a * quat->a)
+           + (float)(quat->b * quat->b))
+           + (float)(quat->c * quat->c))
+           + (float)(quat->d * quat->d))
+        >= -0.0;
+    assigns quat->a, quat->b, quat->c, quat->d;
+    behavior zero_quat: assumes
+        \sqrt(((quat->a * quat->a + quat->b * quat->b) + quat->c * quat->c) + quat->d * quat->d) ≡ 0.0f;
+      ensures \old(quat)->a ≡ \old(quat->a);
+      ensures \old(quat)->b ≡ \old(quat->b);
+      ensures \old(quat)->c ≡ \old(quat->c);
+      ensures \old(quat)->d ≡ \old(quat->d);
+    behavior valid_quat: assumes
+        \sqrt(((quat->a * quat->a + quat->b * quat->b) + quat->c * quat->c) + quat->d * quat->d) ≢ 0.0f;
+    complete behaviors zero_quat, valid_quat;
+    disjoint behaviors zero_quat, valid_quat;
+ */
+void normalize_quat_test(quaternion_t *quat) {
+  /*@ assert rte: mem_access: \valid_read(&quat->a); */
+  /*@ assert rte: is_nan_or_infinite: \is_finite((float)(quat->a * quat->a)); */
+  /*@ assert rte: is_nan_or_infinite:
+        \is_finite((float)((float)(quat->a * quat->a))); */
+
+  /*@ assert rte: mem_access: \valid_read(&quat->b); */
+  /*@ assert rte: is_nan_or_infinite: \is_finite((float)(quat->b * quat->b)); */
+  /*@ assert rte: is_nan_or_infinite:
+        \is_finite((float)((float)(quat->b * quat->b))); */
+
+  /*@ assert rte: mem_access: \valid_read(&quat->c); */
+  /*@ assert rte: is_nan_or_infinite: \is_finite((float)(quat->c * quat->c)); */
+  /*@ assert rte: is_nan_or_infinite:
+        \is_finite((float)((float)(quat->c * quat->c))); */
+
+  /*@ assert rte: mem_access: \valid_read(&quat->d); */
+  /*@ assert rte: is_nan_or_infinite: \is_finite((float)(quat->d * quat->d)); */
+  /*@ assert rte: is_nan_or_infinite:
+        \is_finite((float)((float)(quat->d * quat->d))); */
+  float norm =
+    sqrtf(((quat->a * quat->a + quat->b * quat->b) + quat->c * quat->c) + quat->d * quat->d);
+  /*@ assert rte: is_nan_or_infinite: \is_finite((float)(1.0f / norm)); */
+  norm = 1.0f / norm;
+  /*@ assert rte: mem_access: \valid(&quat->a); */
+  /*@ assert rte: mem_access: \valid_read(&quat->a); */
+  /*@ assert rte: is_nan_or_infinite: \is_finite((float)(quat->a * norm)); */
+  quat->a *= norm;
+  /*@ assert rte: mem_access: \valid(&quat->b); */
+  /*@ assert rte: mem_access: \valid_read(&quat->b); */
+  /*@ assert rte: is_nan_or_infinite: \is_finite((float)(quat->b * norm)); */
+  quat->b *= norm;
+  /*@ assert rte: mem_access: \valid(&quat->c); */
+  /*@ assert rte: mem_access: \valid_read(&quat->c); */
+  /*@ assert rte: is_nan_or_infinite: \is_finite((float)(quat->c * norm)); */
+  quat->c *= norm;
+  /*@ assert rte: mem_access: \valid(&quat->d); */
+  /*@ assert rte: mem_access: \valid_read(&quat->d); */
+  /*@ assert rte: is_nan_or_infinite: \is_finite((float)(quat->d * norm)); */
+  quat->d *= norm;
+}
+
+/*@ requires \valid(quat);
+    requires \is_finite(quat->a);
+    requires \is_finite(quat->b);
+    requires \is_finite(quat->c);
+    requires \is_finite(quat->d);
+
+    requires arg_positive:
+         (float)((float)((float)((float)(quat->a * quat->a)
+                               + (float)(quat->b * quat->b))
+                               + (float)(quat->c * quat->c))
+                               + (float)(quat->d * quat->d))
+         ≥ -0.;
 
     assigns quat->a;
     assigns quat->b;
@@ -30,8 +103,6 @@ quaternion_t quat_from_array(float const q[4]) {
       ensures quat->d == \old(quat->d);
     behavior valid_quat:
       assumes \sqrt(quat->a * quat->a + quat->b * quat->b + quat->c * quat->c + quat->d * quat->d) != 0.0f;
-      assumes \sqrt(quat->a * quat->a + quat->b * quat->b + quat->c * quat->c + quat->d * quat->d) > 0.99f;
-      assumes \sqrt(quat->a * quat->a + quat->b * quat->b + quat->c * quat->c + quat->d * quat->d) < 1.01f;
 
     disjoint behaviors zero_quat, valid_quat;
     complete behaviors zero_quat, valid_quat;

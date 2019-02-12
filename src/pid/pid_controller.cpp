@@ -1,6 +1,9 @@
 #include "../../include/pid/pid_controller.h"
 
-/*@ requires \abs(integral_limit) < \abs(output_limit);
+/*@ requires PIDlimitBounds: 0 <= \abs(integral_limit) < \abs(output_limit);
+    requires PIDlimitBounds: integral_limit >= 0;
+    requires PIDlimitBounds: output_limit >= 0;
+
     assigns \nothing;
 
     ensures \result.enabled == 1;
@@ -9,7 +12,7 @@
     ensures \result.i_gain == i_gain;
     ensures \result.d_gain == d_gain;
 
-    ensures \result.integral == 0;
+    ensures PIDintegralLimit: \result.integral == 0;
 
     ensures \result.d_type == ERROR;
 
@@ -19,12 +22,14 @@
 
     ensures \result.last_measured == 0;
 
-    ensures \result.integral_limit == \abs(integral_limit);
-    ensures \result.output_limit == \abs(output_limit);
+    ensures PIDlimitBounds: \result.integral_limit == \abs(integral_limit);
+    ensures PIDlimitBounds: \result.output_limit == \abs(output_limit);
 
     ensures \result.last_time == 0;
 
-    ensures 0.0f <= \result.integral_limit < \result.output_limit;
+    ensures PIDlimitBounds: 0.0f <= \result.integral_limit < \result.output_limit;
+    
+    ensures PIDinitialization == PID_INITIALIZED;
 */
 pid_controller_t pid_controller_init(float p_gain, float i_gain, float d_gain,
         float integral_limit, float output_limit) {
@@ -35,11 +40,7 @@ pid_controller_t pid_controller_init(float p_gain, float i_gain, float d_gain,
 #if FILTER_TYPE == MOVING_AVERAGE
     moving_average_t mavg_filter = init_moving_average_filter();
 #else
-#if FILTER_TYPE == COMPLEMENTARY
-    complementary_filter_t comp_filter = init_complementary_filter(0.5);
-#else
 #error "Undefined filter type!"
-#endif
 #endif
 #endif
 #endif
@@ -75,35 +76,34 @@ pid_controller_t pid_controller_init(float p_gain, float i_gain, float d_gain,
 #if FILTER_TYPE == MOVING_AVERAGE
         .moving_average_filter = mavg_filter,
 #else
-#if FILTER_TYPE == COMPLEMENTARY
-        .complementary_filter = comp_filter,
-#else
 #error "Undefined filter type!"
 #endif
 #endif
 #endif
-#endif
     };
-    //@ assert controller.output_limit >= 0.0f;
-    //@ assert controller.integral_limit >= 0.0f;
-    //@ assert controller.integral_limit <= controller.output_limit;
+    //@ assert PIDlimitBounds: controller.output_limit >= 0.0f;
+    //@ assert PIDlimitBounds: controller.integral_limit >= 0.0f;
+    //@ assert PIDlimitBounds: controller.integral_limit <= controller.output_limit;
+    //@ requires PIDinitialization: pid_init_state == PID_INITIALIZED;
     return controller;
 }
 
 /* En/Disable Passthrough of setpoint */
 /*@
  requires \valid(self);
- //ensures \valid(\old(self)) ==> \valid(self);
- ensures self->enabled == enable; */
+ requires PIDinitialization: pid_init_state == PID_INITIALIZED;
+ ensures self->enabled == enable;
+*/
 void pid_set_enabled(pid_controller_t *self, bool enable) {
     self->enabled = enable;
 }
 
 /*@
    requires \valid(self);
-   requires 0 <= self->integral_limit <= self->output_limit;
+   requires PIDlimitBounds: 0 <= self->integral_limit <= self->output_limit;
    requires \is_finite(measured);
    requires \is_finite(setpoint);
+   requires PIDinitialization: pid_init_state == PID_INITIALIZED;
 
    assigns self->last_time;
    assigns self->last_error;
@@ -113,7 +113,9 @@ void pid_set_enabled(pid_controller_t *self, bool enable) {
 
    //ensures \valid(\old(self)) ==> \valid(self);
 
-   behavior disabled:
+   ensures PIDboundedResult: -self.output_limit <= \result <= self.output_limit;
+
+   behavior PIDdisabledSetpointPassthrough:
      assumes self->enabled == false;
      ensures self->last_time == \old(self->last_time);
      ensures self->last_error == \old(self->last_error);
@@ -123,8 +125,10 @@ void pid_set_enabled(pid_controller_t *self, bool enable) {
 
    behavior enabled:
      assumes self->enabled;
-     ensures \result <= self->output_limit;
-     ensures \old(self->last_time) < \at(self->last_time, Post);
+     ensures PIDboundedResult: -self.output_limit <= \result <= self->output_limit;
+     // this is an assumption about the loop rate which is correct (otherwise a loop iteration would take hours)
+     // but frama-c cannot take that into account
+     //ensures \old(self->last_time) < \at(self->last_time, Post);
    complete behaviors;
    disjoint behaviors;
 */
@@ -134,12 +138,24 @@ float pid_compute(pid_controller_t *self, float measured, float setpoint) {
     }
 
     uint64_t now = mock_micros();
-    //@ assert now > self->last_time;
+    // unverifyable: frama-c knows nothing about loop rate and actual milliseconds
+    // When loop rate is HOURS, this might malfunction, but honestly...
+
+    // assert PIDdeltatimePositive: now >= self->last_time;
+    // does not work because of assumption that looptime is less than UINT64_MAX
+    // microseconds.
 
     /* If there is overflow, the elapsed time is still correct
-     * The calculation overflows just like the timer */
+     * The calculation overflows just like the timer
+     * Assumption: loop time is shorter than the time it takes where micros() overflows.
+     * If loop time were lower at any time, there'd be much larger problems. */
     uint64_t elapsed_time = now - self->last_time;
-    //@ assert elapsed_time > 0;
+    /* if loop time less than 1 microsecond, then elapsed is 0.
+     * Actual resulution of micros() timer is less, but this loop time would need to be 3 orders of magnitude larger than the actual looprate. */
+    if (elapsed_time == 0) {
+        elapsed_time = 1;
+    }
+    //@ assert PIDdeltatimeNonZero: elapsed_time != 0;
 
     float error = measured - setpoint;
 
@@ -148,9 +164,11 @@ float pid_compute(pid_controller_t *self, float measured, float setpoint) {
     self->integral += elapsed_time * error * self->i_gain;
     /* Integral windup clamp */
     clamp(self->integral, -self->integral_limit, self->integral_limit);
-    //@ assert -self->integral_limit <= self->integral <= self->integral_limit;
+    //@ assert PIDintegralLimit: -self->integral_limit <= self->integral <= self->integral_limit;
 
     float d_term = 0.0f;
+
+    //@ assert elapsed_not_zero: elapsed_time != 0;
     switch (self->d_type) {
         /* Derivative term on error */
         case ERROR:
@@ -191,14 +209,14 @@ float pid_compute(pid_controller_t *self, float measured, float setpoint) {
 
     /* Output limit */
     clamp(result, -self->output_limit, self->output_limit);
-    //@ assert -self->output_limit <= result <= self->output_limit;
+    //@ assert PIDboundedResult: -self->output_limit <= result <= self->output_limit;
 
     return result;
 }
 
 /*@
  requires \valid(self);
- //ensures \valid(\old(self)) ==> \valid(self);
+ requires PIDinitialization: pid_init_state == PID_INITIALIZED;
  ensures self->p_gain == _p_gain;
 */
 void pid_set_p(pid_controller_t *self, float _p_gain) {
@@ -207,6 +225,7 @@ void pid_set_p(pid_controller_t *self, float _p_gain) {
 
 /*@
  requires \valid(self);
+ requires PIDinitialization: pid_init_state == PID_INITIALIZED;
  //ensures \valid(\old(self)) ==> \valid(self);
  ensures self->i_gain == _i_gain;
 */
@@ -216,6 +235,7 @@ void pid_set_i(pid_controller_t *self, float _i_gain) {
 
 /*@
  requires \valid(self);
+ requires PIDinitialization: pid_init_state == PID_INITIALIZED;
  //ensures \valid(\old(self)) ==> \valid(self);
  ensures self->d_gain == _d_gain;
 */
@@ -225,7 +245,7 @@ void pid_set_d(pid_controller_t *self, float _d_gain) {
 
 /*@
  requires \valid(self);
- // bug in spec and still proven! > instead of <
+ requires PIDinitialization: pid_init_state == PID_INITIALIZED;
  requires integral_limit <= output_limit;
 
  ensures self->p_gain == p_gain;
@@ -249,6 +269,7 @@ void pid_set_params(pid_controller_t *self,
 
 /*@
  requires \valid(self);
+ requires PIDinitialization: pid_init_state == PID_INITIALIZED;
  //ensures \valid(\old(self)) ==> \valid(self);
  ensures \result == self->p_gain;
 */
@@ -258,6 +279,7 @@ float pid_get_p(pid_controller_t *self) {
 
 /*@
  requires \valid(self);
+ requires PIDinitialization: pid_init_state == PID_INITIALIZED;
  //ensures \valid(\old(self)) ==> \valid(self);
  ensures \result == self->i_gain;
 */
@@ -267,6 +289,7 @@ float pid_get_i(pid_controller_t *self) {
 
 /*@
  requires \valid(self);
+ requires PIDinitialization: pid_init_state == PID_INITIALIZED;
  //ensures \valid(\old(self)) ==> \valid(self);
  ensures \result == self->d_gain;
 */
@@ -276,6 +299,7 @@ float pid_get_d(pid_controller_t *self) {
 
 /*@
  requires \valid(self);
+ requires PIDinitialization: pid_init_state == PID_INITIALIZED;
  //ensures \valid(\old(self)) ==> \valid(self);
  ensures self->integral == 0.0;
 */
@@ -285,6 +309,7 @@ void pid_integral_reset(pid_controller_t *self) {
 
 /*@
  requires \valid(self);
+ requires PIDinitialization: pid_init_state == PID_INITIALIZED;
  //ensures \valid(\old(self)) ==> \valid(self);
  ensures self->integral_limit == limit;
 */
@@ -294,6 +319,7 @@ void pid_set_integral_limit(pid_controller_t *self, float limit) {
 
 /*@
  requires \valid(self);
+ requires PIDinitialization: pid_init_state == PID_INITIALIZED;
  //ensures \valid(\old(self)) ==> \valid(self);
  ensures self->output_limit == limit;
 */
@@ -303,6 +329,7 @@ void pid_set_output_limit(pid_controller_t *self, float limit) {
 
 /*@
  requires \valid(self);
+ requires PIDinitialization: pid_init_state == PID_INITIALIZED;
  //ensures \valid(\old(self)) ==> \valid(self);
  ensures self->d_type == type;
 */

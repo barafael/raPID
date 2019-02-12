@@ -17,32 +17,24 @@
     //ensures WDOG_PRESC == 4;
 */
 void init_watchdog() {
-    WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;
+    mock_noInterrupts();
+
+    WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;                         // unlock access to WDOG registers
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
-    mock_delayMicroseconds(1);
+    mock_delayMicroseconds(1);                                   // Need to wait a bit..
 
-    /* Enable WDG */
-    WDOG_STCTRLH = (uint16_t) 0x0001;
+    // for this demo, we will use 1 second WDT timeout (e.g. you must reset it in < 1 sec or a boot occurs)
+    WDOG_TOVALH = 0x006d;
+    WDOG_TOVALL = 0xdd00;
 
-    /* The next 2 lines sets the time-out value.
-     * This is the value that the watchdog timer compare itself to.
-     */
-    WDOG_TOVALL = (uint16_t) 200;
-    WDOG_TOVALH = (uint16_t) 0;
+    // This sets prescale clock so that the watchdog timer ticks at 7.2MHz
+    WDOG_PRESC  = 0x400;
 
-    /* This sets prescale clock so that the watchdog timer ticks at 100Hz.
-     * Formula: 1kHZ/4 = 200 HZ
-     */
-    WDOG_PRESC = (uint16_t) 4;
-}
-
-/*@ requires \valid(&WDOG_PRESC);
-    assigns WDOG_PRESC;
-    // not memory, just a volatile register
-    //ensures WDOG_PRESC == prescale;
-*/
-void watchdog_set_prescale(int prescale) {
-    WDOG_PRESC = prescale;
+    // Set options to enable WDT. You must always do this as a SINGLE write to WDOG_CTRLH
+    WDOG_STCTRLH |= WDOG_STCTRLH_ALLOWUPDATE |
+        WDOG_STCTRLH_WDOGEN | WDOG_STCTRLH_WAITEN |
+        WDOG_STCTRLH_STOPEN | WDOG_STCTRLH_CLKSRC;
+    mock_interrupts();
 }
 
 /*@ requires \valid(&WDOG_REFRESH);

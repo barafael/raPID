@@ -14,12 +14,12 @@
 #define M_PI_F 3.14159265358979323846f
 #define PI M_PI_F
 
-int64_t milliseconds = 0;
-int64_t microseconds = 0;
+uint64_t milliseconds = 1;
+uint64_t microseconds = 1;
 
-int64_t mock_millis(void);
+uint64_t mock_millis(void);
 
-int64_t mock_micros(void);
+uint64_t mock_micros(void);
 
 #define INTERRUPTS_OFF 0
 #define INTERRUPTS_ON  1

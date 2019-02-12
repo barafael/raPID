@@ -1,21 +1,21 @@
 #include "../include/ArduinoMock.h"
-
+ 
 /*@ assigns milliseconds;
-
-    behavior normal:
-      assumes milliseconds < INT64_MAX;
-      ensures \result == \old(milliseconds) + 1;
-      ensures milliseconds == \old(milliseconds) + 1;
     behavior overflow:
-      assumes milliseconds == INT64_MAX;
-      ensures \result == 0;
-      ensures milliseconds == 0;
+    assumes milliseconds == UINT64_MAX;
+    ensures milliseconds == 0;
+    ensures \result == 0;
 
-    complete behaviors normal, overflow;
-    disjoint behaviors normal, overflow;
+    behavior no_overflow:
+    assumes milliseconds < UINT64_MAX;
+    ensures milliseconds == \old(milliseconds) + 1;
+    ensures \result == \old(milliseconds) + 1;
+
+    complete behaviors overflow, no_overflow;
+    disjoint behaviors overflow, no_overflow;
 */
-int64_t mock_millis() {
-    if (milliseconds < INT64_MAX) {
+uint64_t mock_millis() {
+    if (milliseconds < UINT64_MAX) {
         milliseconds++;
     } else {
         milliseconds = 0;
@@ -24,21 +24,21 @@ int64_t mock_millis() {
 }
 
 /*@ assigns microseconds;
-
-    behavior normal:
-      assumes microseconds < INT64_MAX;
-      ensures \result == \old(microseconds) + 1;
-      ensures microseconds == \old(microseconds) + 1;
     behavior overflow:
-      assumes microseconds == INT64_MAX;
-      ensures \result == 0;
-      ensures microseconds == 0;
+    assumes microseconds == UINT64_MAX;
+    ensures microseconds == 0;
+    ensures \result == 0;
 
-    complete behaviors normal, overflow;
-    disjoint behaviors normal, overflow;
+    behavior no_overflow:
+    assumes microseconds < UINT64_MAX;
+    ensures microseconds == \old(microseconds) + 1;
+    ensures \result == \old(microseconds) + 1;
+
+    complete behaviors overflow, no_overflow;
+    disjoint behaviors overflow, no_overflow;
 */
-int64_t mock_micros() {
-    if (microseconds < INT64_MAX) {
+uint64_t mock_micros() {
+    if (microseconds < UINT64_MAX) {
         microseconds++;
     } else {
         microseconds = 0;
