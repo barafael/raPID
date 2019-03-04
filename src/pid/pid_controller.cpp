@@ -20,8 +20,6 @@
 
     ensures \result.last_setpoint == 0;
 
-    ensures \result.last_measured == 0;
-
     ensures PIDlimitBounds: \result.integral_limit == \abs(integral_limit);
     ensures PIDlimitBounds: \result.output_limit == \abs(output_limit);
 
@@ -63,12 +61,9 @@ pid_controller_t pid_controller_init(float p_gain, float i_gain, float d_gain,
         /* For derivative-on-setpoint */
         .last_setpoint = 0.0f,
 
-        /* For derivative-on-measured */
-        .last_measured = 0.0f,
-
         .output_limit = abs(output_limit),
 
-        .last_time = 0,
+        .last_time = mock_micros(),
 #ifndef FILTER_TYPE
 #else
 #if FILTER_TYPE == NONE
@@ -95,6 +90,13 @@ pid_controller_t pid_controller_init(float p_gain, float i_gain, float d_gain,
  ensures self->enabled == enable;
 */
 void pid_set_enabled(pid_controller_t *self, bool enable) {
+    if (enable) {
+        self->last_time = mock_micros();
+    } else {
+        pid_integral_reset(self);
+        self->last_error = 0.0f;
+        self->last_setpoint = 0.0f;
+    }
     self->enabled = enable;
 }
 
@@ -108,7 +110,6 @@ void pid_set_enabled(pid_controller_t *self, bool enable) {
    assigns self->last_time;
    assigns self->last_error;
    assigns self->last_setpoint;
-   assigns self->last_measured;
    assigns self->integral;
 
    //ensures \valid(\old(self)) ==> \valid(self);
@@ -120,7 +121,6 @@ void pid_set_enabled(pid_controller_t *self, bool enable) {
      ensures self->last_time == \old(self->last_time);
      ensures self->last_error == \old(self->last_error);
      ensures self->last_setpoint == \old(self->last_setpoint);
-     ensures self->last_measured == \old(self->last_measured);
      ensures \result == setpoint;
 
    behavior enabled:
@@ -179,11 +179,6 @@ float pid_compute(pid_controller_t *self, float measured, float setpoint) {
         case SETPOINT:
             d_term = ((setpoint - self->last_setpoint) / elapsed_time) * self->d_gain;
             break;
-
-            /* Derivative term on measurement */
-        case FEEDBACK:
-            d_term = ((measured - self->last_measured) / elapsed_time) * self->d_gain;
-            break;
     }
     //@ assert \is_finite(d_term);
 
@@ -203,7 +198,6 @@ float pid_compute(pid_controller_t *self, float measured, float setpoint) {
 
     self->last_error    = error;
     self->last_setpoint = setpoint;
-    self->last_measured = measured;
 
     float result = p_term + self->integral + d_term;
 

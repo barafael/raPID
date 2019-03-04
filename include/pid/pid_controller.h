@@ -16,7 +16,7 @@ typedef enum { PID_UNINITIALIZED, PID_INITIALIZED } pid_status;
 
 #define THROTTLE_LOW_CUTOFF 25
 
-typedef enum { ERROR, SETPOINT, FEEDBACK } derivative_type;
+typedef enum { ERROR, SETPOINT/*, FEEDBACK*/ } derivative_type;
 #define FILTER_TYPE NONE
 
 typedef struct {
@@ -36,9 +36,6 @@ typedef struct {
 
     /* For derivative-on-setpoint */
     float last_setpoint;
-
-    /* For derivative-on-measured */
-    float last_measured;
 
     float output_limit;
 
@@ -65,6 +62,8 @@ pid_controller_t pid_controller_init(float p_gain, float i_gain, float d_gain,
 void pid_set_enabled(pid_controller_t *self, bool enable);
 
 float pid_compute(pid_controller_t *self, float measured, float setpoint);
+
+void pid_integral_reset(pid_controller_t *self);
 
 void pid_set_p(pid_controller_t *self, float _p_gain);
 void pid_set_i(pid_controller_t *self, float _i_gain);
