@@ -99,13 +99,13 @@ float sum_float_array(const float *values, size_t size) {
         assumes MAFoutOfBounds: 0 <= self->marker < (FILTER_SIZE - 1);
         ensures MAFoutOfBounds: self->marker == \old(self->marker) + 1;
         ensures self->values[(\old(self->marker))] == value;
-        ensures MAFaverage: \result == sum_real(self->values, 0, FILTER_SIZE) / FILTER_SIZE;
+        ensures MAFaverage: \result == sum_real(&self->values[0], 0, FILTER_SIZE) / FILTER_SIZE;
     behavior reset:
         assumes MAFoutOfBounds: self->marker == FILTER_SIZE - 1;
         ensures MAFoutOfBounds: self->marker == 0;
         ensures self->values[(\old(self->marker))] == value;
         ensures \at(self->marker, Post) == \old(self->marker) + 1;
-        ensures  MAFaverage: \result == sum_real(self->values, 0, FILTER_SIZE) / FILTER_SIZE;
+        ensures  MAFaverage: \result == sum_real(&self->values[0], 0, FILTER_SIZE) / FILTER_SIZE;
     behavior never_happens:
         assumes self->marker >= FILTER_SIZE;
         ensures \false;
