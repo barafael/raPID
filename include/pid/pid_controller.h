@@ -39,6 +39,7 @@ typedef struct {
 
     float output_limit;
 
+    //implements: GLOBALtimestampType
     uint64_t last_time;
 
 #ifndef FILTER_TYPE

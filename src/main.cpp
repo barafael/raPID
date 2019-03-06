@@ -6,7 +6,6 @@
 #include "../include/ArduinoMock.h"
 #include "../include/arming_state.h"
 #include "../include/axis.hpp"
-#include "../include/error_blink.h"
 #include "../include/imu/sentral_imu.hpp"
 #include "../include/output/FastPWMOutput.h"
 #include "../include/pid/pid_controller.h"
@@ -98,14 +97,16 @@ static void print_channels(int16_t channels[NUM_CHANNELS]) {
 #endif
 }
 
-extern "C" int main(void) {
+int main(void) {
 #ifdef USE_SERIAL
     Serial.begin(9600);
 #endif
 
-    uint64_t serial_wait_start_time = mock_millis();
 #ifdef USE_SERIAL
+    //implements: GLOBALtimestampType
+    uint64_t serial_wait_start_time = mock_millis();
     while (!Serial) {
+        //implements: GLOBALelapsedTime, GLOBALelapsedTimeCalculation
         if (mock_millis() - serial_wait_start_time > SERIAL_WAIT_TIMEOUT) {
             break;
         }
@@ -170,23 +171,30 @@ extern "C" int main(void) {
 
     pid_set_enabled(&yaw_controller_rate, true);
 
-    sentral_imu_t imu = init_sentral_imu();
+    IMU_INIT_ERROR error = init_sentral_imu();
+    if (error != IMU_INIT_OK) {
+        while (1) {}
+    }
 
 #ifdef WATCHDOG
     init_watchdog();
 #endif
 
+    //@ ghost ghost_delay_allowed = 0;
+    //@ ghost ghost_delay_happened = 0;
+    /*@ loop invariant GLOBALnoDelayInLoop: ghost_delay_happened == 0;
+    */
     /* Flight loop */
     while (true) {
         receiver_update(channels);
         //print_channels(channels);
 
         /* For outer control loop */
-        attitude = update_attitude(&imu);
+        attitude = update_attitude();
         //print_attitude(attitude);
 
         /* For inner control loop */
-        angular_velocity = update_gyroscope(&imu);
+        angular_velocity = update_gyroscope();
         //print_velocity(angular_rates);
 
         update_arming_state();

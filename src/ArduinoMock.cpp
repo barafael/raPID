@@ -72,7 +72,11 @@ int mock_digitalRead(int pin) {
 
 //@ assigns \nothing;
 void mock_delay(int millis) {
-
+    //implements: GLOBALnoDelayInLoop
+    /*@ ghost if (!ghost_delay_allowed) {
+            ghost_delay_happened = true;
+        }
+    */
 }
 
 //@ assigns \nothing;

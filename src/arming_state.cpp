@@ -2,7 +2,9 @@
 
 #undef USE_SERIAL
 
+//implements: GLOBALtimestampType
 static uint64_t state_change_time;
+
 static internal_state_t internal_state;
 static int16_t *channels;
 
@@ -93,6 +95,7 @@ void update_arming_state() {
 #endif
             if (triggered) {
                 internal_state    = DISARMING;
+                //implements: GLOBALelapsedTime, GLOBALelapsedTimeCalculation
                 state_change_time = mock_millis();
             }
             break;
@@ -105,6 +108,7 @@ void update_arming_state() {
 #endif
             if (triggered) {
                 internal_state    = ARMING;
+                //implements: GLOBALelapsedTime, GLOBALelapsedTimeCalculation
                 state_change_time = mock_millis();
             }
             break;
@@ -116,6 +120,7 @@ void update_arming_state() {
                 Serial.println("Disarming");
 #endif
 #endif
+                //implements: GLOBALelapsedTime, GLOBALelapsedTimeCalculation
                 if ((mock_millis() - state_change_time) > DISARM_TIMEOUT_MS) {
                     internal_state = DISARMING_STANDBY;
                 } else {
@@ -150,6 +155,7 @@ void update_arming_state() {
 #endif
 #endif
             if (triggered) {
+                //implements: GLOBALelapsedTime, GLOBALelapsedTimeCalculation
                 if ((mock_millis() - state_change_time) > ARM_TIMEOUT_MS) {
                     internal_state = ARMING_STANDBY;
                 } else {
@@ -217,26 +223,29 @@ void init_arming_state(int16_t _channels[NUM_CHANNELS]) {
     //assigns \nothing;
     assigns ghost_interrupt_status;
     ensures ARMarmedXORdisarmed: \result == ARMED || \result == DISARMED;
-    ensures ARMinterruptSafety: ghost_interrupt_status == INTERRUPTS_ON;
+    ensures ARMinterruptSafety, GLOBALinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
 */
 const arming_state_t get_arming_state() {
     mock_noInterrupts();
+    //@ assert GLOBALinterruptSafety: ghost_interrupt_status == INTERRUPTS_OFF;
+    // non-functional execution property: critical section is longer than it needs to be
+    // (internal state is read in a switch, critical section could be shorter by using aux variable)
     switch (internal_state) {
         case INTERNAL_DEBUG:
         case INTERNAL_ARMED:
         case DISARMING:
         case DISARMING_STANDBY:
             mock_interrupts();
-            //@ assert ARMinterruptSafety: ghost_interrupt_status == INTERRUPTS_ON;
+            //@ assert ARMinterruptSafety, GLOBALinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
             return ARMED;
         case INTERNAL_DISARMED:
         case ARMING:
         case ARMING_STANDBY:
             mock_interrupts();
-            //@ assert ARMinterruptSafety: ghost_interrupt_status == INTERRUPTS_ON;
+            //@ assert ARMinterruptSafety, GLOBALinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
             return DISARMED;
     }
     mock_interrupts();
-    //@ assert ARMinterruptSafety: ghost_interrupt_status == INTERRUPTS_ON;
+    //@ assert ARMinterruptSafety, GLOBALinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
     return DISARMED;
 }

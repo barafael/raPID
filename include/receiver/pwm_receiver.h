@@ -21,6 +21,7 @@ volatile int16_t channels_shared[NUM_CHANNELS];
 /* Written by interrupt on rising edge, read on falling edge
  * No synchronization necessary if an interrupt only touches one array member.
  */
+//implements: GLOBALtimestampType
 volatile uint64_t pwm_pulse_start_time[NUM_CHANNELS];
 
 

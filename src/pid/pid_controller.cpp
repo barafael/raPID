@@ -27,7 +27,7 @@
 
     ensures PIDlimitBounds: 0.0f <= \result.integral_limit < \result.output_limit;
     
-    ensures PIDinitialization == PID_INITIALIZED;
+    ensures pid_init_state == PID_INITIALIZED;
 */
 pid_controller_t pid_controller_init(float p_gain, float i_gain, float d_gain,
         float integral_limit, float output_limit) {
@@ -114,7 +114,7 @@ void pid_set_enabled(pid_controller_t *self, bool enable) {
 
    //ensures \valid(\old(self)) ==> \valid(self);
 
-   ensures PIDboundedResult: -self.output_limit <= \result <= self.output_limit;
+   ensures PIDboundedResult: -self->output_limit <= \result <= self->output_limit;
 
    behavior PIDdisabledSetpointPassthrough:
      assumes self->enabled == false;
@@ -125,7 +125,7 @@ void pid_set_enabled(pid_controller_t *self, bool enable) {
 
    behavior enabled:
      assumes self->enabled;
-     ensures PIDboundedResult: -self.output_limit <= \result <= self->output_limit;
+     ensures PIDboundedResult: -self->output_limit <= \result <= self->output_limit;
      // this is an assumption about the loop rate which is correct (otherwise a loop iteration would take hours)
      // but frama-c cannot take that into account
      //ensures \old(self->last_time) < \at(self->last_time, Post);

@@ -162,9 +162,20 @@ float GyroMeasDrift = PI * (0.0f / 180.0f);
 // compute zeta, the other free parameter in the Madgwick scheme usually set to a small or zero value
 //float zeta = sqrt(3.0f / 4.0f) * GyroMeasDrift;
 
-uint32_t delt_t = 0, count = 0, sumCount = 0;
+uint32_t delt_t = 0;
+
+//implements: GLOBALelapsedTime, GLOBALelapsedTimeCalculation
+uint32_t count = 0;
+
+uint32_t sumCount = 0;
+
+//implements: GLOBALtimestampType
 uint32_t Now        = 0;
-uint32_t lastUpdate = 0, firstUpdate = 0;
+
+//implements: GLOBALtimestampType
+uint32_t lastUpdate = 0;
+
+uint32_t firstUpdate = 0;
 
 float Yaw, Pitch, Roll;
 
@@ -1586,10 +1597,9 @@ void update_sensors() {
         }
     }
 
-    // keep track of rates
-    Now        = mock_micros();
-    deltat     = ((Now - lastUpdate) / 1000000.0f); // set integration time by time elapsed since last filter update
-    lastUpdate = Now;
+    //implements: GLOBALelapsedTime, GLOBALelapsedTimeCalculation
+    deltat     = ((mock_micros() - lastUpdate) / 1000000.0f); // set integration time by time elapsed since last filter update
+    lastUpdate = mock_micros();
 
     sum += deltat; // sum for averaging filter update rate
     sumCount++;

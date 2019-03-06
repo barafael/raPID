@@ -12,6 +12,7 @@ static uint8_t aux1_pin;
 static uint8_t aux2_pin;
 
 /* Written by interrupt on rising edge, read on falling edge */
+//implements: GLOBALtimestampType
 static volatile uint64_t pwm_pulse_start_tick[NUM_CHANNELS] = { 0 };
 
 /* Interrupts write to this array and the update function reads
@@ -91,11 +92,11 @@ void pwm_receiver_init(uint8_t _throttle_pin,
    assigns channels[5];
    assigns ghost_interrupt_status;
 
-   ensures RXTXinterruptSafety: ghost_interrupt_status == INTERRUPTS_ON;
+   ensures GLOBALinterruptReenable, RXTXinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
 */
 const void receiver_update(int16_t channels[NUM_CHANNELS]) {
     mock_noInterrupts();
-    //@ assert RXTXinterruptSafety: ghost_interrupt_status == INTERRUPTS_OFF;
+    //@ assert GLOBALinterruptSafety: ghost_interrupt_status == INTERRUPTS_OFF;
     /*@ loop invariant 0 <= index <= NUM_CHANNELS;
         //loop invariant \forall int j \in (0 .. index) ==> channels[j] == pwm_pulse_duration_shared[j];
         loop assigns index, channels[0 .. (index - 1)];
@@ -105,7 +106,7 @@ const void receiver_update(int16_t channels[NUM_CHANNELS]) {
         channels[index] = pwm_pulse_duration_shared[index];
     }
     mock_interrupts();
-    //@ assert RXTXinterruptSafety: ghost_interrupt_status == INTERRUPTS_ON;
+    //@ assert GLOBALinterruptReenable, RXTXinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
 
 pre_inversion:
     /*@ loop invariant 0 <= index <= NUM_CHANNELS;
@@ -174,7 +175,7 @@ pre_inversion:
     assigns pwm_offsets[4];
     assigns pwm_offsets[5];
 
-    ensures IsEqual_int16{Here, Here}(&pwm_offsets[0], NUM_CHANNELS, &_offsets[0]) ;
+    ensures IsEqual_int16{Here, Here}(&pwm_offsets[0], NUM_CHANNELS, &_offsets[0]);
 
     ensures _offsets[0] == pwm_offsets[0];
     ensures _offsets[1] == pwm_offsets[1];
@@ -240,10 +241,12 @@ void set_inversion(const bool _inversion[NUM_CHANNELS]) {
    
    complete behaviors has_connection, RXTXconnectionLoss;
    disjoint behaviors has_connection, RXTXconnectionLoss;
+
+   assert GLOBALinterruptReenable, RXTXinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
 */
 const bool has_signal() {
     mock_noInterrupts();
-    //@ assert RXTXinterruptSafety: ghost_interrupt_status == INTERRUPTS_OFF;
+    //@ assert GLOBALinterruptSafety: ghost_interrupt_status == INTERRUPTS_OFF;
     /*@ loop invariant 0 <= index <= NUM_CHANNELS;
         loop assigns ghost_interrupt_status, index;
         loop variant NUM_CHANNELS - index;
@@ -253,12 +256,12 @@ const bool has_signal() {
         // RXTXconnectionTimeout:
         if (pwm_pulse_duration_shared[index] > 80000) {
             mock_interrupts();
-            //@ assert RXTXinterruptSafety: ghost_interrupt_status == INTERRUPTS_ON;
+            //@ assert GLOBALinterruptReenable, RXTXinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
             return false;
         }
     }
     mock_interrupts();
-    //@ assert RXTXinterruptSafety: ghost_interrupt_status == INTERRUPTS_ON;
+    //@ assert GLOBALinterruptReenable, RXTXinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
     return true;
 }
 
@@ -268,8 +271,7 @@ const bool has_signal() {
    ----------------------------------------------------------------
 */
 
-// is this sufficient to denote that this function will never be called when interrupts are off?
-/*@ requires RXTXinterruptSafety: ghost_interrupt_status == INTERRUPTS_ON;
+/*@ requires RXTXinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
    requires RXTXinitialization: ghost_pwmreceiver_status == PWM_RECEIVER_INITIALIZED;
     requires \valid(pwm_pulse_start_tick + (0 .. NUM_CHANNELS - 1));
     requires \valid(pwm_pulse_duration_shared + (0 .. NUM_CHANNELS - 1));
@@ -280,6 +282,7 @@ void update_throttle() {
     if (mock_digitalRead(throttle_pin) == HIGH) {
         pwm_pulse_start_tick[THROTTLE_CHANNEL] = mock_micros();
     } else {
+        //implements: GLOBALelapsedTime, GLOBALelapsedTimeCalculation
         pwm_pulse_duration_shared[THROTTLE_CHANNEL] =
             (mock_micros() - pwm_pulse_start_tick[THROTTLE_CHANNEL]);
     }
@@ -289,6 +292,7 @@ void update_roll() {
     if (mock_digitalRead(roll_pin) == HIGH) {
         pwm_pulse_start_tick[ROLL_CHANNEL] = mock_micros();
     } else {
+        //implements: GLOBALelapsedTime, GLOBALelapsedTimeCalculation
         pwm_pulse_duration_shared[ROLL_CHANNEL] =
             (mock_micros() - pwm_pulse_start_tick[ROLL_CHANNEL]);
     }
@@ -298,6 +302,7 @@ void update_pitch() {
     if (mock_digitalRead(pitch_pin) == HIGH) {
         pwm_pulse_start_tick[PITCH_CHANNEL] = mock_micros();
     } else {
+        //implements: GLOBALelapsedTime, GLOBALelapsedTimeCalculation
         pwm_pulse_duration_shared[PITCH_CHANNEL] =
             (mock_micros() - pwm_pulse_start_tick[PITCH_CHANNEL]);
     }
@@ -307,6 +312,7 @@ void update_yaw() {
     if (mock_digitalRead(yaw_pin) == HIGH) {
         pwm_pulse_start_tick[YAW_CHANNEL] = mock_micros();
     } else {
+        //implements: GLOBALelapsedTime, GLOBALelapsedTimeCalculation
         pwm_pulse_duration_shared[YAW_CHANNEL] =
             (mock_micros() - pwm_pulse_start_tick[YAW_CHANNEL]);
     }
@@ -316,6 +322,7 @@ void update_aux1() {
     if (mock_digitalRead(aux1_pin) == HIGH) {
         pwm_pulse_start_tick[AUX1_CHANNEL] = mock_micros();
     } else {
+        //implements: GLOBALelapsedTime, GLOBALelapsedTimeCalculation
         pwm_pulse_duration_shared[AUX1_CHANNEL] =
             (mock_micros() - pwm_pulse_start_tick[AUX1_CHANNEL]);
     }
@@ -325,6 +332,7 @@ void update_aux2() {
     if (mock_digitalRead(aux2_pin) == HIGH) {
         pwm_pulse_start_tick[AUX2_CHANNEL] = mock_micros();
     } else {
+        //implements: GLOBALelapsedTime, GLOBALelapsedTimeCalculation
         pwm_pulse_duration_shared[AUX2_CHANNEL] =
             (mock_micros() - pwm_pulse_duration_shared[AUX2_CHANNEL]);
     }

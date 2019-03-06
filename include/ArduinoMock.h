@@ -36,8 +36,13 @@ int mock_digitalRead(int pin);
 void mock_analogWrite(int pin, int state);
 int mock_analogRead(int pin);
 
+// delay is allowed at boot
+//implements: GLOBALnoDelayInLoop
+//@ ghost int ghost_delay_allowed = 1;
+//@ ghost int ghost_delay_happened = 1;
 void mock_delay(int millis);
 void mock_delayMicroseconds(uint64_t micros);
+
 void mock_pinMode(int pin, int mode);
 
 #define HIGH 1
