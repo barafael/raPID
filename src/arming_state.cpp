@@ -32,6 +32,10 @@ static int16_t *channels;
     disjoint behaviors triggered, not_triggered;
 */
 const bool state_transition_triggered(const int16_t input[NUM_CHANNELS]) {
+    /*@ assert GLOBALundefBehavior: mem_access: \valid_read(input + 0); */
+    /*@ assert GLOBALundefBehavior: mem_access: \valid_read(input + 1); */
+    /*@ assert GLOBALundefBehavior: mem_access: \valid_read(input + 2); */
+    /*@ assert GLOBALundefBehavior: mem_access: \valid_read(input + 3); */
     if (input[THROTTLE_CHANNEL] > TRANSITION_THROTTLE_THRESHOLD) return false;
     if (input[ROLL_CHANNEL]     < TRANSITION_ROLL_THRESHOLD)     return false;
     /* No typo - roll is different from the other channels when not inverted */
@@ -223,7 +227,7 @@ void init_arming_state(int16_t _channels[NUM_CHANNELS]) {
     //assigns \nothing;
     assigns ghost_interrupt_status;
     ensures ARMarmedXORdisarmed: \result == ARMED || \result == DISARMED;
-    ensures ARMinterruptSafety, GLOBALinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
+    ensures ARMinterruptSafety: GLOBALinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
 */
 const arming_state_t get_arming_state() {
     mock_noInterrupts();
@@ -236,16 +240,16 @@ const arming_state_t get_arming_state() {
         case DISARMING:
         case DISARMING_STANDBY:
             mock_interrupts();
-            //@ assert ARMinterruptSafety, GLOBALinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
+            //@ assert ARMinterruptSafety: GLOBALinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
             return ARMED;
         case INTERNAL_DISARMED:
         case ARMING:
         case ARMING_STANDBY:
             mock_interrupts();
-            //@ assert ARMinterruptSafety, GLOBALinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
+            //@ assert ARMinterruptSafety: GLOBALinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
             return DISARMED;
     }
     mock_interrupts();
-    //@ assert ARMinterruptSafety, GLOBALinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
+    //@ assert ARMinterruptSafety: GLOBALinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
     return DISARMED;
 }

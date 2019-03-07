@@ -14,7 +14,9 @@
 #define M_PI_F 3.14159265358979323846f
 #define PI M_PI_F
 
+//implements: GLOBALtimestampType
 uint64_t milliseconds = 1;
+//implements: GLOBALtimestampType
 uint64_t microseconds = 1;
 
 uint64_t mock_millis(void);
@@ -55,5 +57,8 @@ void mock_pinMode(int pin, int mode);
 #define RISING 1
 #define FALLING 2
 void mock_attachInterrupt(int pin, void f(), int mode);
+
+//implements: MAINnoAlloc
+void *mock_malloc(size_t s);
 
 #endif // ARDUINO_MOCK_H

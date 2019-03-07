@@ -58,7 +58,7 @@ void pwm_receiver_init(uint8_t _throttle_pin,
     aux1_pin     = _aux1_pin;
     aux2_pin     = _aux2_pin;
 
-    // RXTXregisterInterrupts:
+    //implements: RXTXregisterInterrupts
     mock_attachInterrupt(throttle_pin, update_throttle, CHANGE);
     mock_attachInterrupt(roll_pin,     update_roll,     CHANGE);
     mock_attachInterrupt(pitch_pin,    update_pitch,    CHANGE);
@@ -92,7 +92,7 @@ void pwm_receiver_init(uint8_t _throttle_pin,
    assigns channels[5];
    assigns ghost_interrupt_status;
 
-   ensures GLOBALinterruptReenable, RXTXinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
+   ensures GLOBALinterruptReenable: RXTXinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
 */
 const void receiver_update(int16_t channels[NUM_CHANNELS]) {
     mock_noInterrupts();
@@ -103,20 +103,27 @@ const void receiver_update(int16_t channels[NUM_CHANNELS]) {
         loop variant NUM_CHANNELS - index;
     */
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
+        /*@ assert GLOBALundefBehavior: mem_access: \valid(channels + index); */
+        /*@ assert GLOBALundefBehavior: index_bound: index < 6; */
         channels[index] = pwm_pulse_duration_shared[index];
     }
     mock_interrupts();
-    //@ assert GLOBALinterruptReenable, RXTXinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
+    //@ assert GLOBALinterruptReenable: RXTXinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
 
 pre_inversion:
     /*@ loop invariant 0 <= index <= NUM_CHANNELS;
         loop invariant \forall integer i; 0 <= i < index ==> !inversion[i] ==> channels[i] == \at(channels[i], pre_inversion);
-        loop invariant \forall integer i; 0 <= i < index ==> inversion[i] ==> channels[i] == 2000 - (\at(channels[i], pre_inversion)) - 1000);
+        loop invariant \forall integer i; 0 <= i < index ==> inversion[i] ==> channels[i] == 2000 - (\at(channels[i], pre_inversion)) - 1000;
         loop assigns index, channels[0 .. (index - 1)];
         loop variant NUM_CHANNELS - index;
     */
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
+        /*@ assert GLOBALundefBehavior: index_bound: index_0 < 6; */
         if (inversion[index]) {
+            /*@ assert GLOBALundefBehavior: mem_access: \valid(channels + index_0); */
+            /*@ assert GLOBALundefBehavior: mem_access: \valid_read(channels + index_0); */
+            /*@ assert GLOBALundefBehavior: signed_overflow: -2147483648 ≤ (int)*(channels + index_0) - 1000; */
+            /*@ assert GLOBALundefBehavior: signed_overflow: 2000 - (int)((int)*(channels + index_0) - 1000) ≤ 2147483647; */
             channels[index] = 2000 - (channels[index] - 1000);
         }
     }
@@ -134,6 +141,11 @@ pre_inversion:
         loop variant NUM_CHANNELS - index;
     */
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
+        /*@ assert GLOBALundefBehavior: mem_access: \valid(channels + index); */
+        /*@ assert GLOBALundefBehavior: mem_access: \valid_read(channels + index); */
+        /*@ assert GLOBALundefBehavior: index_bound: index < 6; */
+        /*@ assert GLOBALundefBehavior: signed_overflow: -2147483648 ≤ (int)*(channels + index) + (int)pwm_offsets[index]; */
+        /*@ assert GLOBALundefBehavior: signed_overflow: (int)*(channels + index) +(int)pwm_offsets[index] ≤ 2147483647; */
         channels[index] += pwm_offsets[index];
     }
 
@@ -142,6 +154,11 @@ pre_inversion:
         loop variant NUM_CHANNELS - index;
     */
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
+      /*@ assert GLOBALundefBehavior: mem_access: \valid(channels + index); */
+      /*@ assert GLOBALundefBehavior: mem_access: \valid_read(channels + index); */
+      /*@ assert GLOBALundefBehavior: index_bound: index < 6; */
+      /*@ assert GLOBALundefBehavior: signed_overflow: -2147483648 ≤ (int)*(channels + index) +(int)trims[index]; */
+      /*@ assert GLOBALundefBehavior: signed_overflow: (int)*(channels + index) + (int)trims[index] ≤ 2147483647; */
         channels[index] += trims[index];
     }
 
@@ -150,6 +167,7 @@ pre_inversion:
         loop variant NUM_CHANNELS - index;
     */
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
+        /*@ assert GLOBALundefBehavior: mem_access: \valid_read(channels + index); */
         clamp(channels[index], 1000, 2000);
     }
 
@@ -230,6 +248,9 @@ void set_inversion(const bool _inversion[NUM_CHANNELS]) {
    requires RXTXinitialization: ghost_pwmreceiver_status == PWM_RECEIVER_INITIALIZED;
 
    assigns ghost_interrupt_status;
+
+   ensures GLOBALinterruptReenable: RXTXinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
+
    behavior has_connection:
      assumes \forall integer i; 0 <= i < NUM_CHANNELS ==> pwm_pulse_duration_shared[i] <= 80000;
      ensures ghost_interrupt_status == INTERRUPTS_ON;
@@ -241,8 +262,6 @@ void set_inversion(const bool _inversion[NUM_CHANNELS]) {
    
    complete behaviors has_connection, RXTXconnectionLoss;
    disjoint behaviors has_connection, RXTXconnectionLoss;
-
-   assert GLOBALinterruptReenable, RXTXinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
 */
 const bool has_signal() {
     mock_noInterrupts();
@@ -252,16 +271,17 @@ const bool has_signal() {
         loop variant NUM_CHANNELS - index;
     */
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
+        /*@ assert GLOBALundefBehavior: index_bound: index < 6; */
         // assume no signal if no pulse for 80 milliseconds
-        // RXTXconnectionTimeout:
+        //implements: RXTXconnectionTimeout
         if (pwm_pulse_duration_shared[index] > 80000) {
             mock_interrupts();
-            //@ assert GLOBALinterruptReenable, RXTXinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
+            //@ assert GLOBALinterruptReenable: RXTXinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
             return false;
         }
     }
     mock_interrupts();
-    //@ assert GLOBALinterruptReenable, RXTXinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
+    //@ assert GLOBALinterruptReenable: RXTXinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
     return true;
 }
 

@@ -1,6 +1,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+// enable or disable watchdog feature
+//implements: WDGdeselectFeature
 //#define WATCHDOG
 
 #include "../include/ArduinoMock.h"
@@ -14,6 +16,7 @@
 #include "../include/receiver/pwm_receiver.h"
 #include "../include/settings.h"
 
+//implements: WDGdeselectFeature
 #ifdef WATCHDOG
 #include "../include/watchdog.h"
 #endif
@@ -145,6 +148,7 @@ int main(void) {
 #endif
     }
 
+    //implements: MAINconstructPID
     pid_controller_t roll_controller_stbl = pid_controller_init(2.0, 0.0, 0.0, 12.0, 400.0);
     pid_controller_t roll_controller_rate = pid_controller_init(0.65, 0.0, 0.0, 12.0, 400.0);
 
@@ -153,6 +157,7 @@ int main(void) {
 
     pid_controller_t yaw_controller_rate = pid_controller_init(1.5, 0.0, 0.0, 12.0, 400.0);
 
+    //implements: MAINconstructOutputDriver
     FastPWMOutput_t back_left_out_mixer   = fast_out_init(LEFT_SERVO_PIN, 1.0, -1.0, -1.0, 1.0, true);
     FastPWMOutput_t back_right_out_mixer  = fast_out_init(RIGHT_SERVO_PIN, 1.0, 1.0, -1.0, -1.0, true);
     FastPWMOutput_t front_left_out_mixer  = fast_out_init(FRONT_SERVO_PIN, 1.0, -1.0, 1.0, -1.0, true);
@@ -176,7 +181,9 @@ int main(void) {
         while (1) {}
     }
 
+//implements: WDGdeselectFeature
 #ifdef WATCHDOG
+    //implements: WDGinit
     init_watchdog();
 #endif
 
@@ -205,9 +212,6 @@ int main(void) {
 
                 pid_output_roll_rate = pid_compute(&roll_controller_rate, angular_velocity.x, -pid_output_roll_stbl);
 
-                //pitch_controller_stbl.set_p((channels[ROLL_CHANNEL] + 500) * (15.0 / 1000));
-                //pitch_controller_stbl.set_i((channels[YAW_CHANNEL]  + 500) * (5.0  / 1000));
-
                 pid_output_pitch_stbl = pid_compute(&pitch_controller_stbl, attitude.y, channels[PITCH_CHANNEL] / 10);
 
                 pid_output_pitch_rate = pid_compute(&pitch_controller_rate, angular_velocity.y, -pid_output_pitch_stbl);
@@ -221,8 +225,8 @@ int main(void) {
                 fast_out_apply(&front_left_out_mixer,  channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
                 fast_out_apply(&front_right_out_mixer, channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
 
-#define DEBUG_COL
-#ifdef DEBUG_COL
+#define DEBUG_MAIN
+#ifdef DEBUG_MAIN
 #ifdef USE_SERIAL
                 Serial.print(F("setp:"));
                 Serial.print(channels[ROLL_CHANNEL]);
@@ -241,8 +245,8 @@ int main(void) {
                 fast_out_shutoff(&back_right_out_mixer);
                 fast_out_shutoff(&front_left_out_mixer);
                 fast_out_shutoff(&front_right_out_mixer);
-#define DEBUG_COL
-#ifdef DEBUG_COL
+#define DEBUG_MAIN
+#ifdef DEBUG_MAIN
 #ifdef USE_SERIAL
                 Serial.print(F("setp:"));
                 Serial.print(channels[ROLL_CHANNEL]);
@@ -267,7 +271,10 @@ int main(void) {
         /* Blink LED to indicate activity */
         blink_state = !blink_state;
         mock_digitalWrite(LED_PIN, blink_state);
+
+        //implements: WDGdeselectFeature
 #ifdef WATCHDOG
+        //implements: WDGfeed
         watchdog_feed();
 #endif
     }

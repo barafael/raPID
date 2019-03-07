@@ -19,6 +19,7 @@
 
     ensures GLOBALinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
 */
+//implements: WDGinit
 void init_watchdog() {
     mock_noInterrupts();
 
@@ -48,6 +49,7 @@ void init_watchdog() {
     assigns ghost_interrupt_status;
     ensures GLOBALinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
 */
+//implements: WDGfeed
 void watchdog_feed() {
     mock_noInterrupts();
     //@assert GLOBALinterruptSafety: ghost_interrupt_status == INTERRUPTS_OFF;

@@ -1,7 +1,7 @@
 #include "../include/ArduinoMock.h"
  
 /*@ assigns milliseconds;
-    behavior overflow:
+    behavior GLOBALelapsedTimeCalculation, overflow:
     assumes milliseconds == UINT64_MAX;
     ensures milliseconds == 0;
     ensures \result == 0;
@@ -15,6 +15,7 @@
     disjoint behaviors overflow, no_overflow;
 */
 uint64_t mock_millis() {
+    //implements: GLOBALelapsedTime, GLOBALelapsedTimeCalculation
     if (milliseconds < UINT64_MAX) {
         milliseconds++;
     } else {
@@ -64,8 +65,7 @@ void mock_digitalWrite(int pin, int state) {
 }
 
 /*@ assigns \nothing;
-    ensures \result == HIGH || \result == LOW;
-*/
+    ensures \result == HIGH || \result == LOW; */
 int mock_digitalRead(int pin) {
     return HIGH;
 }
@@ -92,4 +92,10 @@ void mock_pinMode(int pin, int mode) {
 //@ assigns \nothing;
 void mock_attachInterrupt(int pin, void f(), int mode) {
 
+}
+
+//implements: MAINnoAlloc
+void *mock_malloc(size_t s) {
+    *(volatile char*)NULL = 1;
+    return (void*) NULL;
 }

@@ -7,8 +7,8 @@ void copy_bool(bool const *a, bool *b, size_t n) {
         loop variant n - i;
      */
     for (size_t i = 0; i < n; ++i) {
-        /*@ assert rte: mem_access: \valid(b + i); */
-        /*@ assert rte: mem_access: \valid_read(a + i); */
+        /*@ assert GLOBALundefBehavior: mem_access: \valid(b + i); */
+        /*@ assert GLOBALundefBehavior: mem_access: \valid_read(a + i); */
         b[i] = a[i];
     }
 }
