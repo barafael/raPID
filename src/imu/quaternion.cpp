@@ -36,44 +36,44 @@ quaternion_t quat_from_array(float const q[4]) {
     disjoint behaviors zero_quat, valid_quat;
  */
 void normalize_quat_test(quaternion_t *quat) {
-  /*@ assert GLOBALundefBehavior: mem_access: \valid_read(&quat->a); */
-  /*@ assert GLOBALundefBehavior: is_nan_or_infinite: \is_finite((float)(quat->a * quat->a)); */
-  /*@ assert GLOBALundefBehavior: is_nan_or_infinite:
+  /*@ assert GLOBAL_undef_behavior: mem_access: \valid_read(&quat->a); */
+  /*@ assert GLOBAL_undef_behavior: is_nan_or_infinite: \is_finite((float)(quat->a * quat->a)); */
+  /*@ assert GLOBAL_undef_behavior: is_nan_or_infinite:
         \is_finite((float)((float)(quat->a * quat->a))); */
 
-  /*@ assert GLOBALundefBehavior: mem_access: \valid_read(&quat->b); */
-  /*@ assert GLOBALundefBehavior: is_nan_or_infinite: \is_finite((float)(quat->b * quat->b)); */
-  /*@ assert GLOBALundefBehavior: is_nan_or_infinite:
+  /*@ assert GLOBAL_undef_behavior: mem_access: \valid_read(&quat->b); */
+  /*@ assert GLOBAL_undef_behavior: is_nan_or_infinite: \is_finite((float)(quat->b * quat->b)); */
+  /*@ assert GLOBAL_undef_behavior: is_nan_or_infinite:
         \is_finite((float)((float)(quat->b * quat->b))); */
 
-  /*@ assert GLOBALundefBehavior: mem_access: \valid_read(&quat->c); */
-  /*@ assert GLOBALundefBehavior: is_nan_or_infinite: \is_finite((float)(quat->c * quat->c)); */
-  /*@ assert GLOBALundefBehavior: is_nan_or_infinite:
+  /*@ assert GLOBAL_undef_behavior: mem_access: \valid_read(&quat->c); */
+  /*@ assert GLOBAL_undef_behavior: is_nan_or_infinite: \is_finite((float)(quat->c * quat->c)); */
+  /*@ assert GLOBAL_undef_behavior: is_nan_or_infinite:
         \is_finite((float)((float)(quat->c * quat->c))); */
 
-  /*@ assert GLOBALundefBehavior: mem_access: \valid_read(&quat->d); */
-  /*@ assert GLOBALundefBehavior: is_nan_or_infinite: \is_finite((float)(quat->d * quat->d)); */
-  /*@ assert GLOBALundefBehavior: is_nan_or_infinite:
+  /*@ assert GLOBAL_undef_behavior: mem_access: \valid_read(&quat->d); */
+  /*@ assert GLOBAL_undef_behavior: is_nan_or_infinite: \is_finite((float)(quat->d * quat->d)); */
+  /*@ assert GLOBAL_undef_behavior: is_nan_or_infinite:
         \is_finite((float)((float)(quat->d * quat->d))); */
   float norm =
     sqrtf(((quat->a * quat->a + quat->b * quat->b) + quat->c * quat->c) + quat->d * quat->d);
-  /*@ assert GLOBALundefBehavior: is_nan_or_infinite: \is_finite((float)(1.0f / norm)); */
+  /*@ assert GLOBAL_undef_behavior: is_nan_or_infinite: \is_finite((float)(1.0f / norm)); */
   norm = 1.0f / norm;
-  /*@ assert GLOBALundefBehavior: mem_access: \valid(&quat->a); */
-  /*@ assert GLOBALundefBehavior: mem_access: \valid_read(&quat->a); */
-  /*@ assert GLOBALundefBehavior: is_nan_or_infinite: \is_finite((float)(quat->a * norm)); */
+  /*@ assert GLOBAL_undef_behavior: mem_access: \valid(&quat->a); */
+  /*@ assert GLOBAL_undef_behavior: mem_access: \valid_read(&quat->a); */
+  /*@ assert GLOBAL_undef_behavior: is_nan_or_infinite: \is_finite((float)(quat->a * norm)); */
   quat->a *= norm;
-  /*@ assert GLOBALundefBehavior: mem_access: \valid(&quat->b); */
-  /*@ assert GLOBALundefBehavior: mem_access: \valid_read(&quat->b); */
-  /*@ assert GLOBALundefBehavior: is_nan_or_infinite: \is_finite((float)(quat->b * norm)); */
+  /*@ assert GLOBAL_undef_behavior: mem_access: \valid(&quat->b); */
+  /*@ assert GLOBAL_undef_behavior: mem_access: \valid_read(&quat->b); */
+  /*@ assert GLOBAL_undef_behavior: is_nan_or_infinite: \is_finite((float)(quat->b * norm)); */
   quat->b *= norm;
-  /*@ assert GLOBALundefBehavior: mem_access: \valid(&quat->c); */
-  /*@ assert GLOBALundefBehavior: mem_access: \valid_read(&quat->c); */
-  /*@ assert GLOBALundefBehavior: is_nan_or_infinite: \is_finite((float)(quat->c * norm)); */
+  /*@ assert GLOBAL_undef_behavior: mem_access: \valid(&quat->c); */
+  /*@ assert GLOBAL_undef_behavior: mem_access: \valid_read(&quat->c); */
+  /*@ assert GLOBAL_undef_behavior: is_nan_or_infinite: \is_finite((float)(quat->c * norm)); */
   quat->c *= norm;
-  /*@ assert GLOBALundefBehavior: mem_access: \valid(&quat->d); */
-  /*@ assert GLOBALundefBehavior: mem_access: \valid_read(&quat->d); */
-  /*@ assert GLOBALundefBehavior: is_nan_or_infinite: \is_finite((float)(quat->d * norm)); */
+  /*@ assert GLOBAL_undef_behavior: mem_access: \valid(&quat->d); */
+  /*@ assert GLOBAL_undef_behavior: mem_access: \valid_read(&quat->d); */
+  /*@ assert GLOBAL_undef_behavior: is_nan_or_infinite: \is_finite((float)(quat->d * norm)); */
   quat->d *= norm;
 }
 

@@ -1,9 +1,9 @@
 #include "../../include/filter/moving_average_filter.h"
 
-/*@ requires MAFinitialization: ghost_maf_status == MAF_UNINITIALIZED;
-    assigns MAFinitialization: ghost_maf_status;
-    ensures MAFvalidMarker: \result.marker == 0;
-    ensures MAFinitialization: ghost_maf_status == MAF_INITIALIZED;
+/*@ requires MAF_init: ghost_maf_status == MAF_UNINITIALIZED;
+    assigns MAF_init: ghost_maf_status;
+    ensures MAF_valid_marker: \result.marker == 0;
+    ensures MAF_init: ghost_maf_status == MAF_INITIALIZED;
 */
 moving_average_t init_moving_average_filter() {
     moving_average_t self;
@@ -41,7 +41,7 @@ float array_sum_lambda_float(float values[], int size) {
 
     assigns \nothing;
 
-    ensures MAFaverage: result_is_sum: \result == sum_int(values, 0, size);
+    ensures MAF_average: result_is_sum: \result == sum_int(values, 0, size);
 */
 int sum_int_array(const int *values, size_t size) {
     int sum = 0;
@@ -72,7 +72,7 @@ int sum_int_array(const int *values, size_t size) {
     requires \forall integer i; 0 <= i < size ==> \is_finite(values[i]);
     assigns \nothing;
 
-    ensures MAFaverage: \result == sum_real(values, 0, size);
+    ensures MAF_average: \result == sum_real(values, 0, size);
 */
 float sum_float_array(const float *values, size_t size) {
     float sum = 0;
@@ -91,21 +91,21 @@ float sum_float_array(const float *values, size_t size) {
     requires valid_access: \valid(self->values + (0 .. FILTER_SIZE));
     requires \is_finite(value);
     requires is_initialized: ghost_maf_status == MAF_INITIALIZED;
-    requires MAFoutOfBounds: 0 <= self->marker < FILTER_SIZE;
+    requires MAF_valid_marker: 0 <= self->marker < FILTER_SIZE;
 
     assigns self->values[self->marker], self->marker;
 
     behavior increment:
-        assumes MAFoutOfBounds: 0 <= self->marker < (FILTER_SIZE - 1);
-        ensures MAFoutOfBounds: self->marker == \old(self->marker) + 1;
+        assumes MAF_valid_marker: 0 <= self->marker < (FILTER_SIZE - 1);
+        ensures MAF_valid_marker: self->marker == \old(self->marker) + 1;
         ensures self->values[(\old(self->marker))] == value;
-        ensures MAFaverage: \result == sum_real(&self->values[0], 0, FILTER_SIZE) / FILTER_SIZE;
+        ensures MAF_average: \result == sum_real(&self->values[0], 0, FILTER_SIZE) / FILTER_SIZE;
     behavior reset:
-        assumes MAFoutOfBounds: self->marker == FILTER_SIZE - 1;
-        ensures MAFoutOfBounds: self->marker == 0;
+        assumes MAF_valid_marker: self->marker == FILTER_SIZE - 1;
+        ensures MAF_valid_marker: self->marker == 0;
         ensures self->values[(\old(self->marker))] == value;
         ensures \at(self->marker, Post) == \old(self->marker) + 1;
-        ensures  MAFaverage: \result == sum_real(&self->values[0], 0, FILTER_SIZE) / FILTER_SIZE;
+        ensures  MAF_average: \result == sum_real(&self->values[0], 0, FILTER_SIZE) / FILTER_SIZE;
     behavior never_happens:
         assumes self->marker >= FILTER_SIZE;
         ensures \false;
@@ -117,7 +117,7 @@ float moving_average_next(moving_average_t *self, float value) {
     self->values[self->marker] = value;
     //@ assert \is_finite(self->values[self->marker]);
     self->marker = self->marker == (FILTER_SIZE - 1) ? 0 : self->marker + 1;
-    //@ assert MAFoutOfBounds: 0 <= self->marker < FILTER_SIZE;
+    //@ assert MAF_valid_marker: 0 <= self->marker < FILTER_SIZE;
     float sum = sum_float_array(self->values, FILTER_SIZE);
     return sum / (float) FILTER_SIZE;
 }

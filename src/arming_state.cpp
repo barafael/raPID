@@ -2,7 +2,7 @@
 
 #undef USE_SERIAL
 
-//implements: GLOBALtimestampType
+//implements: GLOBAL_timestamp_type
 static uint64_t state_change_time;
 
 static internal_state_t internal_state;
@@ -32,10 +32,10 @@ static int16_t *channels;
     disjoint behaviors triggered, not_triggered;
 */
 const bool state_transition_triggered(const int16_t input[NUM_CHANNELS]) {
-    /*@ assert GLOBALundefBehavior: mem_access: \valid_read(input + 0); */
-    /*@ assert GLOBALundefBehavior: mem_access: \valid_read(input + 1); */
-    /*@ assert GLOBALundefBehavior: mem_access: \valid_read(input + 2); */
-    /*@ assert GLOBALundefBehavior: mem_access: \valid_read(input + 3); */
+    /*@ assert GLOBAL_undef_behavior: mem_access: \valid_read(input + 0); */
+    /*@ assert GLOBAL_undef_behavior: mem_access: \valid_read(input + 1); */
+    /*@ assert GLOBAL_undef_behavior: mem_access: \valid_read(input + 2); */
+    /*@ assert GLOBAL_undef_behavior: mem_access: \valid_read(input + 3); */
     if (input[THROTTLE_CHANNEL] > TRANSITION_THROTTLE_THRESHOLD) return false;
     if (input[ROLL_CHANNEL]     < TRANSITION_ROLL_THRESHOLD)     return false;
     /* No typo - roll is different from the other channels when not inverted */
@@ -45,46 +45,46 @@ const bool state_transition_triggered(const int16_t input[NUM_CHANNELS]) {
 }
 
 /*@
-    requires ARMinitialized: ghost_arming_state_initialized == ARMING_INITIALIZED;
+    requires ARM_init: ghost_arming_init_state == ARMING_INITIALIZED;
 */
 void enter_debug_mode() {
     internal_state = INTERNAL_DEBUG;
 }
 
 /*@
-    requires ARMinitialized: ghost_arming_state_initialized == ARMING_INITIALIZED;
+    requires ARM_init: ghost_arming_init_state == ARMING_INITIALIZED;
     requires \valid_read(channels);
     requires \valid_read(channels + (0 .. NUM_CHANNELS - 1));
     assigns milliseconds;
     assigns internal_state;
     assigns state_change_time;
     ensures internal_state == ARMING_STANDBY ==> \at(internal_state, Post) == ARMING_STANDBY || \at(internal_state, Post) == ARMED;
-    ensures internal_state == INTERNAL_ARMED ||
+    ensures ARM_statemachine: internal_state == INTERNAL_ARMED ||
             internal_state == INTERNAL_DISARMED ||
             internal_state == ARMING ||
             internal_state == DISARMING ||
             internal_state == ARMING_STANDBY ||
             internal_state == DISARMING_STANDBY;
-    ensures \old(internal_state)  == INTERNAL_ARMED ==>
+    ensures ARM_statemachine: \old(internal_state)  == INTERNAL_ARMED ==>
         \at(internal_state, Post) == INTERNAL_ARMED ||
         \at(internal_state, Post) == DISARMING;
-    ensures \old(internal_state)  == INTERNAL_DISARMED ==>
+    ensures ARM_statemachine: \old(internal_state)  == INTERNAL_DISARMED ==>
         \at(internal_state, Post) == INTERNAL_DISARMED ||
         \at(internal_state, Post) == ARMING;
 
-    ensures \old(internal_state)  == DISARMING ==>
+    ensures ARM_statemachine: \old(internal_state)  == DISARMING ==>
         \at(internal_state, Post) == DISARMING ||
         \at(internal_state, Post) == INTERNAL_ARMED ||
         \at(internal_state, Post) == DISARMING_STANDBY;
-    ensures \old(internal_state)  == ARMING ==>
+    ensures ARM_statemachine: \old(internal_state)  == ARMING ==>
         \at(internal_state, Post) == ARMING ||
         \at(internal_state, Post) == INTERNAL_DISARMED ||
         \at(internal_state, Post) == ARMING_STANDBY;
 
-    ensures \old(internal_state)  == ARMING_STANDBY ==>
+    ensures ARM_statemachine: \old(internal_state)  == ARMING_STANDBY ==>
         \at(internal_state, Post) == ARMING_STANDBY ||
         \at(internal_state, Post) == INTERNAL_ARMED;
-    ensures \old(internal_state)  == DISARMING_STANDBY ==>
+    ensures ARM_statemachine: \old(internal_state)  == DISARMING_STANDBY ==>
         \at(internal_state, Post) == DISARMING_STANDBY ||
         \at(internal_state, Post) == INTERNAL_DISARMED;
 */
@@ -99,7 +99,7 @@ void update_arming_state() {
 #endif
             if (triggered) {
                 internal_state    = DISARMING;
-                //implements: GLOBALelapsedTime, GLOBALelapsedTimeCalculation
+                //implements: GLOBAL_elapsed_time, GLOBAL_elapsed_time_calculation
                 state_change_time = mock_millis();
             }
             break;
@@ -112,7 +112,7 @@ void update_arming_state() {
 #endif
             if (triggered) {
                 internal_state    = ARMING;
-                //implements: GLOBALelapsedTime, GLOBALelapsedTimeCalculation
+                //implements: GLOBAL_elapsed_time, GLOBAL_elapsed_time_calculation
                 state_change_time = mock_millis();
             }
             break;
@@ -124,7 +124,7 @@ void update_arming_state() {
                 Serial.println("Disarming");
 #endif
 #endif
-                //implements: GLOBALelapsedTime, GLOBALelapsedTimeCalculation
+                //implements: GLOBAL_elapsed_time, GLOBAL_elapsed_time_calculation
                 if ((mock_millis() - state_change_time) > DISARM_TIMEOUT_MS) {
                     internal_state = DISARMING_STANDBY;
                 } else {
@@ -159,7 +159,7 @@ void update_arming_state() {
 #endif
 #endif
             if (triggered) {
-                //implements: GLOBALelapsedTime, GLOBALelapsedTimeCalculation
+                //implements: GLOBAL_elapsed_time, GLOBAL_elapsed_time_calculation
                 if ((mock_millis() - state_change_time) > ARM_TIMEOUT_MS) {
                     internal_state = ARMING_STANDBY;
                 } else {
@@ -202,13 +202,13 @@ void update_arming_state() {
     requires \valid(channels);
     requires \valid(channels + (0 .. NUM_CHANNELS - 1));
 
-    requires ARMinitialized: ghost_arming_state_initialized == ARMING_NOT_INITIALIZED;
+    requires ARM_init: ghost_arming_init_state == ARMING_NOT_INITIALIZED;
 
     assigns channels;
-    assigns ghost_arming_state_initialized;
+    assigns ghost_arming_init_state;
     ensures channels == _channels;
 
-    ensures ARMinitialized: ghost_arming_state_initialized == ARMING_INITIALIZED;
+    ensures ARM_init: ghost_arming_init_state == ARMING_INITIALIZED;
 */
 void init_arming_state(int16_t _channels[NUM_CHANNELS]) {
     channels = _channels;
@@ -218,20 +218,20 @@ void init_arming_state(int16_t _channels[NUM_CHANNELS]) {
         error_blink(STATE_TIMER_HARDWARE_BUSY, "Could not set up interval timer for arming state update!");
     }
     */
-    // #requirement(ARMinitialized)
-    //@ ghost ghost_arming_state_initialized = ARMING_INITIALIZED;
+    //implements: ARM_init
+    //@ ghost ghost_arming_init_state = ARMING_INITIALIZED;
 }
 
 /*@
-    requires ARMinitialized: ghost_arming_state_initialized == ARMING_INITIALIZED;
+    requires ARM_init: ghost_arming_init_state == ARMING_INITIALIZED;
     //assigns \nothing;
     assigns ghost_interrupt_status;
-    ensures ARMarmedXORdisarmed: \result == ARMED || \result == DISARMED;
-    ensures ARMinterruptSafety: GLOBALinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
+    ensures ARM_armed_XOR_disarmed: \result == ARMED || \result == DISARMED;
+    ensures ARM_interrupt_safety: GLOBAL_interrupt_reenable: ghost_interrupt_status == INTERRUPTS_ON;
 */
 const arming_state_t get_arming_state() {
     mock_noInterrupts();
-    //@ assert GLOBALinterruptSafety: ghost_interrupt_status == INTERRUPTS_OFF;
+    //@ assert GLOBAL_interrupt_safety: ghost_interrupt_status == INTERRUPTS_OFF;
     // non-functional execution property: critical section is longer than it needs to be
     // (internal state is read in a switch, critical section could be shorter by using aux variable)
     switch (internal_state) {
@@ -240,16 +240,16 @@ const arming_state_t get_arming_state() {
         case DISARMING:
         case DISARMING_STANDBY:
             mock_interrupts();
-            //@ assert ARMinterruptSafety: GLOBALinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
+            //@ assert ARM_interrupt_safety: GLOBAL_interrupt_reenable: ghost_interrupt_status == INTERRUPTS_ON;
             return ARMED;
         case INTERNAL_DISARMED:
         case ARMING:
         case ARMING_STANDBY:
             mock_interrupts();
-            //@ assert ARMinterruptSafety: GLOBALinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
+            //@ assert ARM_interrupt_safety: GLOBAL_interrupt_reenable: ghost_interrupt_status == INTERRUPTS_ON;
             return DISARMED;
     }
     mock_interrupts();
-    //@ assert ARMinterruptSafety: GLOBALinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
+    //@ assert ARM_interrupt_safety: GLOBAL_interrupt_reenable: ghost_interrupt_status == INTERRUPTS_ON;
     return DISARMED;
 }

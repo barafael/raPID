@@ -17,13 +17,13 @@
     //ensures WDOG_UNLOCK == WDOG_UNLOCK_SEQ2;
     //ensures WDOG_PRESC == 4;
 
-    ensures GLOBALinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
+    ensures GLOBAL_interrupt_reenable: ghost_interrupt_status == INTERRUPTS_ON;
 */
-//implements: WDGinit
+//implements: WDG_init
 void init_watchdog() {
     mock_noInterrupts();
 
-    //@ assert GLOBALinterruptSafety: INTERRUPTS_OFF;
+    //@ assert GLOBAL_interrupt_safety: INTERRUPTS_OFF;
     // unlock access to WDOG registers
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;
     WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
@@ -47,14 +47,14 @@ void init_watchdog() {
 /*@ requires \valid(&WDOG_REFRESH);
     assigns WDOG_REFRESH;
     assigns ghost_interrupt_status;
-    ensures GLOBALinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
+    ensures GLOBAL_interrupt_reenable: ghost_interrupt_status == INTERRUPTS_ON;
 */
-//implements: WDGfeed
+//implements: WDG_feed
 void watchdog_feed() {
     mock_noInterrupts();
-    //@assert GLOBALinterruptSafety: ghost_interrupt_status == INTERRUPTS_OFF;
+    //@assert GLOBAL_interrupt_safety: ghost_interrupt_status == INTERRUPTS_OFF;
     WDOG_REFRESH = 0xA602;
     WDOG_REFRESH = 0xB480;
     mock_interrupts();
-    //@assert GLOBALinterruptReenable: ghost_interrupt_status == INTERRUPTS_ON;
+    //@assert GLOBAL_interrupt_reenable: ghost_interrupt_status == INTERRUPTS_ON;
 }

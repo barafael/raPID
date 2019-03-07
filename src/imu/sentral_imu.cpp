@@ -164,15 +164,15 @@ float GyroMeasDrift = PI * (0.0f / 180.0f);
 
 uint32_t delt_t = 0;
 
-//implements: GLOBALelapsedTime, GLOBALelapsedTimeCalculation
+//implements: GLOBAL_elapsed_time, GLOBAL_elapsed_time_calculation
 uint32_t count = 0;
 
 uint32_t sumCount = 0;
 
-//implements: GLOBALtimestampType
+//implements: GLOBAL_timestamp_type
 uint32_t Now        = 0;
 
-//implements: GLOBALtimestampType
+//implements: GLOBAL_timestamp_type
 uint32_t lastUpdate = 0;
 
 uint32_t firstUpdate = 0;
@@ -1597,7 +1597,7 @@ void update_sensors() {
         }
     }
 
-    //implements: GLOBALelapsedTime, GLOBALelapsedTimeCalculation
+    //implements: GLOBAL_elapsed_time, GLOBAL_elapsed_time_calculation
     deltat     = ((mock_micros() - lastUpdate) / 1000000.0f); // set integration time by time elapsed since last filter update
     lastUpdate = mock_micros();
 

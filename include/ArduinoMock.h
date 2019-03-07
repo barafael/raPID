@@ -14,9 +14,9 @@
 #define M_PI_F 3.14159265358979323846f
 #define PI M_PI_F
 
-//implements: GLOBALtimestampType
+//implements: GLOBAL_timestamp_type
 uint64_t milliseconds = 1;
-//implements: GLOBALtimestampType
+//implements: GLOBAL_timestamp_type
 uint64_t microseconds = 1;
 
 uint64_t mock_millis(void);
@@ -39,7 +39,7 @@ void mock_analogWrite(int pin, int state);
 int mock_analogRead(int pin);
 
 // delay is allowed at boot
-//implements: GLOBALnoDelayInLoop
+//implements: GLOBAL_no_delay_in_loop
 //@ ghost int ghost_delay_allowed = 1;
 //@ ghost int ghost_delay_happened = 1;
 void mock_delay(int millis);
@@ -58,7 +58,7 @@ void mock_pinMode(int pin, int mode);
 #define FALLING 2
 void mock_attachInterrupt(int pin, void f(), int mode);
 
-//implements: MAINnoAlloc
+//implements: MAIN_no_alloc
 void *mock_malloc(size_t s);
 
 #endif // ARDUINO_MOCK_H

@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 // enable or disable watchdog feature
-//implements: WDGdeselectFeature
+//implements: WDG_deselect_feature
 //#define WATCHDOG
 
 #include "../include/ArduinoMock.h"
@@ -16,7 +16,7 @@
 #include "../include/receiver/pwm_receiver.h"
 #include "../include/settings.h"
 
-//implements: WDGdeselectFeature
+//implements: WDG_deselect_feature
 #ifdef WATCHDOG
 #include "../include/watchdog.h"
 #endif
@@ -106,10 +106,10 @@ int main(void) {
 #endif
 
 #ifdef USE_SERIAL
-    //implements: GLOBALtimestampType
+    //implements: GLOBAL_timestamp_type
     uint64_t serial_wait_start_time = mock_millis();
     while (!Serial) {
-        //implements: GLOBALelapsedTime, GLOBALelapsedTimeCalculation
+        //implements: GLOBAL_elapsed_time, GLOBAL_elapsed_time_calculation
         if (mock_millis() - serial_wait_start_time > SERIAL_WAIT_TIMEOUT) {
             break;
         }
@@ -126,14 +126,14 @@ int main(void) {
     vec3_t angular_velocity;
     // vec3_t magnetization;
 
-    init_arming_state(channels);
-
     static bool blink_state = false;
 
     pwm_receiver_init(THROTTLE_INPUT_PIN, ROLL_INPUT_PIN,
                          PITCH_INPUT_PIN, YAW_INPUT_PIN,
                          AUX1_INPUT_PIN,  AUX2_INPUT_PIN,
                          offsets);
+    //@ assert ARM_init_sequence: ghost_pwmreceiver_status == PWM_RECEIVER_INITIALIZED;
+    //@ assert ARM_init_sequence: ghost_arming_init_state == ARMING_NOT_INITIALIZED;
 
     bool receiver_active = false;
     if (receiver_active) {
@@ -148,7 +148,10 @@ int main(void) {
 #endif
     }
 
-    //implements: MAINconstructPID
+    init_arming_state(channels);
+    //@ assert ARM_init_sequence: ghost_arming_init_state == ARMING_INITIALIZED;
+
+    //implements: MAIN_construct_PID
     pid_controller_t roll_controller_stbl = pid_controller_init(2.0, 0.0, 0.0, 12.0, 400.0);
     pid_controller_t roll_controller_rate = pid_controller_init(0.65, 0.0, 0.0, 12.0, 400.0);
 
@@ -157,7 +160,7 @@ int main(void) {
 
     pid_controller_t yaw_controller_rate = pid_controller_init(1.5, 0.0, 0.0, 12.0, 400.0);
 
-    //implements: MAINconstructOutputDriver
+    //implements: MAIN_construct_output_driver
     FastPWMOutput_t back_left_out_mixer   = fast_out_init(LEFT_SERVO_PIN, 1.0, -1.0, -1.0, 1.0, true);
     FastPWMOutput_t back_right_out_mixer  = fast_out_init(RIGHT_SERVO_PIN, 1.0, 1.0, -1.0, -1.0, true);
     FastPWMOutput_t front_left_out_mixer  = fast_out_init(FRONT_SERVO_PIN, 1.0, -1.0, 1.0, -1.0, true);
@@ -181,15 +184,15 @@ int main(void) {
         while (1) {}
     }
 
-//implements: WDGdeselectFeature
+//implements: WDG_deselect_feature
 #ifdef WATCHDOG
-    //implements: WDGinit
+    //implements: WDG_init
     init_watchdog();
 #endif
 
     //@ ghost ghost_delay_allowed = 0;
     //@ ghost ghost_delay_happened = 0;
-    /*@ loop invariant GLOBALnoDelayInLoop: ghost_delay_happened == 0;
+    /*@ loop invariant GLOBAL_no_delay_in_loop: ghost_delay_happened == 0;
     */
     /* Flight loop */
     while (true) {
@@ -272,9 +275,9 @@ int main(void) {
         blink_state = !blink_state;
         mock_digitalWrite(LED_PIN, blink_state);
 
-        //implements: WDGdeselectFeature
+        //implements: WDG_deselect_feature
 #ifdef WATCHDOG
-        //implements: WDGfeed
+        //implements: WDG_feed
         watchdog_feed();
 #endif
     }
