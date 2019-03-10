@@ -25,14 +25,14 @@ typedef struct {
 
     uint16_t range;
 
-    bool low_throttle_cutoff_enabled;
+    bool is_motor;
     uint16_t throttle_low_cutoff;
 } simple_pwm_output_t;
 
 simple_pwm_output_t simple_out_init(uint8_t pin,
         float throttle_volume,
         float roll_volume, float pitch_volume, float yaw_volume,
-        bool is_throttle);
+        bool is_motor);
 
 static void simple_out_write(simple_pwm_output_t *self, uint16_t _milli_throttle);
 
