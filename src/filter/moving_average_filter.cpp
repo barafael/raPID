@@ -60,24 +60,24 @@ int sum_int_array(const int *values, size_t size) {
       logic float sum_real(float *values, integer begin, integer end) reads values[begin .. (end - 1)];
 
       axiom empty_real:
-        \forall float *p, integer begin, end; begin >= end ==> sum_real(p, begin, end) == 0;
+        \forall float *p, integer begin, end; begin >= end ==> (float)sum_real(p, begin, end) == (float)0.0;
 
       axiom range_real:
-        \forall float *p, integer begin, end; begin < end ==> sum_real(p, begin, end) == sum_real(p, begin, end - 1) + p[end - 1];
+        \forall float *p, integer begin, end; begin < end ==> (float)sum_real(p, begin, end) == (float)((float)sum_real(p, begin, end - 1) + (float)p[end - 1]);
 }
 */
 
 /*@ requires \valid_read(values + (0 .. size - 1));
 
-    requires \forall integer i; 0 <= i < size ==> \is_finite(values[i]);
+    //requires \forall integer i; 0 <= i < size ==> \is_finite((float)values[i]);
     assigns \nothing;
 
-    ensures MAF_average: \result == sum_real(values, 0, size);
+    ensures MAF_average: (float)\result == (float)sum_real(values, 0, size);
 */
 float sum_float_array(const float *values, size_t size) {
     float sum = 0;
     /*@ loop invariant 0 <= index <= size;
-        loop invariant sum == sum_real(values, 0, index);
+        loop invariant (float)sum == (float)sum_real(values, 0, index);
         loop assigns sum, index;
         loop variant size - index;
     */
@@ -99,13 +99,13 @@ float sum_float_array(const float *values, size_t size) {
         assumes MAF_valid_marker: 0 <= self->marker < (FILTER_SIZE - 1);
         ensures MAF_valid_marker: self->marker == \old(self->marker) + 1;
         ensures self->values[(\old(self->marker))] == value;
-        ensures MAF_average: \result == sum_real(&self->values[0], 0, FILTER_SIZE) / FILTER_SIZE;
+        ensures MAF_average: (float)\result == (float)sum_real(&self->values[0], 0, FILTER_SIZE) / FILTER_SIZE;
     behavior reset:
         assumes MAF_valid_marker: self->marker == FILTER_SIZE - 1;
         ensures MAF_valid_marker: self->marker == 0;
         ensures self->values[(\old(self->marker))] == value;
         ensures \at(self->marker, Post) == \old(self->marker) + 1;
-        ensures  MAF_average: \result == sum_real(&self->values[0], 0, FILTER_SIZE) / FILTER_SIZE;
+        ensures  MAF_average: (float)\result == (float)sum_real(&self->values[0], 0, FILTER_SIZE) / FILTER_SIZE;
     behavior never_happens:
         assumes self->marker >= FILTER_SIZE;
         ensures \false;
