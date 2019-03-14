@@ -1,21 +1,21 @@
 #include "../include/ArduinoMock.h"
  
 /*@ assigns milliseconds;
-    behavior GLOBAL_elapsed_time_calculation, overflow:
-    assumes milliseconds == UINT64_MAX;
-    ensures milliseconds == 0;
-    ensures \result == 0;
+    behavior GLOBAL_elapsed_time_calculation:
+        assumes milliseconds == UINT64_MAX;
+        ensures milliseconds == 0;
+        ensures \result == 0;
 
     behavior no_overflow:
-    assumes milliseconds < UINT64_MAX;
-    ensures milliseconds == \old(milliseconds) + 1;
-    ensures \result == \old(milliseconds) + 1;
+        assumes milliseconds < UINT64_MAX;
+        ensures milliseconds == \old(milliseconds) + 1;
+        ensures \result == \old(milliseconds) + 1;
 
-    complete behaviors overflow, no_overflow;
-    disjoint behaviors overflow, no_overflow;
+    complete behaviors GLOBAL_elapsed_time_calculation, no_overflow;
+    disjoint behaviors GLOBAL_elapsed_time_calculation, no_overflow;
 */
 uint64_t mock_millis() {
-    //implements: GLOBAL_elapsed_time, GLOBAL_elapsed_time_calculation
+    //implements: GLOBAL_elapsed_time: GLOBAL_elapsed_time_calculation
     if (milliseconds < UINT64_MAX) {
         milliseconds++;
     } else {
@@ -25,7 +25,7 @@ uint64_t mock_millis() {
 }
 
 /*@ assigns microseconds;
-    behavior overflow:
+    behavior GLOBAL_elapsed_time_calculation:
     assumes microseconds == UINT64_MAX;
     ensures microseconds == 0;
     ensures \result == 0;
@@ -35,8 +35,8 @@ uint64_t mock_millis() {
     ensures microseconds == \old(microseconds) + 1;
     ensures \result == \old(microseconds) + 1;
 
-    complete behaviors overflow, no_overflow;
-    disjoint behaviors overflow, no_overflow;
+    complete behaviors GLOBAL_elapsed_time_calculation, no_overflow;
+    disjoint behaviors GLOBAL_elapsed_time_calculation, no_overflow;
 */
 uint64_t mock_micros() {
     if (microseconds < UINT64_MAX) {
@@ -74,7 +74,7 @@ int mock_digitalRead(int pin) {
 void mock_delay(int millis) {
     //implements: GLOBAL_no_delay_in_loop
     /*@ ghost if (!ghost_delay_allowed) {
-            ghost_delay_happened = true;
+            ghost_delay_happened = 1;
         }
     */
 }
