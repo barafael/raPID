@@ -26,8 +26,6 @@
     ensures \result.last_time == 0;
 
     ensures PID_limit_bounds: 0.0f <= \result.integral_limit < \result.output_limit;
-    
-    ensures pid_init_state == PID_INITIALIZED;
 */
 //implements: PID_init
 pid_controller_t pid_controller_init(float p_gain, float i_gain, float d_gain,
@@ -83,14 +81,12 @@ pid_controller_t pid_controller_init(float p_gain, float i_gain, float d_gain,
     //@ assert PID_output_limit_positive: controller.output_limit >= 0.0f;
     //@ assert PID_integral_limit_positive: controller.integral_limit >= 0.0f;
     //@ assert PID_limit_bounds: controller.integral_limit <= controller.output_limit;
-    //@ requires PID_init: pid_init_state == PID_INITIALIZED;
     return controller;
 }
 
 /* En/Disable Passthrough of setpoint */
 /*@
  requires \valid(self);
- requires PID_init: pid_init_state == PID_INITIALIZED;
  ensures self->enabled == enable;
 */
 void pid_set_enabled(pid_controller_t *self, bool enable) {
@@ -119,14 +115,11 @@ void pid_set_enabled(pid_controller_t *self, bool enable) {
    requires PID_limit_bounds: 0 <= self->integral_limit <= self->output_limit;
    requires \is_finite(measured);
    requires \is_finite(setpoint);
-   requires PID_init: pid_init_state == PID_INITIALIZED;
 
    assigns PID_not_constant_rate: self->last_time;
    assigns self->last_error;
    assigns self->last_setpoint;
    assigns self->integral;
-
-   //ensures \valid(\old(self)) ==> \valid(self);
 
    ensures PID_output_limit: -self->output_limit <= \result <= self->output_limit;
 
@@ -261,7 +254,6 @@ float pid_compute(pid_controller_t *self, float measured, float setpoint) {
 
 /*@
  requires \valid(self);
- requires PID_init: pid_init_state == PID_INITIALIZED;
  ensures self->p_gain == _p_gain;
 */
 void pid_set_p(pid_controller_t *self, float _p_gain) {
@@ -271,8 +263,6 @@ void pid_set_p(pid_controller_t *self, float _p_gain) {
 
 /*@
  requires \valid(self);
- requires PID_init: pid_init_state == PID_INITIALIZED;
- //ensures \valid(\old(self)) ==> \valid(self);
  ensures self->i_gain == _i_gain;
 */
 void pid_set_i(pid_controller_t *self, float _i_gain) {
@@ -282,8 +272,6 @@ void pid_set_i(pid_controller_t *self, float _i_gain) {
 
 /*@
  requires \valid(self);
- requires PID_init: pid_init_state == PID_INITIALIZED;
- //ensures \valid(\old(self)) ==> \valid(self);
  ensures self->d_gain == _d_gain;
 */
 void pid_set_d(pid_controller_t *self, float _d_gain) {
@@ -293,7 +281,6 @@ void pid_set_d(pid_controller_t *self, float _d_gain) {
 
 /*@
  requires \valid(self);
- requires PID_init: pid_init_state == PID_INITIALIZED;
  requires PID_integral_limit: integral_limit <= output_limit;
 
  ensures self->p_gain == p_gain;
@@ -323,8 +310,6 @@ void pid_set_params(pid_controller_t *self,
 
 /*@
  requires \valid(self);
- requires PID_init: pid_init_state == PID_INITIALIZED;
- //ensures \valid(\old(self)) ==> \valid(self);
  ensures \result == self->p_gain;
 */
 float pid_get_p(pid_controller_t *self) {
@@ -334,8 +319,6 @@ float pid_get_p(pid_controller_t *self) {
 
 /*@
  requires \valid(self);
- requires PID_init: pid_init_state == PID_INITIALIZED;
- //ensures \valid(\old(self)) ==> \valid(self);
  ensures \result == self->i_gain; */
 float pid_get_i(pid_controller_t *self) {
     /*@ assert GLOBAL_undef_behavior: mem_access: \valid_read(&self->i_gain); */
@@ -344,8 +327,6 @@ float pid_get_i(pid_controller_t *self) {
 
 /*@
  requires \valid(self);
- requires PID_init: pid_init_state == PID_INITIALIZED;
- //ensures \valid(\old(self)) ==> \valid(self);
  ensures \result == self->d_gain;
 */
 float pid_get_d(pid_controller_t *self) {
@@ -355,8 +336,6 @@ float pid_get_d(pid_controller_t *self) {
 
 /*@
  requires \valid(self);
- requires PID_init: pid_init_state == PID_INITIALIZED;
- //ensures \valid(\old(self)) ==> \valid(self);
  ensures self->integral == 0.0;
 */
 void pid_integral_reset(pid_controller_t *self) {
@@ -366,8 +345,6 @@ void pid_integral_reset(pid_controller_t *self) {
 
 /*@
  requires \valid(self);
- requires PID_init: pid_init_state == PID_INITIALIZED;
- //ensures \valid(\old(self)) ==> \valid(self);
  ensures self->integral_limit == limit;
 */
 void pid_set_integral_limit(pid_controller_t *self, float limit) {
@@ -377,8 +354,6 @@ void pid_set_integral_limit(pid_controller_t *self, float limit) {
 
 /*@
  requires \valid(self);
- requires PID_init: pid_init_state == PID_INITIALIZED;
- //ensures \valid(\old(self)) ==> \valid(self);
  ensures self->output_limit == limit;
 */
 void pid_set_output_limit(pid_controller_t *self, float limit) {
@@ -388,8 +363,6 @@ void pid_set_output_limit(pid_controller_t *self, float limit) {
 
 /*@
  requires \valid(self);
- requires PID_init: pid_init_state == PID_INITIALIZED;
- //ensures \valid(\old(self)) ==> \valid(self);
  ensures self->d_type == type;
 */
 void pid_set_derivative_type(pid_controller_t *self, derivative_type type) {

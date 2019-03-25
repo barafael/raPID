@@ -9,7 +9,7 @@
 #include "../include/arming_state.h"
 #include "../include/axis.hpp"
 #include "../include/imu/sentral_imu.hpp"
-#include "../include/output/FastPWMOutput.h"
+#include "../include/output/simple_pwm_output.h"
 #include "../include/pid/pid_controller.h"
 #include "../include/pid/pid_param.h"
 #include "../include/pins.h"
@@ -41,7 +41,7 @@
 
    See ../include/pins.h for pin definitions.  */
 
-int16_t channels[NUM_CHANNELS] = { 0 };
+int16_t channels[NUM_CHANNELS] = { 0, 0, 0, 0, 0, 0 };
 int16_t offsets[NUM_CHANNELS]  = { -1000, -1500, -1500, -1500, -1500, -1500 };
 
 /* Default start state */
@@ -151,25 +151,26 @@ int main(void) {
     init_arming_state(channels);
     //@ assert ARM_init_sequence: ghost_arming_init_state == ARMING_INITIALIZED;
 
+    //@ ghost int pid_init_state[6];
     //implements: MAIN_construct_PID
-    pid_controller_t roll_controller_stbl = pid_controller_init(2.0, 0.0, 0.0, 12.0, 400.0);
-    pid_controller_t roll_controller_rate = pid_controller_init(0.65, 0.0, 0.0, 12.0, 400.0);
+    pid_controller_t roll_controller_stbl = pid_controller_init(2.0, 0.0, 0.0, 12.0, 400.0, 0);
+    pid_controller_t roll_controller_rate = pid_controller_init(0.65, 0.0, 0.0, 12.0, 400.0, 1);
 
-    pid_controller_t pitch_controller_stbl = pid_controller_init(2.0, 0.0, 0.0, 12.0, 400.0);
-    pid_controller_t pitch_controller_rate = pid_controller_init(0.65, 0.0, 0.0, 12.0, 400.0);
+    pid_controller_t pitch_controller_stbl = pid_controller_init(2.0, 0.0, 0.0, 12.0, 400.0, 2);
+    pid_controller_t pitch_controller_rate = pid_controller_init(0.65, 0.0, 0.0, 12.0, 400.0, 3);
 
-    pid_controller_t yaw_controller_rate = pid_controller_init(1.5, 0.0, 0.0, 12.0, 400.0);
+    pid_controller_t yaw_controller_rate = pid_controller_init(1.5, 0.0, 0.0, 12.0, 400.0, 4);
 
     //implements: MAIN_construct_output_driver
-    FastPWMOutput_t back_left_out_mixer   = fast_out_init(LEFT_SERVO_PIN, 1.0, -1.0, -1.0, 1.0, true);
-    FastPWMOutput_t back_right_out_mixer  = fast_out_init(RIGHT_SERVO_PIN, 1.0, 1.0, -1.0, -1.0, true);
-    FastPWMOutput_t front_left_out_mixer  = fast_out_init(FRONT_SERVO_PIN, 1.0, -1.0, 1.0, -1.0, true);
-    FastPWMOutput_t front_right_out_mixer = fast_out_init(BACK_SERVO_PIN, 1.0, 1.0, 1.0, 1.0, true);
+    simple_pwm_output_t back_left_out_mixer   = simple_out_init(LEFT_SERVO_PIN, 1.0, -1.0, -1.0, 1.0, true);
+    simple_pwm_output_t back_right_out_mixer  = simple_out_init(RIGHT_SERVO_PIN, 1.0, 1.0, -1.0, -1.0, true);
+    simple_pwm_output_t front_left_out_mixer  = simple_out_init(FRONT_SERVO_PIN, 1.0, -1.0, 1.0, -1.0, true);
+    simple_pwm_output_t front_right_out_mixer = simple_out_init(BACK_SERVO_PIN, 1.0, 1.0, 1.0, 1.0, true);
 
-    fast_out_shutoff(&back_left_out_mixer);
-    fast_out_shutoff(&back_right_out_mixer);
-    fast_out_shutoff(&front_left_out_mixer);
-    fast_out_shutoff(&front_right_out_mixer);
+    simple_out_shutoff(&back_left_out_mixer);
+    simple_out_shutoff(&back_right_out_mixer);
+    simple_out_shutoff(&front_left_out_mixer);
+    simple_out_shutoff(&front_right_out_mixer);
 
     pid_set_enabled(&roll_controller_stbl, true);
     pid_set_enabled(&roll_controller_rate, true);
@@ -223,10 +224,10 @@ int main(void) {
                 pid_output_yaw_rate = pid_compute(&yaw_controller_rate, angular_velocity.z, channels[YAW_CHANNEL]);
 
 
-                fast_out_apply(&back_left_out_mixer,   channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
-                fast_out_apply(&back_right_out_mixer,  channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
-                fast_out_apply(&front_left_out_mixer,  channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
-                fast_out_apply(&front_right_out_mixer, channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
+                simple_out_apply(&back_left_out_mixer,   channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
+                simple_out_apply(&back_right_out_mixer,  channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
+                simple_out_apply(&front_left_out_mixer,  channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
+                simple_out_apply(&front_right_out_mixer, channels[THROTTLE_CHANNEL], pid_output_roll_rate, pid_output_pitch_rate, pid_output_yaw_rate);
 
 #define DEBUG_MAIN
 #ifdef DEBUG_MAIN
@@ -244,10 +245,10 @@ int main(void) {
                 break;
 
             case DISARMED:
-                fast_out_shutoff(&back_left_out_mixer);
-                fast_out_shutoff(&back_right_out_mixer);
-                fast_out_shutoff(&front_left_out_mixer);
-                fast_out_shutoff(&front_right_out_mixer);
+                simple_out_shutoff(&back_left_out_mixer);
+                simple_out_shutoff(&back_right_out_mixer);
+                simple_out_shutoff(&front_left_out_mixer);
+                simple_out_shutoff(&front_right_out_mixer);
 #define DEBUG_MAIN
 #ifdef DEBUG_MAIN
 #ifdef USE_SERIAL

@@ -12,7 +12,6 @@
 #include "../util.h"
 
 typedef enum { PID_UNINITIALIZED, PID_INITIALIZED } pid_status;
-//@ ghost int pid_init_state = PID_UNINITIALIZED;
 
 #define THROTTLE_LOW_CUTOFF 25
 

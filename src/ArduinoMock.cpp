@@ -70,7 +70,7 @@ int mock_digitalRead(int pin) {
     return HIGH;
 }
 
-//@ assigns \nothing;
+//@ assigns ghost_delay_happened;
 void mock_delay(int millis) {
     //implements: GLOBAL_no_delay_in_loop
     /*@ ghost if (!ghost_delay_allowed) {

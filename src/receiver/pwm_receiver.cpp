@@ -118,12 +118,12 @@ pre_inversion:
         loop variant NUM_CHANNELS - index;
     */
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
-        /*@ assert GLOBAL_undef_behavior: index_bound: index_0 < 6; */
+        /*@ assert GLOBAL_undef_behavior: index_bound: index < 6; */
         if (inversion[index]) {
-            /*@ assert GLOBAL_undef_behavior: mem_access: \valid(channels + index_0); */
-            /*@ assert GLOBAL_undef_behavior: mem_access: \valid_read(channels + index_0); */
-            /*@ assert GLOBAL_undef_behavior: signed_overflow: -2147483648 ≤ (int)*(channels + index_0) - 1000; */
-            /*@ assert GLOBAL_undef_behavior: signed_overflow: 2000 - (int)((int)*(channels + index_0) - 1000) ≤ 2147483647; */
+            /*@ assert GLOBAL_undef_behavior: mem_access: \valid(channels + index); */
+            /*@ assert GLOBAL_undef_behavior: mem_access: \valid_read(channels + index); */
+            /*@ assert GLOBAL_undef_behavior: signed_overflow: -2147483648 ≤ (int)*(channels + index) - 1000; */
+            /*@ assert GLOBAL_undef_behavior: signed_overflow: 2000 - (int)((int)*(channels + index) - 1000) ≤ 2147483647; */
             channels[index] = 2000 - (channels[index] - 1000);
         }
     }

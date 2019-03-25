@@ -29,7 +29,7 @@ static void simple_out_write(simple_pwm_output_t *self, uint16_t _milli_throttle
 
 /*@ requires \valid(self);
     behavior OUTPUTcutoff:
-      assumes self->low_throttle_cutoff_enabled;
+      assumes self->is_motor;
       assumes _milli_throttle < self->throttle_low_cutoff;
       ensures motor_status == MOTOR_OFF;
     behavior on:
