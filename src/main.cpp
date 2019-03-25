@@ -5,7 +5,7 @@
 //implements: WDG_deselect_feature
 //#define WATCHDOG
 
-#include "../include/ArduinoMock.h"
+#include "../include/Mock.h"
 #include "../include/arming_state.h"
 #include "../include/axis.hpp"
 #include "../include/imu/sentral_imu.hpp"
@@ -153,13 +153,13 @@ int main(void) {
 
     //@ ghost int pid_init_state[6];
     //implements: MAIN_construct_PID
-    pid_controller_t roll_controller_stbl = pid_controller_init(2.0, 0.0, 0.0, 12.0, 400.0, 0);
-    pid_controller_t roll_controller_rate = pid_controller_init(0.65, 0.0, 0.0, 12.0, 400.0, 1);
+    pid_controller_t roll_controller_stbl = pid_controller_init(2.0, 0.0, 0.0, 12.0, 400.0);
+    pid_controller_t roll_controller_rate = pid_controller_init(0.65, 0.0, 0.0, 12.0, 400.0);
 
-    pid_controller_t pitch_controller_stbl = pid_controller_init(2.0, 0.0, 0.0, 12.0, 400.0, 2);
-    pid_controller_t pitch_controller_rate = pid_controller_init(0.65, 0.0, 0.0, 12.0, 400.0, 3);
+    pid_controller_t pitch_controller_stbl = pid_controller_init(2.0, 0.0, 0.0, 12.0, 400.0);
+    pid_controller_t pitch_controller_rate = pid_controller_init(0.65, 0.0, 0.0, 12.0, 400.0);
 
-    pid_controller_t yaw_controller_rate = pid_controller_init(1.5, 0.0, 0.0, 12.0, 400.0, 4);
+    pid_controller_t yaw_controller_rate = pid_controller_init(1.5, 0.0, 0.0, 12.0, 400.0);
 
     //implements: MAIN_construct_output_driver
     simple_pwm_output_t back_left_out_mixer   = simple_out_init(LEFT_SERVO_PIN, 1.0, -1.0, -1.0, 1.0, true);

@@ -187,7 +187,7 @@ float pid_compute(pid_controller_t *self, float measured, float setpoint) {
     /*@ assert GLOBAL_undef_behavior: mem_access: \valid_read(&self->integral_limit); */
     /*@ assert GLOBAL_undef_behavior: is_nan_or_infinite: \is_finite(self->integral_limit); */
 
-    clamp(self->integral, -self->integral_limit, self->integral_limit);
+    mock_clamp(self->integral, -self->integral_limit, self->integral_limit);
     //@ assert PID_integral_limit: -self->integral_limit <= self->integral <= self->integral_limit;
 
     float d_term = 0.0f;
@@ -247,7 +247,7 @@ float pid_compute(pid_controller_t *self, float measured, float setpoint) {
     /*@ assert GLOBAL_undef_behavior: is_nan_or_infinite: \is_finite(self->output_limit); */
 
     /* Output limit */
-    clamp(result, -self->output_limit, self->output_limit);
+    mock_clamp(result, -self->output_limit, self->output_limit);
     //@ assert PID_output_limit: -self->output_limit <= result <= self->output_limit;
     return result;
 }

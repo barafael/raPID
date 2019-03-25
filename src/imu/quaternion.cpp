@@ -162,22 +162,28 @@ vec3_t quat2euler(const quaternion_t quat) {
     // roll (x-axis rotation)
     float sinr  = +2.0 * (quat.d * quat.a + quat.b * quat.c);
     float cosr  = +1.0 - 2.0 * (quat.a * quat.a + quat.b * quat.b);
-    //float pitch = atan2f(sinr, cosr);
+#ifdef BINARY
+    float pitch = atan2f(sinr, cosr);
+#else
     float pitch = 1.0f;
+#endif
 
     // pitch (y-axis rotation)
     float sinp = +2.0 * (quat.d * quat.b - quat.c * quat.a);
     float roll;
     if (fabsf(sinp) >= 1) {
-        roll = copysignf(M_PI_F / 2, sinp); // use 90 degrees if out of range
+        roll = copysignf((float)M_PI / 2, sinp); // use 90 degrees if out of range
     } else {
         roll = asinf(sinp);
     }
     // yaw (z-axis rotation)
     float siny = +2.0 * (quat.d * quat.c + quat.a * quat.b);
     float cosy = +1.0 - 2.0 * (quat.b * quat.b + quat.c * quat.c);
-    //float yaw  = atan2f(siny, cosy);
+#ifdef BINARY
+    float yaw  = atan2f(siny, cosy);
+#else
     float yaw  = 1.0f;
+#endif
 
     vec3_t euler = { roll, pitch, yaw };
     return euler;

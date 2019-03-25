@@ -40,8 +40,8 @@ float    uint32_reg_to_float(uint8_t *buf);
 void     update_sensors();
 void     writeByte(uint8_t address, uint8_t subAddress, uint8_t data);
 
-#include "../../include/SPI.h"
-#include "../../include/i2c_t3.h"
+#include "SPI.h"
+#include "i2c_t3.h"
 
 #define SerialDebug false
 
@@ -866,8 +866,7 @@ uint8_t M24512DFMreadByte(uint8_t device_address, uint8_t data_address1, uint8_t
     wire_beginTransmission(device_address); // Initialize the Tx buffer
     wire_write(data_address1); // Put slave register address in Tx buffer
     wire_write(data_address2); // Put slave register address in Tx buffer
-    wire_endTransmission(I2C_NOSTOP); // Send the Tx buffer, but send a restart to keep connection alive
-    //wire_endTransmission(false);             // Send the Tx buffer, but send a restart to keep connection alive
+    wire_endTransmission_nostop(); // Send the Tx buffer, but send a restart to keep connection alive
     // Read one byte from slave register address
     wire_requestFrom(device_address, /*(size_t)*/ 1); // Read one byte from slave register address
     data = wire_read(); // Fill Rx buffer with result
@@ -879,8 +878,7 @@ void M24512DFMreadBytes(uint8_t device_address, uint8_t data_address1, uint8_t d
     wire_beginTransmission(device_address); // Initialize the Tx buffer
     wire_write(data_address1); // Put slave register address in Tx buffer
     wire_write(data_address2); // Put slave register address in Tx buffer
-    wire_endTransmission(I2C_NOSTOP); // Send the Tx buffer, but send a restart to keep connection alive
-    //wire_endTransmission(false);              // Send the Tx buffer, but send a restart to keep connection alive
+    wire_endTransmission_nostop(); // Send the Tx buffer, but send a restart to keep connection alive
     uint8_t i = 0;
     //        wire_requestFrom(address, count);       // Read bytes from slave register address
     wire_requestFrom(device_address, /*(size_t)*/ count); // Read bytes from slave register address
@@ -1021,8 +1019,7 @@ uint8_t readByte(uint8_t address, uint8_t subAddress) {
     uint8_t data; // `data` will store the register data
     wire_beginTransmission(address); // Initialize the Tx buffer
     wire_write(subAddress); // Put slave register address in Tx buffer
-    wire_endTransmission_arg(I2C_NOSTOP); // Send the Tx buffer, but send a restart to keep connection alive
-    //wire_endTransmission(false);             // Send the Tx buffer, but send a restart to keep connection alive
+    wire_endTransmission_nostop(); // Send the Tx buffer, but send a restart to keep connection alive
     //wire_requestFrom(address, 1);  // Read one byte from slave register address
     wire_requestFrom(address, /*(size_t)*/ 1); // Read one byte from slave register address
     data = wire_read(); // Fill Rx buffer with result
@@ -1032,8 +1029,7 @@ uint8_t readByte(uint8_t address, uint8_t subAddress) {
 void readBytes(uint8_t address, uint8_t subAddress, uint8_t count, uint8_t *dest) {
     wire_beginTransmission(address); // Initialize the Tx buffer
     wire_write(subAddress); // Put slave register address in Tx buffer
-    wire_endTransmission_arg(I2C_NOSTOP); // Send the Tx buffer, but send a restart to keep connection alive
-    //wire_endTransmission(false);       // Send the Tx buffer, but send a restart to keep connection alive
+    wire_endTransmission_nostop(); // Send the Tx buffer, but send a restart to keep connection alive
     uint8_t i = 0;
     //        wire_requestFrom(address, count);  // Read bytes from slave register address
     wire_requestFrom(address, /*(size_t)*/ count); // Read bytes from slave register address
@@ -1068,7 +1064,7 @@ IMU_INIT_ERROR init_sentral_imu() {
     mock_digitalWrite(SENTRAL_POWER, HIGH);
     mock_digitalWrite(SENTRAL_GND, LOW);
 
-    wire_begin(I2C_MASTER, 0x00, I2C_PINS_16_17, I2C_PULLUP_EXT, I2C_RATE_400);
+    wire_begin(I2C_MASTER, 0x00, I2C_PINS_16_17, I2C_PULLUP_EXT, I2C_RATE_400, I2C_OP_MODE_ISR);
 
     mock_pinMode(SENTRAL_INTERRUPT_PIN, INPUT);
 
@@ -1095,9 +1091,9 @@ IMU_INIT_ERROR init_sentral_imu() {
         return ROM_VERSION_ERROR;
     }
 
+#ifdef USE_SERIAL
     uint16_t RAM1 = readByte(EM7180_ADDRESS, EM7180_RAMVersion1);
     uint16_t RAM2 = readByte(EM7180_ADDRESS, EM7180_RAMVersion2);
-#ifdef USE_SERIAL
     Serial.print("EM7180 RAM Version: 0x");
     Serial.print(RAM1);
     Serial.println(RAM2);
@@ -1333,9 +1329,9 @@ IMU_INIT_ERROR init_sentral_imu() {
     writeByte(EM7180_ADDRESS, EM7180_ParamRequest, 0x00); //End parameter transfer
     writeByte(EM7180_ADDRESS, EM7180_AlgorithmControl, 0x00); // re-enable algorithm
 
+#ifdef USE_SERIAL
     // Read EM7180 status
     uint8_t runStatus = readByte(EM7180_ADDRESS, EM7180_RunStatus);
-#ifdef USE_SERIAL
     if (runStatus & 0x01) {
         Serial.println(" EM7180 run status = normal mode");
     }
@@ -1371,8 +1367,8 @@ IMU_INIT_ERROR init_sentral_imu() {
         Serial.println(" EM7180 unreliable sensor data");
 #endif
     }
-    uint8_t passthruStatus = readByte(EM7180_ADDRESS, EM7180_PassThruStatus);
 #ifdef USE_SERIAL
+    uint8_t passthruStatus = readByte(EM7180_ADDRESS, EM7180_PassThruStatus);
     if (passthruStatus & 0x01) {
         Serial.print(" EM7180 in passthru mode!");
     }
@@ -1494,10 +1490,9 @@ void update_sensors() {
         uint8_t eventStatus = readByte(EM7180_ADDRESS, EM7180_EventStatus);
 
         // Check for errors
-        if (eventStatus & 0x02) { // error detected, what is it?
-
-            uint8_t errorStatus = readByte(EM7180_ADDRESS, EM7180_ErrorRegister);
 #ifdef USE_SERIAL
+        if (eventStatus & 0x02) { // error detected, what is it?
+            uint8_t errorStatus = readByte(EM7180_ADDRESS, EM7180_ErrorRegister);
             if (errorStatus != 0x00) { // non-zero value indicates error, what is it?
                 Serial.print("EM7180 sensor status = ");
                 Serial.println(errorStatus);
@@ -1517,11 +1512,10 @@ void update_sensors() {
                     Serial.println("Math error!");
                 if (errorStatus & 0x80)
                     Serial.println("Invalid sample rate!");
+                return;
             }
-#endif
-            // if just proceeding after error, any measurement might result
-            return;
         }
+#endif
 
         // if no errors, see if new data is ready
 #ifdef SENTRAL_COLLECT_ALL
@@ -1659,7 +1653,6 @@ void update_sensors() {
     // points toward the right of the device.
     //
 
-    if (SerialDebug) {
 #ifdef USE_SERIAL
         Serial.print("Hardware Yaw, Pitch, Roll: ");
         Serial.print(Yaw, 2);
@@ -1675,9 +1668,8 @@ void update_sensors() {
         Serial.print("Altimeter pressure = ");
         Serial.print(pressure, 2);
         Serial.println(" mbar"); // pressure in millibar
-#endif
+
         altitude = 145366.45f * (1.0f - pow((pressure / 1013.25f), 0.190284f));
-#ifdef USE_SERIAL
         Serial.print("Altitude = ");
         Serial.print(altitude, 2);
         Serial.println(" feet");
@@ -1686,12 +1678,16 @@ void update_sensors() {
         Serial.print("rate = ");
         Serial.print((float) sumCount / sum, 2);
         Serial.println(" Hz");
-#endif
 
-        // Serial.print(millis()/1000.0, 1);Serial.print(",");
-        // Serial.print(yaw); Serial.print(",");Serial.print(pitch); Serial.print(",");Serial.print(roll); Serial.print(",");
-        // Serial.print(Yaw); Serial.print(",");Serial.print(Pitch); Serial.print(",");Serial.println(Roll);
-    }
+        Serial.print(millis() / 1000.0, 1);Serial.print(",");
+        Serial.print(yaw); Serial.print(",");
+        Serial.print(pitch); Serial.print(",");
+        Serial.print(roll); Serial.print(",");
+
+        Serial.print(Yaw); Serial.print(",");
+        Serial.print(Pitch); Serial.print(",");
+        Serial.println(Roll);
+#endif
 
     count    = mock_millis();
     sumCount = 0;

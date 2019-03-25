@@ -1,10 +1,10 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#define abs(value) \
+#define mock_abs(value) \
     (value) = (value) >= 0 ? (value) : (-(value))
 
-#define clamp(value, low, high) \
+#define mock_clamp(value, low, high) \
     ((value) = \
     ((value) < (low)  ? (low) : \
     ((value) > (high) ? (high) : (value))))

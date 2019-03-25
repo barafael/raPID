@@ -11,6 +11,19 @@ static uint8_t yaw_pin;
 static uint8_t aux1_pin;
 static uint8_t aux2_pin;
 
+/* Interrupts write to this array and the update function reads
+ * Note: disable interrupts when reading to avoid race conditions
+*/
+static volatile int16_t channels_shared[NUM_CHANNELS];
+
+static int16_t pwm_offsets[NUM_CHANNELS];
+
+/* Per-channel trims */
+static int16_t trims[NUM_CHANNELS];
+
+/* Per-channel inversion */
+static bool inversion[NUM_CHANNELS];
+
 /* Written by interrupt on rising edge, read on falling edge */
 //implements: GLOBAL_timestamp_type
 static volatile uint64_t pwm_pulse_start_tick[NUM_CHANNELS] = { 0 };
@@ -168,7 +181,7 @@ pre_inversion:
     */
     for (size_t index = 0; index < NUM_CHANNELS; index++) {
         /*@ assert GLOBAL_undef_behavior: mem_access: \valid_read(channels + index); */
-        clamp(channels[index], 1000, 2000);
+        mock_clamp(channels[index], 1000, 2000);
     }
 
     //@ assert RXTX_bounded_results: 1000 <= channels[0] <= 2000;

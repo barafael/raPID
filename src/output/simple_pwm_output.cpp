@@ -22,7 +22,7 @@ simple_pwm_output_t simple_out_init(const uint8_t pin,
    assigns self->milli_throttle;
 */
 static void simple_out_write(simple_pwm_output_t *self, uint16_t _milli_throttle) {
-    self->milli_throttle = clamp(_milli_throttle, 0, 255);
+    self->milli_throttle = mock_clamp(_milli_throttle, 0, 255);
     // reusing _millithrottle could result in error if clamp was necessary
     mock_analogWrite(self->pin, self->milli_throttle);
 }
@@ -55,7 +55,7 @@ void simple_out_apply(simple_pwm_output_t *self, uint16_t _milli_throttle,
     throttle_tmp += (int16_t) (pitch_stbl * self->mixer.pitch_volume);
     throttle_tmp += (int16_t) (yaw_stbl   * self->mixer.yaw_volume);
 
-    clamp(throttle_tmp, 0, 255);
+    mock_clamp(throttle_tmp, 0, 255);
 
     simple_out_write(self, throttle_tmp);
 }

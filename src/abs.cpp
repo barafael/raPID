@@ -20,6 +20,6 @@
     disjoint behaviors pos, neg;
 */
 int16_t use_abs(int16_t value) {
-    abs(value);
+    mock_abs(value);
     return value;
 }

@@ -18,10 +18,9 @@ float complement_float(float number) {
 */
 complementary_filter_t init_complementary_filter(float beta) {
     float ateb = (float)1 - beta;
-    complementary_filter_t self = {
-        .beta = beta,
-        .ateb = ateb,
-    };
+    complementary_filter_t self;
+    self.beta = beta;
+    self.ateb = ateb;
     return self;
 }
 

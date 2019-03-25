@@ -14,6 +14,6 @@
     complete behaviors clamped, notClamped;
 */
 int use_clamp(int value, const int low, const int high) {
-    clamp(value, low, high);
+    mock_clamp(value, low, high);
     return value;
 }

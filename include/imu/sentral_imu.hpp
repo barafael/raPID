@@ -3,7 +3,8 @@
 
 #include <stdint.h>
 
-#include "../../include/pins.h"
+#include "../Mock.h"
+#include "../pins.h"
 #include "../axis.hpp"
 
 typedef enum {

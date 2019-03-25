@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#include "../ArduinoMock.h"
+#include "../Mock.h"
 
 #include "../util.h"
 
@@ -33,8 +33,6 @@ simple_pwm_output_t simple_out_init(uint8_t pin,
         float throttle_volume,
         float roll_volume, float pitch_volume, float yaw_volume,
         bool is_motor);
-
-static void simple_out_write(simple_pwm_output_t *self, uint16_t _milli_throttle);
 
 void simple_out_apply(simple_pwm_output_t *self, uint16_t _milli_throttle,
         float roll_stbl, float pitch_stbl, float yaw_stbl);

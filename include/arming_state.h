@@ -5,7 +5,7 @@
 
 #include "../include/settings.h"
 
-#include "ArduinoMock.h"
+#include "Mock.h"
 
 #define ARMING_INITIALIZED 0
 #define ARMING_NOT_INITIALIZED 1

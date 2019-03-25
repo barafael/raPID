@@ -4,7 +4,7 @@
 #include "../axis.hpp"
 #include <math.h>
 
-#include "../ArduinoMock.h"
+#include "../Mock.h"
 
 typedef struct {
     float a;

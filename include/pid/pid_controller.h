@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "../../include/ArduinoMock.h"
+#include "../../include/Mock.h"
 
 #include "../../include/filter/complementary_filter.h"
 #include "../../include/filter/moving_average_filter.h"

@@ -3,7 +3,7 @@
 
 #include <string.h>
 
-#include "./ArduinoMock.h"
+#include "./Mock.h"
 
 typedef enum {
     DMP_INIT_MEM_LOAD_FAILED,
